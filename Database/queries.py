@@ -1,4 +1,4 @@
-import data_csv_to_db
+from Database import data_csv_to_db
 
 conn = None
 c = None
@@ -29,9 +29,9 @@ def mvp():
     return c.fetchall()
 
 
-def player_stats(stat, mode, player_id):
+def player_stats(stat, mode):
     if stat not in possible_stats or mode not in possible_modes:
-        raise ValueError('Input: ' + stat + mode + str(player_id) + ' is not known for query.')
+        raise ValueError('Input: ' + stat + ' ' + mode + ' is not known for query.')
 
     c.execute("""
         SELECT name AS 'Player', """ + mode + """(""" + stat + """)
@@ -129,13 +129,13 @@ def query_last_20(stat, mode, player):
     return c.fetchall()
 
 
-def performance_agg(stat, mode, starting_game_id=1, games_considered=20):
+def performance_agg(stat, mode, starting_game_id=0, games_considered=20):
     c.execute("""
         SELECT name, """ + mode + """(""" + stat + """)
             FROM(   SELECT scores.playerID, """ + stat + """, name
                     FROM scores JOIN players 
                     ON scores.playerID = players.playerID WHERE scores.gameID > """ + str(starting_game_id) + """
-                    ORDER BY scores.gameID ASC LIMIT """ + str(games_considered) + """)
+                    ORDER BY scores.gameID ASC LIMIT """ + str(games_considered * 3) + """)
             GROUP BY playerID
     """)
     return c.fetchall()

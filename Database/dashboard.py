@@ -1,5 +1,4 @@
-import queries as q
-
+from Database import queries as q
 
 def print_dashboard():
     print('Last 10 games')

@@ -6,7 +6,7 @@ c = None
 
 
 def import_data_from_csv():
-    with open('C:/Users/Jokim/code-workspace/RocketLeagueSQL/Database/newest.csv') as stats:
+    with open('C:\\Users\\Jokim\\Desktop\\Code\\rocketleague-stats\\Database\\stats.csv') as stats:
         for line in stats:
             data = line.split(',')
             games_data = [data[0], data.pop(1), data.pop(1), data.pop(1)]
