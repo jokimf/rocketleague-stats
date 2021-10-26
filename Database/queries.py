@@ -217,6 +217,17 @@ def grph_average_goals():
     """)
     return c.fetchmany()
 
+def grph_average_stat_single():
+    c.execute("""
+    WITH 
+    player AS(
+    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) AS tilt1
+    FROM (SELECT gameID, playerID, goals
+    FROM scores) WHERE playerID = 0)
+    SELECT player.gameID, ROUND(tilt1,3) AS 'Player'
+    FROM player
+    """)
+
 def init():
     global conn, c
     conn = data_csv_to_db.create_connection('test.db')
