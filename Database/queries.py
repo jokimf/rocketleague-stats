@@ -222,16 +222,20 @@ def grph_average_goals(stat):
     return c.fetchall()
 
 
-def grph_average_stat_single():
+def grph_stat_over_time(player_id, stat, mode):
+    if stat not in possible_stats or mode not in possible_modes:
+        raise ValueError(stat + ' is not a possible stat or ' + mode + ' is not a possible mode')
     c.execute("""
     WITH 
     player AS(
-    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) AS tilt1
-    FROM (SELECT gameID, playerID, goals
-    FROM scores) WHERE playerID = 0)
-    SELECT player.gameID, ROUND(tilt1,3) AS 'Player'
+    SELECT """ + mode + """(""" + stat + """) OVER (ORDER BY GameID) AS tilt1
+    FROM (SELECT gameID, playerID, """ + stat + """
+    FROM scores) WHERE playerID = """ + str(player_id) + """)
+    SELECT ROUND(tilt1,3) AS 'Player'
     FROM player
     """)
+    return c.fetchall()
+
 
 def init():
     global conn, c
