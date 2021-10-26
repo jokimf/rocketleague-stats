@@ -153,7 +153,7 @@ def mvp_streak(player_id):
     FROM (SELECT gameID, score, playerID
         FROM scores
         GROUP BY gameID
-        HAVING MAX(score) AND playerID = """ + player_id + """) AS MVPTable
+        HAVING MAX(score) AND playerID = """ + str(player_id) + """) AS MVPTable
         )
         SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
         FROM MVPs
@@ -192,30 +192,35 @@ def stat_by_game_id(game_id):
                 scores1.rank AS RankP, scores1.score AS ScoreP, scores1.goals AS GoalsP, scores1.assists AS AssistsP, scores1.saves AS SavesP, scores1.shots AS ShotsP,
                 scores2.rank AS RankS, scores2.score AS 'ScoreS', scores2.goals AS GoalsS, scores2.assists AS AssistsS,    scores2.saves AS SavesS, scores2.shots AS ShotsS
             FROM games JOIN scores ON games.gameID = scores.gameID JOIN scores0 ON games.gameID = scores0.gameID JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
-            WHERE ID = """ + game_id + """
+            WHERE ID = """ + str(game_id) + """
             GROUP BY ID ORDER BY ID DESC
     """)
     return c.fetchmany()
 
-def grph_average_goals():
+
+def grph_average_goals(stat):
+    if stat not in possible_stats:
+        raise ValueError(stat + " is not in possible stats")
     c.execute("""
     WITH 
-    knus AS(
-    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) AS tilt1
-    FROM (SELECT gameID, playerID, goals
-    FROM scores) WHERE playerID = 0),
-    puad AS(
-    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) AS tilt2
-    FROM (SELECT gameID, playerID, goals
-    FROM scores) WHERE playerID = 1),
-    sticker as(
-    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) as tilt3
-    FROM (SELECT gameID, playerID, goals
-    FROM scores) WHERE playerID = 2)
-    SELECT knus.gameID, ROUND(tilt1,3) AS 'Knus', ROUND(tilt2,3) AS 'Puad', ROUND(tilt3,3) AS 'Sticker'
-    FROM knus join puad on knus.gameID = puad.gameID join sticker on knus.gameID = sticker.gameID
+        knus AS(
+        SELECT gameID, AVG(""" + stat + """) OVER (ORDER BY GameID) AS tilt1
+        FROM (SELECT gameID, playerID, """ + stat + """
+        FROM scores) WHERE playerID = 0),
+        puad AS(
+        SELECT gameID, AVG(""" + stat + """) OVER (ORDER BY GameID) AS tilt2
+        FROM (SELECT gameID, playerID, """ + stat + """
+        FROM scores) WHERE playerID = 1),
+        sticker as(
+        SELECT gameID, AVG(""" + stat + """) OVER (ORDER BY GameID) as tilt3
+        FROM (SELECT gameID, playerID, """ + stat + """
+        FROM scores) WHERE playerID = 2)
+        
+        SELECT knus.gameID, ROUND(tilt1,3) AS 'Knus', ROUND(tilt2,3) AS 'Puad', ROUND(tilt3,3) AS 'Sticker'
+        FROM knus join puad on knus.gameID = puad.gameID join sticker on knus.gameID = sticker.gameID
     """)
-    return c.fetchmany()
+    return c.fetchall()
+
 
 def init():
     global conn, c
