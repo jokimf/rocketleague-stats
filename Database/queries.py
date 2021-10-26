@@ -197,6 +197,25 @@ def stat_by_game_id(game_id):
     """)
     return c.fetchmany()
 
+def grph_average_goals():
+    c.execute("""
+    WITH 
+    knus AS(
+    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) AS tilt1
+    FROM (SELECT gameID, playerID, goals
+    FROM scores) WHERE playerID = 0),
+    puad AS(
+    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) AS tilt2
+    FROM (SELECT gameID, playerID, goals
+    FROM scores) WHERE playerID = 1),
+    sticker as(
+    SELECT gameID, AVG(goals) OVER (ORDER BY GameID) as tilt3
+    FROM (SELECT gameID, playerID, goals
+    FROM scores) WHERE playerID = 2)
+    SELECT knus.gameID, ROUND(tilt1,3) AS 'Knus', ROUND(tilt2,3) AS 'Puad', ROUND(tilt3,3) AS 'Sticker'
+    FROM knus join puad on knus.gameID = puad.gameID join sticker on knus.gameID = sticker.gameID
+    """)
+    return c.fetchmany()
 
 def init():
     global conn, c
