@@ -4,8 +4,8 @@ conn = None
 c = None
 
 possible_stats = ['goals', 'assists', 'saves', 'shots']
-possible_game_stats = ['goals', 'against']
 possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
+possible_game_stats = ['goals', 'against']
 
 
 def sum_of_game_stat(stat):
@@ -234,6 +234,18 @@ def grph_stat_over_time(player_id, stat, mode):
     SELECT ROUND(tilt1,3) AS 'Player'
     FROM player
     """)
+    return c.fetchall()
+
+
+def grph_trend_over_time(player_id, stat, mode, trend=20):
+    if stat not in possible_stats or mode not in possible_modes:
+        raise ValueError(stat + ' is not a possible stat or ' + mode + ' is not a possible mode')
+    if trend > game_amount() or trend < 1:
+        raise ValueError('Trend number is not legal (' + trend + ')')
+    c.execute("""
+        SELECT ROUND(""" + mode + """(""" + stat + """) OVER (ORDER BY gameID ROWS BETWEEN """ + str(trend - 1) + """ PRECEDING AND CURRENT ROW), 3)
+        FROM scores
+        WHERE playerID = """ + str(player_id))
     return c.fetchall()
 
 
