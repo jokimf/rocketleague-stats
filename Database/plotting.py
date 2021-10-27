@@ -18,6 +18,7 @@ def standard_graph(stat, mode, ymin, ymax, save, show, xmax):
     if ymin is not None or ymax is not None: plt.ylim(ymin, ymax)
     if save: plt.savefig('png/' + stat + "_" + mode)
     if show: plt.show()
+    plt.close()
 
 
 def trend_graph(stat, mode, trend, ymin, ymax, save, show, xmax):
@@ -36,11 +37,12 @@ def trend_graph(stat, mode, trend, ymin, ymax, save, show, xmax):
     if ymin is not None or ymax is not None: plt.ylim(ymin, ymax)
     if save: plt.savefig('png/' + stat + "_" + mode + "_trend" + str(trend))
     if show: plt.show()
+    plt.close()
 
 
 def mass_produce():
     for mode in ['AVG', 'SUM', 'MAX', 'MIN']:
-        for stat in ['goals', 'assists', 'saves', 'shots']:
+        for stat in ['score', 'goals', 'assists', 'saves', 'shots']:
             for amount in [20, 50, 100]:
                 trend_graph(stat, mode, amount, None, None, True, False, q.game_amount() + 1)
             standard_graph(stat, mode, None, None, True, False, q.game_amount() + 1)

@@ -3,7 +3,7 @@ from Database import data_csv_to_db
 conn = None
 c = None
 
-possible_stats = ['goals', 'assists', 'saves', 'shots']
+possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
 possible_game_stats = ['goals', 'against']
 
