@@ -12,9 +12,9 @@ def standard_graph(stat, mode, ymin, ymax, save, show, xmax):
     plt.grid()
 
     x_axis = [*range(1, q.game_amount() + 1)]
-    plt.plot(x_axis, q.grph_stat_over_time(0, stat, mode), color='darkgreen')
-    plt.plot(x_axis, q.grph_stat_over_time(1, stat, mode), color='maroon')
-    plt.plot(x_axis, q.grph_stat_over_time(2, stat, mode), color='steelblue')
+    plt.plot(x_axis, q.player_stat_over_time(0, stat, mode), color='darkgreen')
+    plt.plot(x_axis, q.player_stat_over_time(1, stat, mode), color='maroon')
+    plt.plot(x_axis, q.player_stat_over_time(2, stat, mode), color='steelblue')
     if ymin is not None or ymax is not None: plt.ylim(ymin, ymax)
     if save: plt.savefig('png/' + stat + "_" + mode)
     if show: plt.show()
@@ -31,9 +31,9 @@ def trend_graph(stat, mode, trend, ymin, ymax, save, show, xmax):
     plt.grid()
 
     x_axis = [*range(1, q.game_amount() + 1)]
-    plt.plot(x_axis, q.grph_trend_over_time(0, stat, mode, trend), color='darkgreen')
-    plt.plot(x_axis, q.grph_trend_over_time(1, stat, mode, trend), color='maroon')
-    plt.plot(x_axis, q.grph_trend_over_time(2, stat, mode, trend), color='steelblue')
+    plt.plot(x_axis, q.player_stat_trend_over_time(0, stat, mode, trend), color='darkgreen')
+    plt.plot(x_axis, q.player_stat_trend_over_time(1, stat, mode, trend), color='maroon')
+    plt.plot(x_axis, q.player_stat_trend_over_time(2, stat, mode, trend), color='steelblue')
     if ymin is not None or ymax is not None: plt.ylim(ymin, ymax)
     if save: plt.savefig('png/' + stat + "_" + mode + "_trend" + str(trend))
     if show: plt.show()
@@ -50,6 +50,4 @@ def mass_produce():
 
 if __name__ == '__main__':
     q.init()
-    mass_produce()
-
     # TODO: Calculate yMin and yMax based on values
