@@ -20,7 +20,12 @@ def game_stat(game_stat, mode):
 def trend_game_stat(game_stat, mode, trend=20):
     if game_stat.lower() not in possible_game_stats or mode.lower() not in possible_modes or trend > game_amount() or trend < 1:
         raise ValueError(game_stat + ' ' + mode + ' ' + trend + ' is not a legal parameter set')
-    raise NotImplementedError()
+    c.execute("""
+    SELECT SUM(goalsSum) OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW)
+    FROM (SELECT gameID, SUM(goals) AS goalsSum
+	FROM games GROUP BY gameID)
+    """)
+    return c.fetchall()
 
 
 # The MVP count for player x OUTPUT: Number
