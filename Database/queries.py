@@ -123,17 +123,11 @@ def trend_lvp_count(player_id, trend=20):
 
 
 # Players (avg/sum/min/max) of (score/goals/...) of all games OUTPUT: Number
-# TODO implement player_id
 def player_stat(player_id, stat, mode):
     if stat not in possible_stats or mode not in possible_modes:
         raise ValueError('Input: ' + stat + ' ' + mode + ' is not known for query.')
-
-    c.execute("""
-        SELECT name AS 'Player', """ + mode + """(""" + stat + """)
-        FROM scores JOIN players ON scores.playerID = players.playerID
-        GROUP BY scores.playerID
-    """)
-    return c.fetchall()
+    c.execute("SELECT " + mode + "(" + stat + ")" + "FROM scores WHERE playerID = " + player_id)
+    return c.fetchone()[0]
 
 
 # Players running (avg/sum/min/max) of (score/goals/...) of all games OUTPUT: List
@@ -172,8 +166,18 @@ def solo_goals():
 
 
 # Amount of solo goals over time OUTPUT: List
-def solo_goals_over_time():
-    raise NotImplementedError()
+def solo_goals_over_time(trend=20):
+    if trend > game_amount() or trend < 1:
+        raise ValueError('Trend number is not legal (' + trend + ')')
+    c.execute("""
+        WITH solosTable AS(
+        SELECT gameID, SUM(goals) - SUM(assists) AS solos
+        FROM scores
+        GROUP BY gameID)
+        SELECT SUM(solos) OVER (ORDER BY gameID ROWS BETWEEN """ + str(trend - 1) + """ PRECEDING AND CURRENT ROW)
+        FROM solosTable
+    """)
+    return c.fetchall()
 
 
 # Amount of wins OUTPUT: number
@@ -183,8 +187,14 @@ def total_wins():
 
 
 # Amount of wins over time OUTPUT: List
-def total_wins_over_time():
-    raise NotImplementedError()
+def total_wins_over_time(trend = 20):
+    if trend > game_amount() or trend < 1:
+        raise ValueError('Trend number is not legal (' + trend + ')')
+    c.execute("""
+        SELECT COUNT(gameID) FILTER(WHERE goals > against) 
+        OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) FROM games
+        """)
+    return c.fetchall()
 
 
 # Amount of losses OUTPUT: number
@@ -194,8 +204,14 @@ def total_losses():
 
 
 # Amount of losses over time OUTPUT: List
-def total_losses_over_time():
-    raise NotImplementedError()
+def total_losses_over_time(trend = 20):
+    if trend > game_amount() or trend < 1:
+        raise ValueError('Trend number is not legal (' + trend + ')')
+    c.execute("""
+        SELECT COUNT(gameID) FILTER(WHERE goals < against) 
+        OVER(ORDER BY gameID ROWS BETWEEN """ + str(trend - 1) + """ PRECEDING AND CURRENT ROW) FROM games
+        """)
+    return c.fetchall()
 
 
 # Amount of wins with one goal difference OUTPUT: number
@@ -205,8 +221,14 @@ def one_diff_win():
 
 
 # Amount of wins over time with one goal difference OUTPUT: List
-def one_diff_win_over_time():
-    raise NotImplementedError()
+def one_diff_win_over_time(trend = 20):
+    if trend > game_amount() or trend < 1:
+        raise ValueError('Trend number is not legal (' + trend + ')')
+    c.execute("""
+        SELECT COUNT(gameID) FILTER(WHERE goals - against = 1) 
+        OVER(ORDER BY gameID ROWS BETWEEN """ + str(trend - 1) + """ PRECEDING AND CURRENT ROW) FROM games
+        """)
+    c.fetchall()
 
 
 # Amount of losses with one goal difference OUTPUT: number
@@ -216,8 +238,14 @@ def one_diff_loss():
 
 
 # Amount of losses over time with one goal difference OUTPUT: List
-def one_diff_loss():
-    raise NotImplementedError()
+def one_diff_loss_over_time(trend = 20):
+    if trend > game_amount() or trend < 1:
+        raise ValueError('Trend number is not legal (' + trend + ')')
+    c.execute("""
+            SELECT COUNT(gameID) FILTER(WHERE against - goals = 1) 
+            OVER(ORDER BY gameID ROWS BETWEEN """ + str(trend - 1) + """ PRECEDING AND CURRENT ROW) FROM games
+            """)
+    c.fetchall()
 
 
 # Max of (stat) achieved in one day OUTPUT: (Date, Count)
@@ -254,26 +282,53 @@ def average_lvp_score():
     return c.fetchall()
 
 
-# TODO: weekday as parameter, output as single number
-# Amount of games per weekday OUTPUT: Number
+# Amount of games per weekday OUTPUT: LIST
 def games_per_weekday():
     c.execute("""
-        SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS WD, COUNT(date)
+        SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) 
+            AS WD, COUNT(date)
             FROM games
         GROUP BY WD
     """)
     return c.fetchall()
 
+# TODO: translate weekday names to 0-6 & add input validation
+# Amount of games per weekday OUTPUT: Number
+def games_per_weekday_single(weekday):
+    c.execute("""
+        SELECT dateCount FROM(
+            SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2))
+            AS WD, COUNT(date) AS dateCount
+            FROM games
+            GROUP BY WD)
+        WHERE WD = '""" + str(weekday) + """'
+    """)
+    return c.fetchone()[0]
 
-# TODO: weekday as parameter, output as single number
-# Amount of wins per weekday OUTPUT: Number
+
+# Amount of wins per weekday OUTPUT: LIST
 def wins_per_weekday():
     c.execute("""
-        SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS WD, COUNT(date)
-            FROM (SELECT gameID, date FROM games WHERE goals > against)
+        SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2))
+        AS WD, COUNT(date)
+        FROM (SELECT gameID, date FROM games WHERE goals > against)
         GROUP BY WD
     """)
     return c.fetchall()
+
+
+# TODO: translate weekday names to 0-6 & add input validation
+# Amount of wins per weekday OUTPUT: Number
+def wins_per_weekday_single(weekday):
+    c.execute("""
+        SELECT winCount FROM(
+            SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2))
+            AS WD, COUNT(date) AS winCount
+            FROM (SELECT gameID, date FROM games WHERE goals > against)
+            GROUP BY WD)
+        WHERE WD = '""" + str(weekday) + """'
+    """)
+    return c.fetchone()[0]
 
 
 # (AVG/SUM/MAX/MIN) of (stat) for every player OUTPUT: (Name, Value)
@@ -291,7 +346,7 @@ def query_last_20(stat, mode):
     return c.fetchall()
 
 
-# TODO random ass query, find out what it does
+# Obsolete, outputs stat with mode for all players in given range of games. OUTPUT: 3 values + names
 def performance_agg(stat, mode, starting_game_id=0, games_considered=20):
     c.execute("""
         SELECT name, """ + mode + """(""" + stat + """)
