@@ -4,9 +4,16 @@ import sqlite3
 conn = None
 c = None
 
+if __name__ == '__main__':
+    conn = create_connection('test.db')
+    c = conn.cursor()
+    drop_tables()
+    create_tables()
+    import_data_from_csv()
+
 
 def import_data_from_csv():
-    with open('C:/Users/Jokim/code-workspace/RocketLeagueSQL/Database/newest.csv') as stats:
+    with open('newest.csv') as stats:
         for line in stats:
             data = line.split(',')
             games_data = [data[0], data.pop(1), data.pop(1), data.pop(1)]
@@ -78,11 +85,3 @@ def drop_tables():
         c.execute("DROP TABLE scores")
     except Error as e:
         print(e)
-
-
-if __name__ == '__main__':
-    conn = create_connection('test.db')
-    c = conn.cursor()
-    drop_tables()
-    create_tables()
-    import_data_from_csv()

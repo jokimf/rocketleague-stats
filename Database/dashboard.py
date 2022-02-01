@@ -1,16 +1,30 @@
 import queries as q
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+q.init()
+hostName = "localhost"
+serverPort = 8080
+json = retrieveData()
 
 
-def print_dashboard():
-    print('Last 10 games')
-    for game in q.allgemeine_game_stats(10):
-        print(game)
-
-    print('This life')
-    print('Games: ' + str(q.game_amount()) + ' Goals F/A: ' + str(q.sum_of_game_stat('goals')) + '/' + str(
-        q.sum_of_game_stat('against')) + ' W/L: ' + str(q.total_wins()) + '/' + str(q.total_losses()))
+class MyServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(bytes(json))
 
 
 if __name__ == '__main__':
-    q.init()
-    print_dashboard()
+    webServer = HTTPServer((hostName, serverPort), MyServer)
+
+    try:
+        webServer.serve_forever()
+    except KeyboardInterrupt:
+        print('ja')
+    webServer.server_close()
+
+
+def retrieveData():
+    # TODO: Make master JSON to be fetched by JS
+    pass
