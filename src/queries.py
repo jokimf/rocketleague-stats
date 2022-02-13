@@ -1,4 +1,4 @@
-import data_csv_to_db
+from resources import data_csv_to_db
 
 conn = None
 c = None
@@ -141,7 +141,7 @@ def performance_agg(stat, mode, starting_game_id=1, games_considered=20):
     return c.fetchall()
 
 
-def game_amount():
+def total_games():
     c.execute("SELECT COUNT(*) FROM games")
     return c.fetchone()[0]
 
@@ -200,5 +200,5 @@ def stat_by_game_id(game_id):
 
 def init():
     global conn, c
-    conn = data_csv_to_db.create_connection('test.db')
+    conn = data_csv_to_db.create_connection('../resources/test.db')
     c = conn.cursor()
