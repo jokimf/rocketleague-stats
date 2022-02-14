@@ -12,10 +12,9 @@ def hello_world(request):
 
 @view_config(
     route_name='home',
-    renderer='templates/home.jinja2'
+    renderer='../resources/home.jinja2'
 )
 def serve(request):
-    q.init()
     data = {}
     data["days_since_inception"] = 0
     data["total_games"] = q.total_games()

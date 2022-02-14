@@ -1,7 +1,7 @@
-from resources import data_csv_to_db
+import data_csv_to_db
 
-conn = None
-c = None
+conn = data_csv_to_db.create_connection('../resources/test.db')
+c = conn.cursor()
 
 possible_stats = ['goals', 'assists', 'saves', 'shots']
 possible_game_stats = ['goals', 'against']
@@ -196,9 +196,3 @@ def stat_by_game_id(game_id):
             GROUP BY ID ORDER BY ID DESC
     """)
     return c.fetchmany()
-
-
-def init():
-    global conn, c
-    conn = data_csv_to_db.create_connection('../resources/test.db')
-    c = conn.cursor()

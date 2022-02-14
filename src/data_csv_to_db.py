@@ -1,19 +1,9 @@
 from sqlite3 import Error
 import sqlite3
 
-conn = None
-c = None
-
-if __name__ == '__main__':
-    conn = create_connection('test.db')
-    c = conn.cursor()
-    drop_tables()
-    create_tables()
-    import_data_from_csv()
-
 
 def import_data_from_csv():
-    with open('newest.csv') as stats:
+    with open('../resources/newest.csv') as stats:
         for line in stats:
             data = line.split(',')
             games_data = [data[0], data.pop(1), data.pop(1), data.pop(1)]
@@ -85,3 +75,11 @@ def drop_tables():
         c.execute("DROP TABLE scores")
     except Error as e:
         print(e)
+
+
+conn = create_connection('../resources/test.db')
+c = conn.cursor()
+
+drop_tables()
+create_tables()
+import_data_from_csv()
