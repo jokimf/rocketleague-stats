@@ -59,15 +59,6 @@ def create_tables():
         print(e)
 
 
-def create_connection(db_file):
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Error as e:
-        print(e)
-    return conn
-
-
 def drop_tables():
     try:
         c.execute("DROP TABLE players")
@@ -77,9 +68,8 @@ def drop_tables():
         print(e)
 
 
-conn = create_connection('../resources/test.db')
+conn = connect('../resources/test.db')
 c = conn.cursor()
-
 drop_tables()
 create_tables()
 import_data_from_csv()

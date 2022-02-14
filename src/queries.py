@@ -1,6 +1,6 @@
-import data_csv_to_db
+import sqlite3
 
-conn = data_csv_to_db.create_connection('../resources/test.db')
+conn = sqlite3.connect('../resources/test.db')
 c = conn.cursor()
 
 possible_stats = ['goals', 'assists', 'saves', 'shots']
