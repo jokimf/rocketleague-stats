@@ -1,19 +1,103 @@
 import sqlite3
 
-conn = sqlite3.connect('../resources/test.db')
+conn = sqlite3.connect('C:/Users/Knus/git/rocketleague-stats/resources/test.db')
 c = conn.cursor()
 
 possible_stats = ['goals', 'assists', 'saves', 'shots']
 possible_game_stats = ['goals', 'against']
 possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
 
+def allgemeine_game_stats(games):
+    c.execute("""
+        WITH
+            scores0 AS (SELECT * FROM scores WHERE playerID = 0 GROUP BY gameID),
+            scores1 AS (SELECT * FROM scores WHERE playerID = 1 GROUP BY gameID),
+            scores2 AS (SELECT * FROM scores WHERE playerID = 2 GROUP BY gameID)
+            SELECT 
+                games.gameID AS ID,    games.date AS 'Date', games.goals As CG, against AS Enemy,
+                scores0.rank AS RankK, scores0.score AS ScoreK, scores0.goals AS GoalsK, scores0.assists AS AssistsK, scores0.saves AS SavesK, scores0.shots AS ShotsK,
+                scores1.rank AS RankP, scores1.score AS ScoreP, scores1.goals AS GoalsP, scores1.assists AS AssistsP, scores1.saves AS SavesP, scores1.shots AS ShotsP,
+                scores2.rank AS RankS, scores2.score AS 'ScoreS', scores2.goals AS GoalsS, scores2.assists AS AssistsS,    scores2.saves AS SavesS, scores2.shots AS ShotsS
+            FROM games JOIN scores ON games.gameID = scores.gameID JOIN scores0 ON games.gameID = scores0.gameID JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
+            GROUP BY ID ORDER BY ID DESC
+    """)
+    return c.fetchmany(games)
+
+
+def xDQuery(stat, start_index = 0, gamesIndexEnd = 20):
+    c.execute("""
+    WITH knusTable AS (SELECT SUM(""" + stat + """) s1, AVG(""" + stat + """) a1 FROM scores WHERE playerID = 0 AND gameID <= ? AND gameID >= ?),
+	puadTable AS (SELECT SUM(""" + stat + """) s2, AVG(""" + stat + """) a2 FROM scores WHERE playerID = 1 AND gameID <= ? AND gameID >= ?),
+	stickerTable AS (SELECT SUM(""" + stat + """) s3, AVG(""" + stat + """) a3 FROM scores WHERE playerID = 2 AND gameID <= ? AND gameID >= ?)
+    SELECT s1, a1, s2, a2, s3, a3
+    FROM knusTable, puadTable, stickerTable
+    """, (gamesIndexEnd, start_index, gamesIndexEnd, start_index, gamesIndexEnd, start_index))
+    return c.fetchall()
+
+
+def allgemeine_game_stats_over_time_period(start_index = 1, end_index = 20):
+    if start_index > end_index:
+        raise ValueError('Startindex was larger than ebdindex: ' + start_index + ' > ' + end_index)
+    data = {}
+    wins = wins_in_range(start_index, end_index)
+    losses = losses_in_range(start_index, end_index)
+    games = end_index - start_index + 1
+    goals = goals_in_range(start_index, end_index)
+    against = against_in_range(start_index, end_index)
+    data["General"] = [games, wins/games, goals, against, goals/games, against/games, wins, losses]
+    data["Score"] = xDQuery("score", start_index, end_index)
+    data["Goals"] = xDQuery("goals", start_index, end_index)
+    data["Assists"] = xDQuery("assists", start_index, end_index)
+    data["Saves"] = xDQuery("saves", start_index, end_index)
+    data["Shots"] = xDQuery("shots", start_index, end_index)
+    data["MVPs"] = c.execute("""
+    WITH knusTable AS (SELECT 
+	SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END), CAST(SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
+    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID < ? AND gameID > ?),
+	puadTable AS (SELECT 
+	SUM(CASE playerID WHEN 1 THEN 1 ELSE 0 END), CAST(SUM(CASE playerID WHEN 1 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
+    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID < ? AND gameID > ?),
+	stickerTable AS (SELECT 
+	SUM(CASE playerID WHEN 2 THEN 1 ELSE 0 END), CAST(SUM(CASE playerID WHEN 2 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
+    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID < ? AND gameID > ?)
+    SELECT * FROM knusTable, puadTable, stickerTable
+    """, (end_index, start_index, end_index, start_index, end_index, start_index)).fetchall()
+    return data
+
+
+def goals_in_range(start_index, end_index):
+    c.execute("SELECT SUM(goals) FROM games WHERE gameID >= ? AND gameID <= ?", (start_index, end_index))
+    return c.fetchone()[0]
+
+
+def against_in_range(start_index, end_index):
+    c.execute("SELECT SUM(against) FROM games WHERE gameID >= ? AND gameID <= ?", (start_index, end_index))
+    return c.fetchone()[0]
+
+
+def wins_in_range(start_index, end_index):
+    c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= ? AND gameID <= ?", (start_index, end_index))
+    return c.fetchone()[0]
+
+
+def losses_in_range(start_index, end_index):
+    c.execute("SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= ? AND gameID <= ?", (start_index, end_index))
+    return c.fetchone()[0]
+
+print(allgemeine_game_stats_over_time_period(1, 2171))
+
+
+
+
+
+
+
+
 
 def sum_of_game_stat(stat):
     if stat not in possible_game_stats:
         raise ValueError('Stat: ' + stat + ' is not known for query.')
-    c.execute("""
-        SELECT SUM(""" + stat + """) FROM games
-    """)
+    c.execute("SELECT SUM(?) FROM games", stat)
     return c.fetchone()[0]
 
 
@@ -36,6 +120,7 @@ def player_stats(stat, mode, player_id):
     c.execute("""
         SELECT name AS 'Player', """ + mode + """(""" + stat + """)
         FROM scores JOIN players ON scores.playerID = players.playerID
+        WHERE scores.playerID = """ + player_id + """
         GROUP BY scores.playerID
     """)
     return c.fetchall()
@@ -145,7 +230,6 @@ def total_games():
     c.execute("SELECT COUNT(*) FROM games")
     return c.fetchone()[0]
 
-
 def mvp_streak(player_id):
     c.execute("""
     WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
@@ -162,22 +246,6 @@ def mvp_streak(player_id):
     """)
     return c.fetchall()
 
-
-def allgemeine_game_stats(games):
-    c.execute("""
-        WITH
-            scores0 AS (SELECT * FROM scores WHERE playerID = 0 GROUP BY gameID),
-            scores1 AS (SELECT * FROM scores WHERE playerID = 1 GROUP BY gameID),
-            scores2 AS (SELECT * FROM scores WHERE playerID = 2 GROUP BY gameID)
-            SELECT 
-                games.gameID AS ID,    games.date AS 'Date', games.goals As CG, against AS Enemy,
-                scores0.rank AS RankK, scores0.score AS ScoreK, scores0.goals AS GoalsK, scores0.assists AS AssistsK, scores0.saves AS SavesK, scores0.shots AS ShotsK,
-                scores1.rank AS RankP, scores1.score AS ScoreP, scores1.goals AS GoalsP, scores1.assists AS AssistsP, scores1.saves AS SavesP, scores1.shots AS ShotsP,
-                scores2.rank AS RankS, scores2.score AS 'ScoreS', scores2.goals AS GoalsS, scores2.assists AS AssistsS,    scores2.saves AS SavesS, scores2.shots AS ShotsS
-            FROM games JOIN scores ON games.gameID = scores.gameID JOIN scores0 ON games.gameID = scores0.gameID JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
-            GROUP BY ID ORDER BY ID DESC
-    """)
-    return c.fetchmany(games)
 
 
 def stat_by_game_id(game_id):
