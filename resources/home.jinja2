@@ -14,7 +14,14 @@
         }
 
         table {
+            border-collapse: collapse;
             font-style: normal;
+        }
+
+        td, th {
+            border: 1px solid #999;
+            padding: 0.5rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -22,36 +29,44 @@
 <h1>CLOWN GAMEPLAY ROCKET LEAGUE STATISTICS</h1>
 <div>Days since inception: {{ days_since_inception }}, Total Games: {{ total_games }}, davon
     Wins: {{ total_wins }}</div>
-<h3>Last 10 games: </h3>
 <table>
+    <caption>Last 10 Games</caption>
+    <thead>
     <tr>
-        <th>ID</th>
-        <th>Date</th>
-        <th>Goals</th>
-        <th>Against</th>
-        <th>Rank</th>
-        <th>Score</th>
-        <th>Goals</th>
-        <th>Assists</th>
-        <th>Saves</th>
-        <th>Shots</th>
-        <th>Rank</th>
-        <th>Score</th>
-        <th>Goals</th>
-        <th>Assists</th>
-        <th>Saves</th>
-        <th>Shots</th>
-        <th>Rank</th>
-        <th>Score</th>
-        <th>Goals</th>
-        <th>Assists</th>
-        <th>Saves</th>
-        <th>Shots</th>
+        <th colspan="4" vertical-align="middle">General</th>
+        <th colspan="7">Knus</th>
+        <th colspan="7">Puad</th>
+        <th colspan="7">Sticker</th>
     </tr>
+    <tr>
+        <td>ID</td>
+        <td>Date</td>
+        <td>Goals</td>
+        <td>Against</td>
+        <td>Rank</td>
+        <td>Score</td>
+        <td>Goals</td>
+        <td>Assists</td>
+        <td>Saves</td>
+        <td>Shots</td>
+        <td>Rank</td>
+        <td>Score</td>
+        <td>Goals</td>
+        <td>Assists</td>
+        <td>Saves</td>
+        <td>Shots</td>
+        <td>Rank</td>
+        <td>Score</td>
+        <td>Goals</td>
+        <td>Assists</td>
+        <td>Saves</td>
+        <td>Shots</td>
+    </tr>
+    </thead>
     {% for a in games %}
         <tr>
             {% for data in a %}
-                <th>{{ data }}</th>
+                <td>{{ data }}</td>
             {% endfor %}
         </tr>
     {% endfor %}
@@ -59,11 +74,11 @@
 <h3>WEEKDAYS</h3>
 <table>
     <tr>
-        <th>Weekday</th>
-        <th>Winrate</th>
-        <th>Amount</th>
-        <th>W</th>
-        <th>L</th>
+        <td>Weekday</td>
+        <td>Winrate</td>
+        <td>Amount</td>
+        <td>W</td>
+        <td>L</td>
     </tr>
     {% for a in weekdays %}
         <tr>
