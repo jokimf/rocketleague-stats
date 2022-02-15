@@ -71,8 +71,167 @@
         </tr>
     {% endfor %}
 </table>
-<h3>WEEKDAYS</h3>
 <table>
+    <caption>GRAND TOTAL</caption>
+    <tr>
+        <th rowspan="2"></th>
+        <th colspan="2">Knus</th>
+        <th colspan="2">Puad</th>
+        <th colspan="2">Sticker</th>
+    </tr>
+    <tr>
+        <td>Total</td>
+        <td>Average</td>
+        <td>Total</td>
+        <td>Average</td>
+        <td>Total</td>
+        <td>Average</td>
+    </tr>
+    <tr>
+        <td>Score</td>
+        {% for goal in grand_total["Score"] %}
+            <td>{{ goal|round(2) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Goals</td>
+        {% for goal in grand_total["Goals"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Assists</td>
+        {% for goal in grand_total["Assists"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Saves</td>
+        {% for goal in grand_total["Saves"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Shots</td>
+        {% for goal in grand_total["Shots"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>MVPs</td>
+        {% for goal in grand_total["MVPs"] %}
+            <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+        {% endfor %}
+    </tr>
+</table>
+<table>
+    <caption>THIS SEASON</caption>
+    <tr>
+        <th rowspan="2"></th>
+        <th colspan="2">Knus</th>
+        <th colspan="2">Puad</th>
+        <th colspan="2">Sticker</th>
+    </tr>
+    <tr>
+        <td>Total</td>
+        <td>Average</td>
+        <td>Total</td>
+        <td>Average</td>
+        <td>Total</td>
+        <td>Average</td>
+    </tr>
+    <tr>
+        <td>Score</td>
+        {% for goal in season_data["Score"] %}
+            <td>{{ goal|round(2) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Goals</td>
+        {% for goal in season_data["Goals"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Assists</td>
+        {% for goal in season_data["Assists"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Saves</td>
+        {% for goal in season_data["Saves"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Shots</td>
+        {% for goal in season_data["Shots"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>MVPs</td>
+        {% for goal in season_data["MVPs"] %}
+            <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+        {% endfor %}
+    </tr>
+</table>
+<table>
+    <caption>THIS SESSION</caption>
+    <tr>
+        <th rowspan="2"></th>
+        <th colspan="2">Knus</th>
+        <th colspan="2">Puad</th>
+        <th colspan="2">Sticker</th>
+    </tr>
+    <tr>
+        <td>Total</td>
+        <td>Average</td>
+        <td>Total</td>
+        <td>Average</td>
+        <td>Total</td>
+        <td>Average</td>
+    </tr>
+    <tr>
+        <td>Score</td>
+        {% for goal in session_data["Score"] %}
+            <td>{{ goal|round(2) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Goals</td>
+        {% for goal in session_data["Goals"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Assists</td>
+        {% for goal in session_data["Assists"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Saves</td>
+        {% for goal in session_data["Saves"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>Shots</td>
+        {% for goal in session_data["Shots"] %}
+            <td>{{ goal|round(3) }}</td>
+        {% endfor %}
+    </tr>
+    <tr>
+        <td>MVPs</td>
+        {% for goal in session_data["MVPs"] %}
+            <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+        {% endfor %}
+    </tr>
+</table>
+<table>
+    <caption>WEEKDAYS</caption>
     <tr>
         <td>Weekday</td>
         <td>Winrate</td>

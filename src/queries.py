@@ -1,11 +1,13 @@
 import sqlite3
 
-conn = sqlite3.connect('C:/Users/Knus/git/rocketleague-stats/resources/test.db')
+database_path = '../resources/test.db'
+conn = sqlite3.connect(database_path)
 c = conn.cursor()
 
 possible_stats = ['goals', 'assists', 'saves', 'shots']
 possible_game_stats = ['goals', 'against']
 possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
+
 
 def allgemeine_game_stats(games):
     c.execute("""
@@ -24,44 +26,47 @@ def allgemeine_game_stats(games):
     return c.fetchmany(games)
 
 
-def xDQuery(stat, start_index = 0, gamesIndexEnd = 20):
+def over_time_box_query(stat, start_index=0, end_index=20):
     c.execute("""
     WITH knusTable AS (SELECT SUM(""" + stat + """) s1, AVG(""" + stat + """) a1 FROM scores WHERE playerID = 0 AND gameID <= ? AND gameID >= ?),
 	puadTable AS (SELECT SUM(""" + stat + """) s2, AVG(""" + stat + """) a2 FROM scores WHERE playerID = 1 AND gameID <= ? AND gameID >= ?),
 	stickerTable AS (SELECT SUM(""" + stat + """) s3, AVG(""" + stat + """) a3 FROM scores WHERE playerID = 2 AND gameID <= ? AND gameID >= ?)
     SELECT s1, a1, s2, a2, s3, a3
     FROM knusTable, puadTable, stickerTable
-    """, (gamesIndexEnd, start_index, gamesIndexEnd, start_index, gamesIndexEnd, start_index))
-    return c.fetchall()
+    """, (end_index, start_index, end_index, start_index, end_index, start_index))
+    return c.fetchone()
 
 
-def allgemeine_game_stats_over_time_period(start_index = 1, end_index = 20):
+def general_game_stats_over_time_period(start_index=1, end_index=20):
     if start_index > end_index:
-        raise ValueError('Startindex was larger than ebdindex: ' + start_index + ' > ' + end_index)
+        raise ValueError(f'StartIndex was larger than EndIndex: {start_index} > {end_index}')
+    elif start_index <= 0:
+        raise ValueError("StartIndex can't be 0 or lower")
+
     data = {}
     wins = wins_in_range(start_index, end_index)
     losses = losses_in_range(start_index, end_index)
     games = end_index - start_index + 1
     goals = goals_in_range(start_index, end_index)
     against = against_in_range(start_index, end_index)
-    data["General"] = [games, wins/games, goals, against, goals/games, against/games, wins, losses]
-    data["Score"] = xDQuery("score", start_index, end_index)
-    data["Goals"] = xDQuery("goals", start_index, end_index)
-    data["Assists"] = xDQuery("assists", start_index, end_index)
-    data["Saves"] = xDQuery("saves", start_index, end_index)
-    data["Shots"] = xDQuery("shots", start_index, end_index)
+    data["General"] = [games, wins / games, goals, against, goals / games, against / games, wins, losses]
+    data["Score"] = over_time_box_query("score", start_index, end_index)
+    data["Goals"] = over_time_box_query("goals", start_index, end_index)
+    data["Assists"] = over_time_box_query("assists", start_index, end_index)
+    data["Saves"] = over_time_box_query("saves", start_index, end_index)
+    data["Shots"] = over_time_box_query("shots", start_index, end_index)
     data["MVPs"] = c.execute("""
     WITH knusTable AS (SELECT 
 	SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END), CAST(SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
-    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID < ? AND gameID > ?),
+    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID <= ? AND gameID >= ?),
 	puadTable AS (SELECT 
 	SUM(CASE playerID WHEN 1 THEN 1 ELSE 0 END), CAST(SUM(CASE playerID WHEN 1 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
-    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID < ? AND gameID > ?),
+    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID <= ? AND gameID >= ?),
 	stickerTable AS (SELECT 
 	SUM(CASE playerID WHEN 2 THEN 1 ELSE 0 END), CAST(SUM(CASE playerID WHEN 2 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
-    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID < ? AND gameID > ?)
+    FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID <= ? AND gameID >= ?)
     SELECT * FROM knusTable, puadTable, stickerTable
-    """, (end_index, start_index, end_index, start_index, end_index, start_index)).fetchall()
+    """, (end_index, start_index, end_index, start_index, end_index, start_index)).fetchone()
     return data
 
 
@@ -76,22 +81,15 @@ def against_in_range(start_index, end_index):
 
 
 def wins_in_range(start_index, end_index):
-    c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= ? AND gameID <= ?", (start_index, end_index))
+    c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= ? AND gameID <= ?",
+              (start_index, end_index))
     return c.fetchone()[0]
 
 
 def losses_in_range(start_index, end_index):
-    c.execute("SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= ? AND gameID <= ?", (start_index, end_index))
+    c.execute("SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= ? AND gameID <= ?",
+              (start_index, end_index))
     return c.fetchone()[0]
-
-print(allgemeine_game_stats_over_time_period(1, 2171))
-
-
-
-
-
-
-
 
 
 def sum_of_game_stat(stat):
@@ -115,7 +113,7 @@ def mvp():
 
 def player_stats(stat, mode, player_id):
     if stat not in possible_stats or mode not in possible_modes:
-        raise ValueError('Input: ' + stat + mode + str(player_id) + ' is not known for query.')
+        raise ValueError(f'Input: {stat}{mode} {str(player_id)}  is not known for query.')
 
     c.execute("""
         SELECT name AS 'Player', """ + mode + """(""" + stat + """)
@@ -153,7 +151,7 @@ def one_diff_loss():
 
 def most_one_day(stat):
     if stat not in possible_stats and not 'games':
-        raise ValueError('Stat: ' + stat + ' is not known for most_one_day.')
+        raise ValueError(f'Stat: {stat} is not known for most_one_day.')
 
     if stat == 'games':
         c.execute("SELECT date, MAX(Fisch) FROM(SELECT date, COUNT(date) AS Fisch FROM games GROUP BY date)")
@@ -202,7 +200,7 @@ def wins_per_weekday():
 
 def query_last_20(stat, mode, player):
     if stat not in possible_stats or mode not in possible_modes:
-        raise ValueError('stat or mode invalid in query_last_20. stat=' + stat + ' mode=' + mode)
+        raise ValueError(f'stat or mode invalid in query_last_20. stat={stat} mode={mode}')
 
     c.execute("""
         SELECT name, """ + mode + """(""" + stat + """)
@@ -230,6 +228,7 @@ def total_games():
     c.execute("SELECT COUNT(*) FROM games")
     return c.fetchone()[0]
 
+
 def mvp_streak(player_id):
     c.execute("""
     WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
@@ -245,7 +244,6 @@ def mvp_streak(player_id):
         ORDER BY 1 DESC, 2 ASC
     """)
     return c.fetchall()
-
 
 
 def stat_by_game_id(game_id):

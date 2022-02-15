@@ -16,11 +16,15 @@ def hello_world(request):
 )
 def serve(request):
     data = {}
+    total_games = q.total_games()
     data["days_since_inception"] = 0
-    data["total_games"] = q.total_games()
+    data["total_games"] = total_games
     data["total_wins"] = q.total_wins()
     data["games"] = q.allgemeine_game_stats(10)
     data["weekdays"] = "XD"
+    data["grand_total"] = q.general_game_stats_over_time_period(1, total_games)
+    data["season_data"] = q.general_game_stats_over_time_period(2135, total_games)
+    data["session_data"] = q.general_game_stats_over_time_period(2165, total_games)
     return data
 
 
