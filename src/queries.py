@@ -55,7 +55,21 @@ def general_game_stats_over_time_period(start_index=1, end_index=20):
     data["Assists"] = over_time_box_query("assists", start_index, end_index)
     data["Saves"] = over_time_box_query("saves", start_index, end_index)
     data["Shots"] = over_time_box_query("shots", start_index, end_index)
-    data["MVPs"] = c.execute("""
+    data["MVPs"] = mvp_helper_query(end_index, start_index)
+    return data
+
+
+def build_fun_facts():
+    data = []
+    games = total_games()
+    wins = total_wins()
+    knus_mvp = mvp(0)
+    data.append(["Knus is MVP", knus_mvp / games, knus_mvp / wins])
+    return 0
+
+
+def mvp_helper_query(end_index, start_index):
+    return c.execute("""
     WITH knusTable AS (SELECT 
 	SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END), CAST(SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
     FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID <= ? AND gameID >= ?),
@@ -67,7 +81,6 @@ def general_game_stats_over_time_period(start_index=1, end_index=20):
     FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))WHERE gameID <= ? AND gameID >= ?)
     SELECT * FROM knusTable, puadTable, stickerTable
     """, (end_index, start_index, end_index, start_index, end_index, start_index)).fetchone()
-    return data
 
 
 def goals_in_range(start_index, end_index):

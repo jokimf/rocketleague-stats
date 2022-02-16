@@ -25,6 +25,7 @@ def serve(request):
     data["grand_total"] = q.general_game_stats_over_time_period(1, total_games)
     data["season_data"] = q.general_game_stats_over_time_period(2135, total_games)
     data["session_data"] = q.general_game_stats_over_time_period(2165, total_games)
+    data["FunFacts"] = q.build_fun_facts()
     return data
 
 
