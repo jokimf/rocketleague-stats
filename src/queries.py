@@ -112,14 +112,14 @@ def sum_of_game_stat(stat):
     return c.fetchone()[0]
 
 
-def mvp():
+def mvp(player_id):
     c.execute("""
-        SELECT name, COUNT(name) AS MVPs
-        FROM (  SELECT gameID, score, name
-                FROM scores JOIN players ON scores.playerID = players.playerID
+        SELECT COUNT(playerID) AS MVPs
+        FROM (  SELECT gameID, playerID, score
+                FROM scores
                 GROUP BY scores.gameID
                 HAVING MAX(score))
-        GROUP BY name
+        WHERE playerID = """ + player_id + """
     """)
     return c.fetchall()
 
