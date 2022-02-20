@@ -9,7 +9,83 @@ possible_game_stats = ['goals', 'against']
 possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
 
 
-def allgemeine_game_stats(games):
+def weekdays():
+    # output:    Weekday, W/R, Amount, W, L
+    raise NotImplementedError()
+
+
+def months():
+    # output:    Month, W/R, Amount, W, L
+    raise NotImplementedError()
+
+
+def years():
+    # output:    Weekday, W/R, Amount, W, L
+    raise NotImplementedError()
+
+
+def dates():
+    # output:    Weekday, W/R, Amount, W, L
+    raise NotImplementedError()
+
+
+def goals_without_assist(start=0, end=None):
+    if end is None:
+        end = total_games()
+    # output: Count, Occurrence, Winrate
+    raise NotImplementedError()
+
+
+def days_since_inception():
+    raise NotImplementedError()
+
+
+def longest_winning_streak():
+    # output: Streak, GameID von bis
+    raise NotImplementedError()
+
+
+def longest_losing_streak():
+    # output: Streak, GameID von bis
+    raise NotImplementedError()
+
+
+def mvp_streak(player_id):
+    c.execute("""
+    WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID, score, playerID
+        FROM scores
+        GROUP BY gameID
+        HAVING MAX(score) AND playerID = """ + player_id + """) AS MVPTable
+        )
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM MVPs
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """)
+    return c.fetchall()
+
+
+def not_mvp_streak(player):
+    raise NotImplementedError()
+
+
+def not_lvp_streak(player):
+    raise NotImplementedError()
+
+
+def lvp_streak(player):
+    raise NotImplementedError()
+
+
+def average_games_per_day(start=0, end=None):
+    if end is None:
+        end = max_id()
+    return total_games(start, end) / days_since_inception()
+
+
+def general_game_stats(games):
     c.execute("""
         WITH
             scores0 AS (SELECT * FROM scores WHERE playerID = 0 GROUP BY gameID),
@@ -26,46 +102,43 @@ def allgemeine_game_stats(games):
     return c.fetchmany(games)
 
 
-def over_time_box_query(stat, start_index=0, end_index=20):
+def over_time_box_query(stat, start=0, end=None):
+    if start < 0 or end < 0 or end < start:
+        raise ValueError(f"Illegal combination of start and end index. (s={start}, e={end})")
+    if end is None:
+        end = max_id()
     c.execute("""
     WITH knusTable AS (SELECT SUM(""" + stat + """) s1, AVG(""" + stat + """) a1 FROM scores WHERE playerID = 0 AND gameID <= ? AND gameID >= ?),
 	puadTable AS (SELECT SUM(""" + stat + """) s2, AVG(""" + stat + """) a2 FROM scores WHERE playerID = 1 AND gameID <= ? AND gameID >= ?),
 	stickerTable AS (SELECT SUM(""" + stat + """) s3, AVG(""" + stat + """) a3 FROM scores WHERE playerID = 2 AND gameID <= ? AND gameID >= ?)
     SELECT s1, a1, s2, a2, s3, a3
     FROM knusTable, puadTable, stickerTable
-    """, (end_index, start_index, end_index, start_index, end_index, start_index))
+    """, (end, start, end, start, end, start))
     return c.fetchone()
 
 
-def general_game_stats_over_time_period(start_index=1, end_index=20):
-    if start_index > end_index:
-        raise ValueError(f'StartIndex was larger than EndIndex: {start_index} > {end_index}')
-    elif start_index <= 0:
+def general_game_stats_over_time_period(start=1, end=None):
+    if end is None:
+        end = max_id()
+    if start > end:
+        raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
+    if start <= 0:
         raise ValueError("StartIndex can't be 0 or lower")
 
-    data = {}
-    wins = wins_in_range(start_index, end_index)
-    losses = losses_in_range(start_index, end_index)
-    games = end_index - start_index + 1
-    goals = goals_in_range(start_index, end_index)
-    against = against_in_range(start_index, end_index)
-    data["General"] = [games, wins / games, goals, against, goals / games, against / games, wins, losses]
-    data["Score"] = over_time_box_query("score", start_index, end_index)
-    data["Goals"] = over_time_box_query("goals", start_index, end_index)
-    data["Assists"] = over_time_box_query("assists", start_index, end_index)
-    data["Saves"] = over_time_box_query("saves", start_index, end_index)
-    data["Shots"] = over_time_box_query("shots", start_index, end_index)
-    data["MVPs"] = mvp_helper_query(end_index, start_index)
+    wins = wins_in_range(start, end)
+    losses = losses_in_range(start, end)
+    games = end - start + 1
+    goals = goals_in_range(start, end)
+    against = against_in_range(start, end)
+    data = {
+        "General": [games, wins / games, goals, against, goals / games, against / games, wins, losses],
+        "Score": over_time_box_query("score", start, end),
+        "Goals": over_time_box_query("goals", start, end),
+        "Assists": over_time_box_query("assists", start, end),
+        "Saves": over_time_box_query("saves", start, end),
+        "Shots": over_time_box_query("shots", start, end),
+        "MVPs": mvp_helper_query(end, start)}
     return data
-
-
-def build_fun_facts():
-    data = []
-    games = total_games()
-    wins = total_wins()
-    knus_mvp = mvp(0)
-    data.append(["Knus is MVP", knus_mvp / games, knus_mvp / wins])
-    return 0
 
 
 def mvp_helper_query(end_index, start_index):
@@ -105,6 +178,15 @@ def losses_in_range(start_index, end_index):
     return c.fetchone()[0]
 
 
+def build_fun_facts():
+    data = []
+    games = total_games()
+    wins = total_wins()
+    knus_mvp = mvp(0)
+    # data.append(["Knus is MVP", knus_mvp / games, knus_mvp / wins])
+    return 0
+
+
 def sum_of_game_stat(stat):
     if stat not in possible_game_stats:
         raise ValueError('Stat: ' + stat + ' is not known for query.')
@@ -119,7 +201,7 @@ def mvp(player_id):
                 FROM scores
                 GROUP BY scores.gameID
                 HAVING MAX(score))
-        WHERE playerID = """ + player_id + """
+        WHERE playerID = """ + str(player_id) + """
     """)
     return c.fetchall()
 
@@ -211,6 +293,12 @@ def wins_per_weekday():
     return c.fetchall()
 
 
+def latest_date():
+    c.execute(
+        "SELECT MAX(STRFTIME('20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2))) FROM games")
+    return c.fetchone()
+
+
 def query_last_20(stat, mode, player):
     if stat not in possible_stats or mode not in possible_modes:
         raise ValueError(f'stat or mode invalid in query_last_20. stat={stat} mode={mode}')
@@ -237,26 +325,16 @@ def performance_agg(stat, mode, starting_game_id=1, games_considered=20):
     return c.fetchall()
 
 
-def total_games():
-    c.execute("SELECT COUNT(*) FROM games")
+def total_games(start=1, end=None):
+    if end is None:
+        end = max_id()
+    c.execute("SELECT COUNT(*) FROM games WHERE gameID >= ? AND gameID <= ?", (start, end))
     return c.fetchone()[0]
 
 
-def mvp_streak(player_id):
-    c.execute("""
-    WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
-    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-    FROM (SELECT gameID, score, playerID
-        FROM scores
-        GROUP BY gameID
-        HAVING MAX(score) AND playerID = """ + player_id + """) AS MVPTable
-        )
-        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-        FROM MVPs
-        GROUP BY grouper
-        ORDER BY 1 DESC, 2 ASC
-    """)
-    return c.fetchall()
+def max_id():
+    c.execute("SELECT MAX(gameID) FROM games")
+    return c.fetchone()
 
 
 def stat_by_game_id(game_id):

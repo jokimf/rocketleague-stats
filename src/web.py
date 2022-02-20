@@ -20,7 +20,7 @@ def serve(request):
     data["days_since_inception"] = 0
     data["total_games"] = total_games
     data["total_wins"] = q.total_wins()
-    data["games"] = q.allgemeine_game_stats(10)
+    data["games"] = q.general_game_stats(10)
     data["weekdays"] = "XD"
     data["grand_total"] = q.general_game_stats_over_time_period(1, total_games)
     data["season_data"] = q.general_game_stats_over_time_period(2135, total_games)
