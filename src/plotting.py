@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import queries as q
 
-data = q.performance_agg('score', 'AVG', games_considered=60)
+data = q.performance_agg('score', 'AVG', games_considered=6000)
 
 names = ([data[0][0], data[1][0], data[2][0]])
 stats = ([data[0][1], data[1][1], data[2][1]])

@@ -243,13 +243,30 @@
         <td>0%</td>
         <td>0%</td>
         <td>^</td>
+    </tr>
+</table>
+<table>
+    <caption>Points Performance</caption>
+    <tr>
+        <th>Game ID</th>
+        <th>Knus</th>
+        <th>Puad</th>
+        <th>Sticker</th>
+    </tr>
+    {% for data in last_5 %}
+    <tr>
+        {% for values in data %}
+            <td>{{values}}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
 </table>
 <table>
     <caption>WEEKDAYS</caption>
     <tr>
         <td>Weekday</td>
-        <td>Winrate</td>
         <td>Amount</td>
+        <td>Winrate</td>
         <td>W</td>
         <td>L</td>
     </tr>

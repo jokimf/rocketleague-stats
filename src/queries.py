@@ -334,7 +334,7 @@ def total_games(start=1, end=None):
 
 def max_id():
     c.execute("SELECT MAX(gameID) FROM games")
-    return c.fetchone()
+    return c.fetchone()[0]
 
 
 def stat_by_game_id(game_id):
@@ -349,7 +349,24 @@ def stat_by_game_id(game_id):
                 scores1.rank AS RankP, scores1.score AS ScoreP, scores1.goals AS GoalsP, scores1.assists AS AssistsP, scores1.saves AS SavesP, scores1.shots AS ShotsP,
                 scores2.rank AS RankS, scores2.score AS 'ScoreS', scores2.goals AS GoalsS, scores2.assists AS AssistsS,    scores2.saves AS SavesS, scores2.shots AS ShotsS
             FROM games JOIN scores ON games.gameID = scores.gameID JOIN scores0 ON games.gameID = scores0.gameID JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
-            WHERE ID = """ + game_id + """
+            WHERE ID = """ + str(game_id) + """
             GROUP BY ID ORDER BY ID DESC
     """)
     return c.fetchmany()
+
+
+def points_by_game_id(game_id):
+    c.execute("""
+    WITH
+            scores0 AS (SELECT * FROM scores WHERE playerID = 0 GROUP BY gameID),
+            scores1 AS (SELECT * FROM scores WHERE playerID = 1 GROUP BY gameID),
+            scores2 AS (SELECT * FROM scores WHERE playerID = 2 GROUP BY gameID)
+            SELECT games.gameID AS ID, scores0.score, scores1.score, scores2.score
+            FROM games JOIN scores0 ON games.gameID = scores0.gameID JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
+            WHERE ID = """ + str(game_id) + " GROUP BY ID ORDER BY ID DESC")
+    return c.fetchone()
+
+
+def points_last_5():
+    f = [points_by_game_id(max_id() - x) for x in range(0, 5)]
+    return list(reversed(f))

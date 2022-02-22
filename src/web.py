@@ -1,13 +1,7 @@
+import queries as q
 from wsgiref.simple_server import make_server
 from pyramid.config import Configurator
-from pyramid.response import Response
 from pyramid.view import view_config
-import queries as q
-
-
-def hello_world(request):
-    data = open("../resources/index.html").read()
-    return Response(data)
 
 
 @view_config(
@@ -15,17 +9,17 @@ def hello_world(request):
     renderer='../resources/home.jinja2'
 )
 def serve(request):
-    data = {}
     total_games = q.total_games()
-    data["days_since_inception"] = 0
-    data["total_games"] = total_games
-    data["total_wins"] = q.total_wins()
-    data["games"] = q.general_game_stats(10)
-    data["weekdays"] = "XD"
-    data["grand_total"] = q.general_game_stats_over_time_period(1, total_games)
-    data["season_data"] = q.general_game_stats_over_time_period(2135, total_games)
-    data["session_data"] = q.general_game_stats_over_time_period(2165, total_games)
-    data["FunFacts"] = q.build_fun_facts()
+    data = {"days_since_inception": 0,
+            "total_games": total_games,
+            "total_wins": q.total_wins(),
+            "games": q.general_game_stats(10),
+            "weekdays": "q.weekdays()",
+            "grand_total": q.general_game_stats_over_time_period(1, q.max_id()),
+            "season_data": q.general_game_stats_over_time_period(2135, q.max_id()),
+            "session_data": q.general_game_stats_over_time_period(2165, q.max_id()),
+            "last_5": q.points_last_5(),
+            "FunFacts": q.build_fun_facts()}
     return data
 
 
