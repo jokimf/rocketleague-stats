@@ -11,43 +11,111 @@ possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
 
 def weekdays():
     # output:    Weekday, W/R, Amount, W, L
-    raise NotImplementedError()
+    c.execute("""
+    SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS WD, COUNT(date), SUM(CASE WHEN goals > against THEN 1 ELSE 0 END), SUM(CASE WHEN goals < against THEN 1 ELSE 0 END)
+    FROM games GROUP BY WD
+    """)
+    raw_values = c.fetchall()
+    values_done = []
+    for x in raw_values:
+        wrate = x[2] / (x[2] + x[3])
+        new_value = [x[0], x[1], wrate, x[2], x[3]]
+        values_done.append(new_value)
+    return values_done
 
 
 def months():
     # output:    Month, W/R, Amount, W, L
-    raise NotImplementedError()
+    c.execute("""
+    SELECT STRFTIME('%m', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS m, COUNT(date), SUM(CASE WHEN goals > against THEN 1 ELSE 0 END), SUM(CASE WHEN goals < against THEN 1 ELSE 0 END)
+    FROM games GROUP BY m
+    """)
+    raw_values = c.fetchall()
+    values_done = []
+    for x in raw_values:
+        wrate = x[2] / (x[2] + x[3])
+        new_value = [x[0], x[1], wrate, x[2], x[3]]
+        values_done.append(new_value)
+    return values_done
 
 
 def years():
     # output:    Weekday, W/R, Amount, W, L
-    raise NotImplementedError()
+    c.execute("""
+    SELECT STRFTIME('%Y', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS Y, COUNT(date), SUM(CASE WHEN goals > against THEN 1 ELSE 0 END), SUM(CASE WHEN goals < against THEN 1 ELSE 0 END)
+    FROM games GROUP BY Y
+    """)
+    raw_values = c.fetchall()
+    values_done = []
+    for x in raw_values:
+        wrate = x[2] / (x[2] + x[3])
+        new_value = [x[0], x[1], wrate, x[2], x[3]]
+        values_done.append(new_value)
+    return values_done
 
 
 def dates():
     # output:    Weekday, W/R, Amount, W, L
-    raise NotImplementedError()
+    c.execute("""
+    SELECT STRFTIME('%d', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS d, COUNT(date), SUM(CASE WHEN goals > against THEN 1 ELSE 0 END), SUM(CASE WHEN goals < against THEN 1 ELSE 0 END)
+    FROM games GROUP BY d
+    """)
+    raw_values = c.fetchall()
+    values_done = []
+    for x in raw_values:
+        wrate = x[2] / (x[2] + x[3])
+        new_value = [x[0], x[1], wrate, x[2], x[3]]
+        values_done.append(new_value)
+    return values_done
 
 
 def goals_without_assist(start=0, end=None):
-    if end is None:
-        end = total_games()
-    # output: Count, Occurrence, Winrate
-    raise NotImplementedError()
+    c.execute("""
+    SELECT SUM(goalsSum - assistsSum) AS diff FROM(
+    SELECT SUM(assists) AS assistsSum, SUM(goals) AS goalsSum FROM scores GROUP BY gameID
+    )h
+    """)
+    return c.fetchone()
 
 
 def days_since_inception():
-    raise NotImplementedError()
+    c.execute("""
+    SELECT julianday(MAX(dateF)) - julianday(MIN(dateF))
+    FROM (
+    SELECT STRFTIME('20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS dateF
+    FROM games)h
+    """)
+    return c.fetchone()
 
 
 def longest_winning_streak():
-    # output: Streak, GameID von bis
-    raise NotImplementedError()
+    c.execute("""
+    WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID
+        FROM games
+        WHERE goals > against)h)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM Streaks
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """)
+    return c.fetchone()
 
 
 def longest_losing_streak():
-    # output: Streak, GameID von bis
-    raise NotImplementedError()
+    c.execute("""
+    WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID
+        FROM games
+        WHERE goals < against)h)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM Streaks
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """)
+    return c.fetchone()
 
 
 def mvp_streak(player_id):
@@ -67,16 +135,51 @@ def mvp_streak(player_id):
     return c.fetchall()
 
 
-def not_mvp_streak(player):
-    raise NotImplementedError()
+def not_mvp_streak(player_id):
+    c.execute("""
+    WITH helperTable AS(
+	SELECT gameID as helperID, score, playerID
+        FROM scores GROUP BY helperID
+        HAVING MAX(score) AND playerID = """ + player_id + """),
+    NotMVPs AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
+    SELECT gameID from games,helperTable GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
+    """)
+    return c.fetchall()
 
 
-def not_lvp_streak(player):
-    raise NotImplementedError()
+def not_lvp_streak(player_id):
+    c.execute("""
+    WITH helperTable AS(
+	SELECT gameID as helperID, score, playerID
+        FROM scores GROUP BY helperID
+        HAVING MIN(score) AND playerID = """ + player_id + """),
+    NotMVPs AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
+    SELECT gameID from games,helperTable GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
+    """)
+    return c.fetchall()
 
 
-def lvp_streak(player):
-    raise NotImplementedError()
+def lvp_streak(player_id):
+    c.execute("""
+    WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) as 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID, score, playerID
+        FROM scores
+        GROUP BY gameID
+        HAVING MIN(score) AND playerID = """ + player_id + """) AS MVPTable
+        )
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM MVPs
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """)
+    return c.fetchall()
 
 
 def average_games_per_day(start=0, end=None):
@@ -249,9 +352,9 @@ def most_one_day(stat):
         raise ValueError(f'Stat: {stat} is not known for most_one_day.')
 
     if stat == 'games':
-        c.execute("SELECT date, MAX(Fisch) FROM(SELECT date, COUNT(date) AS Fisch FROM games GROUP BY date)")
+        c.execute("SELECT date, MAX(counter) FROM(SELECT date, COUNT(date) AS counter FROM games GROUP BY date)")
     else:
-        c.execute("SELECT date, MAX(Fisch) FROM(SELECT date, SUM(" + stat + ") AS Fisch FROM games GROUP BY date)")
+        c.execute("SELECT date, MAX(counter) FROM(SELECT date, SUM(" + stat + ") AS counter FROM games GROUP BY date)")
     return c.fetchall()
 
 
