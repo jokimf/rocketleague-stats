@@ -13,7 +13,7 @@ def serve(request):
     data = {"days_since_inception": 0,
             "total_games": total_games,
             "total_wins": q.total_wins(),
-            "games": q.general_game_stats(10),
+            "games": q.last_x_games_stats(10),
             "weekdays": "q.weekdays()",
             "grand_total": q.general_game_stats_over_time_period(1, q.max_id()),
             "season_data": q.general_game_stats_over_time_period(2135, q.max_id()),

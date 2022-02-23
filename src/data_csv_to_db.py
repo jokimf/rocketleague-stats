@@ -7,7 +7,7 @@ or overwrites 'test.db' in the resources folder.
 """
 
 name = "newest.csv"
-conn = connect('../resources/test.db')
+conn = sqlite3.connect('../resources/test.db')
 c = conn.cursor()
 
 # Drop tables
