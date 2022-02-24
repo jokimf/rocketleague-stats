@@ -595,3 +595,82 @@ def team_concedes_x_times(x, start=1, end=None):
 def results():
     # Result, Amount, %
     raise NotImplementedError()
+
+
+# RECORD GAMES
+
+def build_record_games():
+    def highest_player(stat):
+        if stat == 'goals':
+            stat = 'scores.goals'
+
+        c.execute('''
+            SELECT name, ''' + stat + ''', games.gameID, date 
+            FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
+            ORDER BY ''' + stat + ''' DESC''')
+        return c.fetchmany(3)
+
+    def most_points_without_goal():
+        c.execute('''
+        SELECT name, score, games.gameID, date 
+        FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
+        WHERE scores.goals = 0
+        ORDER BY score DESC''')
+        return c.fetchmany(3)
+
+    def least_points_with_goals():
+        c.execute('''
+        SELECT name, score, games.gameID, date 
+        FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
+        WHERE scores.goals > 0
+        ORDER BY score ASC''')
+        return c.fetchmany(3)
+
+    def most_against():
+        c.execute('SELECT "", against, gameID, date FROM games ORDER BY against DESC')
+        return c.fetchmany(3)
+
+    def most_against_and_won():
+        c.execute('SELECT "", against, gameID, date FROM games WHERE goals > against ORDER BY against DESC')
+        return c.fetchmany(3)
+
+    def most_goals_and_lost():
+        c.execute('SELECT "", goals, gameID, date FROM games WHERE goals < against ORDER BY goals DESC')
+        return c.fetchmany(3)
+
+    def most_total_goals():
+        c.execute('SELECT "",goals+against, gameID, date FROM games ORDER BY goals + against DESC')
+        return c.fetchmany(3)
+
+    def highest_team(stat):
+        if stat == 'goals':
+            stat = 'scores.goals'
+        c.execute('''
+            SELECT SUM(''' + stat + ''') AS stat, games.gameID, date 
+            FROM games JOIN scores ON games.gameID = scores.gameID 
+            GROUP BY games.gameID ORDER BY stat DESC
+        ''')
+        return c.fetchmany(3)
+
+    data = {
+        'Highest Score by player': highest_player('score'),
+        'Most goals by player': highest_player('goals'),
+        'Most assists by player': highest_player('assists'),
+        'Most saves by player': highest_player('saves'),
+        'Most shots by player': highest_player('shots'),
+        'Most points by team': highest_team('score'),
+        'Most goals by team': highest_team('goals'),
+        'Most assists by team': highest_team('assists'),
+        'Most saves by team': highest_team('saves'),
+        'Most shots by team': highest_team('shots'),
+        'Most points with no goal': most_points_without_goal(),
+        'Least points with at least one goal': least_points_with_goals(),
+        'Most goals conceded by team': most_against(),
+        'Most goals conceded and still won': most_against_and_won(),
+        'Most goals scored and still lost': most_goals_and_lost(),
+        'Most total goals': most_total_goals()
+    }
+    return data
+
+
+print(x) for x in build_record_games()
