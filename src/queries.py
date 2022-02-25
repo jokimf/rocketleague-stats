@@ -318,10 +318,25 @@ def mvp(player_id, start=1, end=None):
         SELECT COUNT(playerID) AS MVPs FROM (
             SELECT gameID, playerID, score
             FROM scores
+            WHERE gameId >= ? AND gameId <= ?
             GROUP BY scores.gameID
-            HAVING MAX(score)
-        )
-        WHERE playerID = ?""", (player_id,))
+            HAVING MAX(score))
+        WHERE playerID = ?""", (start, end, player_id))
+    return c.fetchone()[0]
+
+
+def mvp_wins(player_id, start=1, end=None):
+    if end is None:
+        end = max_id()
+    c.execute("""
+        SELECT COUNT(playerID) AS MVPs FROM (
+            SELECT wins.gameID, playerID, score
+            FROM wins
+			LEFT JOIN scores ON scores.gameID = wins.gameID
+            WHERE wins.gameId >= ? AND wins.gameId <= ?
+            GROUP BY wins.gameID
+            HAVING MAX(score))
+        WHERE playerID = ?""", (start, end, player_id))
     return c.fetchone()[0]
 
 
