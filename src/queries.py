@@ -652,6 +652,30 @@ def build_record_games():
         ''')
         return c.fetchmany(3)
 
+    def diff_to_2nd(stat):
+        pass
+
+    def diff_mvp_lvp(order):
+        if order not in ['ASC', 'DESC']:
+            raise ValueError('Order is not DESC or ASC.')
+        c.execute('''
+        WITH
+            mvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MAX(score)),
+            lvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MIN(score))
+            SELECT pm.name, mvp.score - lvp.score AS diff, mvp.gameID, games.date FROM mvp
+            LEFT JOIN lvp ON mvp.gameID = lvp.gameID
+            LEFT JOIN players AS pm ON mvp.playerID = pm.playerID
+            LEFT JOIN games ON mvp.gameID = games.gameID
+            ORDER BY diff ''' + order)
+        return c.fetchmany(3)
+
+    def most_solo_goals():
+        c.execute('''
+            SELECT "", games.goals - SUM(assists) AS ja, games.gameID, date FROM games 
+            JOIN scores ON games.gameID = scores.gameID
+            GROUP BY games.gameID ORDER BY ja DESC''')
+        return c.fetchmany(3)
+
     data = {
         'Highest Score by player': highest_player('score'),
         'Most goals by player': highest_player('goals'),
@@ -668,9 +692,9 @@ def build_record_games():
         'Most goals conceded by team': most_against(),
         'Most goals conceded and still won': most_against_and_won(),
         'Most goals scored and still lost': most_goals_and_lost(),
-        'Most total goals': most_total_goals()
+        'Most total goals': most_total_goals(),
+        'Highest score diff between MVP and LVP': diff_mvp_lvp('DESC'),
+        'Lowest score diff between MVP and LVP': diff_mvp_lvp('ASC'),
+        'Most solo goals by "team"': most_solo_goals()
     }
     return data
-
-
-print(x) for x in build_record_games()
