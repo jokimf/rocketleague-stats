@@ -495,11 +495,17 @@ def build_fun_facts():
     knus_mvp = mvp(0)
 
 
-def score_performance(show=5, games_considered=20):
-    # Output: GameID, K, P, S
-    #           234, 233,231,123
-    #           233, 212,123,123
-    raise NotImplementedError()
+def score_performance(show=5, start=1, end=None):
+    if end is None:
+        end = max_id()
+    c.execute("""
+        WITH k AS(SELECT gameID,scorePerf FROM performance WHERE playerID = 0),
+        p AS(SELECT gameID,scorePerf FROM performance WHERE playerID = 1),
+        s AS(SELECT gameID,scorePerf FROM performance WHERE playerID = 2)
+        SELECT k.*, p.scorePerf, s.scorePerf FROM k LEFT JOIN p ON k.gameID = p.gameID LEFT JOIN s ON k.gameID = s.gameID
+        WHERE k.gameID >= ? AND k.gameID <= ? LIMIT ?
+    """, (start, end, show))
+    return c.fetchall()
 
 
 # Ignored because graphs will display better data
@@ -517,35 +523,63 @@ def trend_box():
     return trend
 
 
-def mvp_count(player_id, start=1, end=None):
-    # Vielleicht mvp(player_id) so anpassen, dass man sie auf 'games' und 'wins' anwenden kann
+def mvp_count(player_id, start=1, end=None):#pls test
+    # Vielleicht mvp(player_id) so anpassen, dass man sie auf 'games' und 'wins' anwenden kann #Nein, Puddinger
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN playerID = ? THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
+        CAST(SUM(CASE WHEN playerID = ? AND w IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN playerID = ? THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM (SELECT scores.gameID, scores.playerID,scores.score, wins.gameID AS w FROM scores
+        LEFT JOIN wins ON scores.gameID = wins.gameID
+        GROUP BY scores.gameID HAVING MAX(score))
+        WHERE gameID >= ? AND gameID <= ?
+    """, (player_id, player_id, player_id, start, end))
+    return c.fetchall()
 
 
-def solo_carry(player_id, start=1, end=None):
+def solo_carry(player_id, start=1, end=None):#pls test
     # p1 > p2+p3
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
+        CAST(SUM(CASE WHEN playerID = ? AND sc = 1 AND w IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM (SELECT s.gameID, s.playerID, MAX(s.score) > (SUM(s.score) - MAX(s.score)) AS sc, wins.gameID AS w
+        FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID GROUP BY s.gameID)
+        WHERE gameID >= ? AND gameID <= ?
+    """, (player_id, player_id, player_id, start, end))
+    return c.fetchall()
 
 
-def more_than_500(player_id, start=1, end=None):
+def more_than_500(player_id, start=1, end=None):#pls test
     # player got more than 500 in one game
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(gameID)/3 AS FLOAT) AS oc, 
+        CAST(SUM(CASE WHEN playerID = ? AND sc = 1 AND w IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM (SELECT s.gameID, s.playerID, CASE WHEN score >= 500 THEN 1 ELSE 0 END AS sc, wins.gameID AS w
+        FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID)
+        WHERE gameID >= ? AND gameID <= ?
+    """, (player_id, player_id, player_id, start, end))
+    return c.fetchall()
 
 
-def everyone_scored(start=1, end=None):
+def everyone_scored(start=1, end=None):#pls test
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN sc = 1 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
+        CAST(SUM(CASE WHEN sc = 1 AND wi IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN sc = 1 THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM (SELECT s.gameID, CASE WHEN MIN(s.goals) > 0 THEN 1 ELSE 0 END AS sc, w.gameID AS wi FROM scores s LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY s.gameID)
+        WHERE gameID >= ? AND gameID <= ?
+    """, (start, end))
+    return c.fetchall()
 
 
 def did_not_score(player_id, start=1, end=None):
