@@ -42,7 +42,7 @@ def months():
     FROM games GROUP BY m""")
     values_done = []
     for x in c.fetchall():
-        new_value = [x[0], x[1], x[2] / (x[2] + x[3]), x[2], x[3]]
+        new_value = [x[0], x[1], x[2] / (x[2] + x[3]) * 100, x[2], x[3]]
         values_done.append(new_value)
 
     month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
@@ -60,7 +60,7 @@ def years():
     FROM games GROUP BY Y""")
     values_done = []
     for x in c.fetchall():
-        wrate = x[2] / (x[2] + x[3])
+        wrate = x[2] / (x[2] + x[3]) * 100
         new_value = [x[0], x[1], wrate, x[2], x[3]]
         values_done.append(new_value)
     return values_done
@@ -76,7 +76,7 @@ def dates():
     raw_values = c.fetchall()
     values_done = []
     for x in raw_values:
-        wrate = x[2] / (x[2] + x[3])
+        wrate = x[2] / (x[2] + x[3]) * 100
         new_value = [x[0], x[1], wrate, x[2], x[3]]
         values_done.append(new_value)
     return values_done
@@ -310,7 +310,6 @@ def sum_of_game_stat(stat):
     return c.fetchone()[0]
 
 
-# TODO: use start/end in query
 def mvp(player_id, start=1, end=None):
     if end is None:
         end = max_id()
@@ -469,9 +468,9 @@ def stat_by_game_id(game_id):
                 scores2.rank, scores2.score, scores2.goals, scores2.assists, scores2.saves, scores2.shots
             FROM games JOIN scores ON games.gameID = scores.gameID JOIN scores0 ON games.gameID = scores0.gameID 
                 JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
-            WHERE ID = """ + str(game_id) + """
+            WHERE ID = ?
             GROUP BY ID ORDER BY ID DESC
-    """)
+    """, (game_id,))
     return c.fetchmany()
 
 
@@ -661,7 +660,7 @@ def build_record_games():
         if stat == 'goals':
             stat = 'scores.goals'
         c.execute('''
-            SELECT SUM(''' + stat + ''') AS stat, games.gameID, date 
+            SELECT "", SUM(''' + stat + ''') AS stat, games.gameID, date 
             FROM games JOIN scores ON games.gameID = scores.gameID 
             GROUP BY games.gameID ORDER BY stat DESC
         ''')
@@ -691,6 +690,41 @@ def build_record_games():
             GROUP BY games.gameID ORDER BY ja DESC''')
         return c.fetchmany(3)
 
+    def trend(stat, minmax):
+        if stat not in possible_stats or minmax not in ['MIN', 'MAX']:
+            raise ValueError('stat or MINMAX not known.')
+        if stat == 'goals':
+            stat = 'performance.goals'
+        c.execute('''
+        SELECT name, ''' + minmax + '''(''' + stat + ''') AS s, games.gameID, date 
+        FROM performance JOIN games ON games.gameID = performance.gameID NATURAL JOIN players
+        GROUP BY games.gameID ORDER BY s ''' + ('DESC' if minmax == 'MAX' else 'ASC'))
+        return c.fetchmany(3)
+
+    def highest_points_nothing_else():
+        c.execute('''
+            SELECT name, MAX(score), games.gameID, date     
+            FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
+            WHERE scores.goals = 0 AND assists=0 AND saves=0 AND shots=0
+            GROUP BY games.gameID ORDER BY score DESC''')
+        return c.fetchmany(3)
+
+    def lowest_points_at_least_1():
+        c.execute('''
+            SELECT name, MIN(score), games.gameID, date 
+            FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
+            WHERE scores.goals >= 1 AND assists>=1 AND saves>=1 AND shots>=1
+            GROUP BY games.gameID ORDER BY score ASC ''')
+        return c.fetchmany(3)
+
+    def most_points_without_goal_or_assist():
+        c.execute('''
+            SELECT name, MAX(score), games.gameID, date 
+            FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
+            WHERE scores.goals = 0 AND assists=0
+            GROUP BY games.gameID ORDER BY score DESC''')
+        return c.fetchmany(3)
+
     data = {
         'Highest Score by player': highest_player('score'),
         'Most goals by player': highest_player('goals'),
@@ -710,6 +744,21 @@ def build_record_games():
         'Most total goals': most_total_goals(),
         'Highest score diff between MVP and LVP': diff_mvp_lvp('DESC'),
         'Lowest score diff between MVP and LVP': diff_mvp_lvp('ASC'),
-        'Most solo goals by "team"': most_solo_goals()
+        'Most solo goals by "team"': most_solo_goals(),
+        'Highest score in Trend': trend('score', 'MAX'),
+        'Highest goals in Trend': trend('goals', 'MAX'),
+        'Highest assists in Trend': trend('assists', 'MAX'),
+        'Highest saves in Trend': trend('saves', 'MAX'),
+        'Highest shots in Trend': trend('shots', 'MAX'),
+        'Lowest score in Trend': trend('score', 'MIN'),
+        'Lowest goals in Trend': trend('goals', 'MIN'),
+        'Lowest assists in Trend': trend('assists', 'MIN'),
+        'Lowest saves in Trend': trend('saves', 'MIN'),
+        'Lowest shots in Trend': trend('shots', 'MIN'),
+        'Most points with all stats being 0': highest_points_nothing_else(),
+        'Lowest points with all stats being at least 1': lowest_points_at_least_1(),
+        'Most points without scoring or assisting': most_points_without_goal_or_assist()
     }
-    return data
+    # Sort by gameID
+    sorted_data = {k: v for k, v in sorted(data.items(), key=lambda item: item[1][0][2])}
+    return sorted_data

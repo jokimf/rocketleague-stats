@@ -1,7 +1,9 @@
-import queries as q
 from wsgiref.simple_server import make_server
+
 from pyramid.config import Configurator
 from pyramid.view import view_config
+
+import queries as q
 
 
 @view_config(
@@ -9,16 +11,21 @@ from pyramid.view import view_config
     renderer='../resources/home.jinja2'
 )
 def serve(request):
-    total_games = q.total_games()
-    data = {"days_since_inception": 0,
-            "total_games": total_games,
+    max_id = q.max_id()
+    data = {"days_since_inception": q.days_since_inception(),
+            "total_games": q.max_id(),
             "total_wins": q.total_wins(),
             "games": q.last_x_games_stats(10),
-            "weekdays": "q.weekdays()",
-            "grand_total": q.general_game_stats_over_time_period(1, q.max_id()),
-            "season_data": q.general_game_stats_over_time_period(2135, q.max_id()),
-            "session_data": q.general_game_stats_over_time_period(2165, q.max_id()),
-            "last_5": q.points_last_5(),
+            # "weekdays": q.weekdays(),
+            "days": q.dates(),
+            "months": q.months(),
+            "years": q.years(),
+            "grand_total": q.general_game_stats_over_time_period(1, max_id),
+            "season_data": q.general_game_stats_over_time_period(2135, max_id),
+            "session_data": q.general_game_stats_over_time_period(2165, max_id),
+            "performance_data": q.general_game_stats_over_time_period(max_id - 19, max_id),
+            # "last_5": q.points_last_5(),
+            "record_games": q.build_record_games(),
             "FunFacts": q.build_fun_facts()}
     return data
 
