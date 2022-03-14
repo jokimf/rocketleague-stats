@@ -522,7 +522,7 @@ def trend_box():
     return trend
 
 
-def mvp_count(player_id, start=1, end=None):#pls test
+def mvp_count(player_id, start=1, end=None):  # pls test
     # Vielleicht mvp(player_id) so anpassen, dass man sie auf 'games' und 'wins' anwenden kann #Nein, Puddinger
     # Output: Occurrence, Winrate
     if end is None:
@@ -538,7 +538,7 @@ def mvp_count(player_id, start=1, end=None):#pls test
     return c.fetchall()
 
 
-def solo_carry(player_id, start=1, end=None):#pls test
+def solo_carry(player_id, start=1, end=None):  # pls test
     # p1 > p2+p3
     # Output: Occurrence, Winrate
     if end is None:
@@ -553,7 +553,7 @@ def solo_carry(player_id, start=1, end=None):#pls test
     return c.fetchall()
 
 
-def more_than_500(player_id, start=1, end=None):#pls test
+def more_than_500(player_id, start=1, end=None):  # pls test
     # player got more than 500 in one game
     # Output: Occurrence, Winrate
     if end is None:
@@ -568,7 +568,7 @@ def more_than_500(player_id, start=1, end=None):#pls test
     return c.fetchall()
 
 
-def everyone_scored(start=1, end=None):#pls test
+def everyone_scored(start=1, end=None):  # pls test
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
@@ -716,7 +716,6 @@ def results():#pls test2
 
 
 # RECORD GAMES
-
 def build_record_games():
     def highest_player(stat):
         if stat == 'goals':

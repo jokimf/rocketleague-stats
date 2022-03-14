@@ -15,7 +15,7 @@ def serve(request):
     data = {"days_since_inception": q.days_since_inception(),
             "total_games": q.max_id(),
             "total_wins": q.total_wins(),
-            "games": q.last_x_games_stats(10),
+            "games": q.last_x_games_stats(5),
             # "weekdays": q.weekdays(),
             "days": q.dates(),
             "months": q.months(),
@@ -34,8 +34,8 @@ if __name__ == '__main__':
     with Configurator() as config:
         config.include('pyramid_jinja2')
         config.add_route('home', '/')
+        config.add_route('css', '/css')
         config.scan()
-        # config.add_view(hello_world, route_name='home')
         app = config.make_wsgi_app()
     server = make_server('0.0.0.0', 6543, app)
     server.serve_forever()
