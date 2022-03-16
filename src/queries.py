@@ -581,68 +581,138 @@ def everyone_scored(start=1, end=None):  # pls test
     return c.fetchall()
 
 
-def did_not_score(player_id, start=1, end=None):
+def did_not_score(player_id, start=1, end=None):#pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN sG = 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+        CAST(SUM(CASE WHEN sG = 0 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN sG = 0 THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM (SELECT s.gameID AS sID, playerID, s.goals AS sG, w.gameID AS wID FROM scores s
+        LEFT JOIN wins w ON s.gameID = w.gameID
+        WHERE playerID = ?)
+        WHERE sID >= ? AND sID <= ?
+    """, (player_id, start, end))
+    return c.fetchall()
 
 
-def no_solo_goals(start=1, end=None):
+def no_solo_goals(start=1, end=None):#pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN sG = sA AND sG > 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+        CAST(SUM(CASE WHEN sG = sA AND sG > 0 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN sG = sA AND sG > 0 THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM(SELECT s.gameID AS sID, SUM(s.goals) AS sG, SUM(s.assists) AS sA, w.gameID AS wID FROM scores s LEFT JOIN wins w ON s.gameID = w.gameID
+        GROUP BY s.gameID)
+        WHERE sID >= ? AND sID <= ?
+    """, (start, end))
+    return c.fetchall()
 
 
-def six_or_more_shots(start=1, end=None):
+def six_or_more_shots(start=1, end=None):#pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN sS >= 6 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+        CAST(SUM(CASE WHEN sS >= 6 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN sS >= 6 THEN 1 ELSE 0 END) AS FLOAT)
+        FROM(SELECT s.gameID AS sID, SUM(s.shots) AS sS, w.gameID AS wID FROM scores s
+        LEFT JOIN wins w ON s.gameID = w.gameID
+        GROUP BY sID)
+        WHERE sID >= ? AND sID <= ?
+    """, (start, end))
+    return c.fetchall()
 
 
-def at_least_one_assist(player_id, start=1, end=None):
+def at_least_one_assist(player_id, start=1, end=None):#pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN sA > 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+        CAST(SUM(CASE WHEN sA > 0 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN sA > 0 THEN 1 ELSE 0 END) AS FLOAT)
+        FROM(SELECT s.gameID AS sID, s.assists AS sA, w.gameID AS wID FROM scores s
+        LEFT JOIN wins w ON s.gameID = w.gameID
+        WHERE playerID = ?
+        GROUP BY sID)
+        WHERE sID >= ? AND sID <= ?
+    """, (player_id, start, end))
+    return c.fetchall()
 
 
-def two_or_more_saves(player_id, start=1, end=None):
+def two_or_more_saves(player_id, start=1, end=None):#pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN sS >= 2 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+        CAST(SUM(CASE WHEN sS >= 2 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN sS >= 2 THEN 1 ELSE 0 END) AS FLOAT)
+        FROM(SELECT s.gameID AS sID, s.saves AS sS, w.gameID AS wID FROM scores s
+        LEFT JOIN wins w ON s.gameID = w.gameID
+        WHERE playerID = ?
+        GROUP BY sID)
+        WHERE sID >= ? AND sID <= ?
+    """, (player_id, start, end))
+    return c.fetchall()
 
 
-def irrelevant(player_id, start=1, end=None):
+def irrelevant(player_id, start=1, end=None):#pls test2
     # Irrelevant: Sum of all averages / 7.5
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        WITH st AS (
+        SELECT s.gameID AS sID, s.playerID, s.score AS stSc, w.gameID AS wID
+        FROM scores s LEFT JOIN wins w ON s.gameID = w.gameID
+        WHERE playerID = ?),
+        at AS (SELECT AVG(score) * 3 / 7.5 AS avgS FROM scores)
+        SELECT CAST(SUM(CASE WHEN st.stSc <= at.avgS THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(st.sID) AS FLOAT) AS oc,
+        CAST(SUM(CASE WHEN st.stSc <= at.avgS AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN st.stSc <= at.avgS THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM st, at
+        WHERE sID >= ? AND sID <= ?
+    """, (player_id, start, end))
+    return c.fetchall()
 
 
-def team_scores_x_times(x, start=1, end=None):
+def team_scores_x_times(x, start=1, end=None):#pls test2
     # x = (1) bis (5 or more)
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN gGoals = ? THEN 1 ELSE 0 END) AS FLOAT) / COUNT(gID) AS oc,
+        CAST(SUM(CASE WHEN gGoals = ? AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN gGoals = ? THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM (SELECT g.gameID AS gID, g.goals AS gGoals, w.gameID AS wID FROM games g LEFT JOIN wins w ON g.gameID = w.gameID)
+        WHERE gID >= ? AND gID <= ?
+    """, (x, x, x, start, end))
+    return c.fetchall()
 
 
-def team_concedes_x_times(x, start=1, end=None):
+def team_concedes_x_times(x, start=1, end=None):#pls test2
     # x = (1) bis (5 or more)
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT CAST(SUM(CASE WHEN gAgainst = ? THEN 1 ELSE 0 END) AS FLOAT) / COUNT(gID) AS oc,
+        CAST(SUM(CASE WHEN gAgainst = ? AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / CAST(SUM(CASE WHEN gAgainst = ? THEN 1 ELSE 0 END) AS FLOAT) AS wr
+        FROM (SELECT g.gameID AS gID, g.against AS gAgainst, w.gameID AS wID FROM games g LEFT JOIN wins w ON g.gameID = w.gameID)
+        WHERE gID >= ? AND gID <= ?
+    """, (x, x, x, start, end))
+    return c.fetchall()
 
 
-def results():
+def results():#pls test2
     # Result, Amount, %
-    raise NotImplementedError()
+    c.execute("""
+        WITH cG AS (SELECT COUNT(*) allG FROM games)
+        SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / cG.allG AS ch  FROM games, cG
+        GROUP BY goals, against
+        ORDER BY c DESC
+    """)
+    return c.fetchall()
 
 
 # RECORD GAMES
