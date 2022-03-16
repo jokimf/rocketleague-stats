@@ -795,3 +795,45 @@ def build_record_games():
     # Sort by gameID
     sorted_data = {k: v for k, v in sorted(data.items(), key=lambda item: item[1][0][2])}
     return sorted_data
+
+
+# GRAPH QUERIES
+# Output: ID, K, P, S
+
+def graph_performance(stat, start=1, end=None):
+    if end is None:
+        end = max_id()
+    if stat not in possible_stats:
+        raise ValueError("Not valid stat.")
+    raise NotImplementedError()
+
+
+def graph_total_performance(stat, start=1, end=None):
+    if end is None:
+        end = max_id()
+    if stat not in possible_stats:
+        raise ValueError("Not valid stat.")
+    raise NotImplementedError()
+
+
+# player score - average of score performance
+def graph_grief_value(start=1, end=None):
+    if end is None:
+        end = max_id()
+    raise NotImplementedError()
+
+
+def graph_winrate_last20():
+    raise NotImplementedError()
+
+
+def graph_winrate(stat, start=1, end=None):
+    if end is None:
+        end = max_id()
+    raise NotImplementedError()
+
+
+def graph_solo_goals(stat, start=1, end=None):
+    if end is None:
+        end = max_id()
+    raise NotImplementedError()
