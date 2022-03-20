@@ -870,40 +870,87 @@ def build_record_games():
 # GRAPH QUERIES
 # Output: ID, K, P, S
 
-def graph_performance(stat, start=1, end=None):
+def graph_performance(stat, start=1, end=None):#plstest3
     if end is None:
         end = max_id()
     if stat not in possible_stats:
         raise ValueError("Not valid stat.")
-    raise NotImplementedError()
+    c.execute("""
+        WITH kT AS (SELECT * FROM performance WHERE playerID = 0),
+        pT AS (SELECT * FROM performance WHERE playerID = 1),
+        sT AS (SELECT * FROM performance WHERE playerID = 2)
+        SELECT kT.gameID, kT.""" + stat + """, pT.""" + stat + """, sT.""" + stat + """ FROM kT
+        LEFT JOIN pT ON kT.gameID = pT.gameID
+        LEFT JOIN sT ON kT.gameID = sT.gameID
+        WHERE kT.gameID >= ? AND kT.gameID <= ?
+    """, (start, end))
+    data = c.fetchall()
+    return "Player performance over time", data
 
 
-def graph_total_performance(stat, start=1, end=None):
+def graph_total_performance(stat, start=1, end=None):#plstest3
     if end is None:
         end = max_id()
     if stat not in possible_stats:
         raise ValueError("Not valid stat.")
-    raise NotImplementedError()
+    c.execute("""
+        SELECT gameID, AVG(""" + stat + """) FROM performance WHERE gameID >= ? AND gameID <= ? GROUP BY gameID
+    """, (start, end))
+    data = c.fetchall()
+    return "Global performance over time", data
 
 
-# player score - average of score performance
-def graph_grief_value(start=1, end=None):
+# player performance - average of score performance
+def graph_grief_value(start=1, end=None):#plstest3
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        WITH kT AS (SELECT * FROM performance WHERE playerID = 0),
+        pT AS (SELECT * FROM performance WHERE playerID = 1),
+        sT AS (SELECT * FROM performance WHERE playerID = 2),
+		gAvg AS (SELECT gameID, AVG(performance.score) AS gA FROM performance GROUP BY performance.gameID)
+        SELECT kT.gameID, kT.score - gA, pT.score - gA, sT.score - gA FROM kT
+        LEFT JOIN pT ON kT.gameID = pT.gameID
+        LEFT JOIN sT ON kT.gameID = sT.gameID
+		LEFT JOIN gAvg ON kT.gameID = gAvg.gameID
+        WHERE kT.gameID >= ? AND kT.gameID <= ?
+    """, (start, end))
+    data = c.fetchall()
+    return "Grief value over time", data
 
 
-def graph_winrate_last20():
-    raise NotImplementedError()
-
-
-def graph_winrate(stat, start=1, end=None):
+def graph_winrate_last20(start=20, end=None):#plstest3
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    if start < 20:
+        raise ValueError("No values for gameID < 20")
+    c.execute("""
+        SELECT gameID, wr FROM(
+        SELECT gameID, CAST(SUM(w) OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 20 AS wr FROM(  
+        SELECT gameID, CASE WHEN goals > against THEN 1 ELSE 0 END AS w FROM games))
+        WHERE gameID >= ? AND gameID <= ?
+    """, (start, end))
+    data = c.fetchall()
+    return "Winrate last 20 over time", data
 
 
-def graph_solo_goals(stat, start=1, end=None):
+def graph_winrate(start=1, end=None):#plstest3
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT gameID, CAST(SUM(CASE WHEN goals > against THEN 1 ELSE 0 END) OVER(ORDER BY gameID) AS FLOAT) / gameID AS wr FROM games
+        WHERE gameID >= ? AND gameID <= ?
+    """, (start, end))
+    data = c.fetchall()
+    return "Winrate over time", data
+
+
+def graph_solo_goals(start=1, end=None):#plstest3
+    if end is None:
+        end = max_id()
+    c.execute("""
+        SELECT gameID, SUM(SUM(goals) - SUM(assists)) OVER(ORDER BY gameID) as sumSG FROM scores GROUP BY gameID
+        WHERE gameID >= = AND gameID <= ?
+    """, (start, end))
+    data = c.fetchall()
+    return "Solo goals over time", data
