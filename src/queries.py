@@ -581,7 +581,7 @@ def everyone_scored(start=1, end=None):  # pls test
     return c.fetchall()
 
 
-def did_not_score(player_id, start=1, end=None):#pls test2
+def did_not_score(player_id, start=1, end=None):  # pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
@@ -596,7 +596,7 @@ def did_not_score(player_id, start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def no_solo_goals(start=1, end=None):#pls test2
+def no_solo_goals(start=1, end=None):  # pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
@@ -610,7 +610,7 @@ def no_solo_goals(start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def six_or_more_shots(start=1, end=None):#pls test2
+def six_or_more_shots(start=1, end=None):  # pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
@@ -625,7 +625,7 @@ def six_or_more_shots(start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def at_least_one_assist(player_id, start=1, end=None):#pls test2
+def at_least_one_assist(player_id, start=1, end=None):  # pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
@@ -641,7 +641,7 @@ def at_least_one_assist(player_id, start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def two_or_more_saves(player_id, start=1, end=None):#pls test2
+def two_or_more_saves(player_id, start=1, end=None):  # pls test2
     # Output: Occurrence, Winrate
     if end is None:
         end = max_id()
@@ -657,7 +657,7 @@ def two_or_more_saves(player_id, start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def irrelevant(player_id, start=1, end=None):#pls test2
+def irrelevant(player_id, start=1, end=None):  # pls test2
     # Irrelevant: Sum of all averages / 7.5
     # Output: Occurrence, Winrate
     if end is None:
@@ -676,7 +676,7 @@ def irrelevant(player_id, start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def team_scores_x_times(x, start=1, end=None):#pls test2
+def team_scores_x_times(x, start=1, end=None):  # pls test2
     # x = (1) bis (5 or more)
     # Output: Occurrence, Winrate
     if end is None:
@@ -690,7 +690,7 @@ def team_scores_x_times(x, start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def team_concedes_x_times(x, start=1, end=None):#pls test2
+def team_concedes_x_times(x, start=1, end=None):  # pls test2
     # x = (1) bis (5 or more)
     # Output: Occurrence, Winrate
     if end is None:
@@ -704,7 +704,7 @@ def team_concedes_x_times(x, start=1, end=None):#pls test2
     return c.fetchall()
 
 
-def results():#pls test2
+def results():  # pls test2
     # Result, Amount, %
     c.execute("""
         WITH cG AS (SELECT COUNT(*) allG FROM games)
@@ -907,3 +907,8 @@ def graph_solo_goals(stat, start=1, end=None):
     if end is None:
         end = max_id()
     raise NotImplementedError()
+
+
+def test(player_id):
+    data = c.execute("SELECT score FROM performance WHERE playerID = ?", (player_id,)).fetchall()
+    return [x[0] for x in data]
