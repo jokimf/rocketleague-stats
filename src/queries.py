@@ -878,7 +878,7 @@ def build_record_games():
 
 
 # GRAPH QUERIES
-# Output: ID, K, P, S
+# TODO: OUTPUT: Graph queries as dictionary, keys: {title, x-axis-range; (k, p, s) OR (data)}
 
 def graph_performance(stat, start=1, end=None):
     if end is None:
@@ -965,3 +965,51 @@ def graph_solo_goals(start=1, end=None):
     """, (start, end))
     data = c.fetchall()
     return "Solo goals over time", data
+
+
+# % Share of stat in game range [all stats + mvp share (might need own query)]
+# Output: [k%,p%,s%]
+def graph_performance_share(stat, start=1, end=None):
+    if end is None:
+        end = max_id()
+    if stat not in possible_stats or stat != 'mvp':
+        raise ValueError('Stat not legal')
+    raise NotImplementedError()
+
+
+# Output: Three dictionaries for K,P,S; {200:v, 250: w, 300: x, 350:y, ..., 500:z}
+# Score is capped, rounded down, 275 -> 250, 301 -> 300, 499 -> 450 (maybe use modulo 50?)
+def graph_score_performance_pointer(start=1, end=None):
+    if end is None:
+        end = max_id()
+    raise NotImplementedError()
+
+
+# Average MVP score over time
+def graph_average_mvp_score_over_time(start=1, end=None):
+    if end is None:
+        end = max_id()
+    raise NotImplementedError()
+
+
+# Average LVP score over time
+def graph_average_lvp_score_over_time(start=1, end=None):
+    if end is None:
+        end = max_id()
+    raise NotImplementedError()
+
+
+# SUM of all stat over time, also for MVPs
+def graph_cumulative_stat_over_time(stat):
+    if stat not in possible_stats or stat != 'mvp':
+        raise ValueError('Illegal stat')
+    raise NotImplementedError()
+
+
+# ja
+def graph_solo_goals_over_time():
+    raise NotImplementedError()
+
+# K TODO: Session/Season View
+
+# P TODO: Session/Season Queries

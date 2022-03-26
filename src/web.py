@@ -26,7 +26,7 @@ def serve(request):
             "performance_data": q.general_game_stats_over_time_period(max_id - 19, max_id),
             # "last_5": q.points_last_5(),
             "record_games": q.build_record_games(),
-            "FunFacts": q.build_fun_facts()}
+            "FunFacts": "q.build_fun_facts()"}
     return data
 
 
@@ -35,9 +35,12 @@ def serve(request):
     renderer='../resources/charts.jinja2'
 )
 def ja(request):
-    data = {"p": q.test(1),
-            "k": q.test(0),
-            "s": q.test(2),
+    performance = q.graph_performance('score')
+    print(performance)
+    print(performance[1][0])
+    data = {"p": performance[1][1],
+            "k": performance[1][0],
+            "s": performance[1][2],
             "label": [x for x in range(1, q.max_id())]}
     return data
 
