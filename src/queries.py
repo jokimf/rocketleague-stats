@@ -854,7 +854,7 @@ def build_record_games():
         'Most goals conceded by team': most_against(),
         'Most goals conceded and still won': most_against_and_won(),
         'Most goals scored and still lost': most_goals_and_lost(),
-        'Most total goals': most_total_goals(),
+        'Most total goals in one game': most_total_goals(),
         'Highest score diff between MVP and LVP': diff_mvp_lvp('DESC'),
         'Lowest score diff between MVP and LVP': diff_mvp_lvp('ASC'),
         'Most solo goals by "team"': most_solo_goals(),
@@ -1010,6 +1010,58 @@ def graph_cumulative_stat_over_time(stat):
 def graph_solo_goals_over_time():
     raise NotImplementedError()
 
+
 # K TODO: Session/Season View
 
 # P TODO: Session/Season Queries
+
+# Random Facts
+def total(player_id, stat):
+    if stat not in possible_stats:
+        raise ValueError()
+    return c.execute('SELECT SUM(' + stat + ') FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
+
+
+def last(player_id, stat):
+    if stat not in possible_stats:
+        raise ValueError()
+    return c.execute('SELECT ' + stat + '  FROM scores WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+                     (player_id,)).fetchone()[0]
+
+
+def average(player_id, stat):
+    if stat not in possible_stats:
+        raise ValueError()
+    return c.execute('SELECT AVG(' + stat + ') FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
+
+
+def average_all(player_id, stat):
+    if stat not in possible_stats:
+        raise ValueError()
+    data = c.execute('SELECT ' + stat + ' FROM performance WHERE playerID = ?', (player_id,)).fetchall()
+    return [x[0] for x in data]
+
+
+def performance(player_id, stat):
+    if stat not in possible_stats:
+        raise ValueError()
+    return c.execute('SELECT ' + stat + '  FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+                     (player_id,)).fetchone()[0]
+
+
+def performance100(player_id, stat):
+    if stat not in possible_stats:
+        raise ValueError()
+    return c.execute('SELECT ' + stat + '  FROM performance100 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+                     (player_id,)).fetchone()[0]
+
+
+def performance250(player_id, stat):
+    if stat not in possible_stats:
+        raise ValueError()
+    return c.execute('SELECT ' + stat + '  FROM performance250 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+                     (player_id,)).fetchone()[0]
+
+
+def player_name(player_id: int) -> str:
+    return c.execute('SELECT name FROM players WHERE playerID = ?', (player_id,)).fetchone()[0]
