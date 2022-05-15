@@ -2,15 +2,33 @@ import queries as q
 import statistics
 
 
-# -- Possible fun facts --
-# Came close to a record
-# Unusual result
-# Last session was xy
-# Things related to date
-# X has double the amount of Y, also session/season based
-
 def generate_fun_facts() -> set[str]:
     return set.union(milestone(), average_high_variance())
+
+
+# Things related to date
+def date_things() -> set[str]:
+    pass
+
+
+# Last session was xy
+def last_session_info() -> set[str]:
+    pass
+
+
+# Unusual result
+def unusual_result() -> set[str]:
+    pass
+
+
+# Came close to a record
+def close_to_record() -> set[str]:
+    pass
+
+
+# X has double the amount of Y, also session/season based
+def outclassed() -> set[str]:
+    pass
 
 
 # Player average is higher/lower in last x games than total avg
@@ -43,8 +61,7 @@ def milestone() -> set[str]:
         for p in range(0, 3):
             milestone_val = 50000 if stat == 'score' else 500 if stat == 'shots' else 250
             total = q.total(p, stat)
-
-            if total % milestone_val < q.last(p, stat):  # Milestone crossed
-                facts.add(
-                    f'{q.player_name(p)} just reached {total // milestone_val * milestone_val} {stat}!')
+            overshoot = total % milestone_val
+            if overshoot < q.last(p, stat):  # Milestone crossed
+                facts.add(f'{q.player_name(p)} just reached {total - overshoot} {stat}!')
     return facts
