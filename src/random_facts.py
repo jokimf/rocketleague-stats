@@ -1,5 +1,6 @@
 import queries as q
 import statistics
+from datetime import date
 
 
 def generate_fun_facts() -> set[str]:
@@ -8,10 +9,15 @@ def generate_fun_facts() -> set[str]:
 
 # Things related to date
 def date_things() -> set[str]:
-    pass
+    dates = q.dates()  # data[0] = 1.
+    months = q.months()
+    today = int(date.today().strftime('%d'))  # Last session?
+
+    date_data = dates[today - 1]
+    print(date_data)
 
 
-# Last session was xy
+# Last session was xy TODO: needs SQL session view
 def last_session_info() -> set[str]:
     pass
 
@@ -28,6 +34,11 @@ def close_to_record() -> set[str]:
 
 # X has double the amount of Y, also session/season based
 def outclassed() -> set[str]:
+    pass
+
+
+# 'At least 1' streak in Goals/Assists/Saves
+def at_least_1_streak() -> set[str]:
     pass
 
 

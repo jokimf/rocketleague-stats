@@ -2,8 +2,11 @@ from wsgiref.simple_server import make_server
 
 from pyramid.config import Configurator
 from pyramid.view import view_config
+from collections.abc import Callable
 
 import queries as q
+import json
+from json.encoder import JSONEncoder
 
 
 @view_config(
@@ -30,19 +33,54 @@ def serve(request):
     return data
 
 
+def generate_graphs(graph: str, function: Callable, is_kps: bool) -> dict:
+    function_data = function
+    if is_kps:
+        graph_data = {f"{graph}_title": function_data[0],
+                      f"{graph}_xmin": function_data[1],
+                      f"{graph}_xmax": function_data[2],
+                      f"{graph}_k": function_data[3],
+                      f"{graph}_p": function_data[4],
+                      f"{graph}_s": function_data[5],
+                      }
+    else:
+        graph_data = {f"{graph}_title": function_data[0],
+                      f"{graph}_xmin": function_data[1],
+                      f"{graph}_xmax": function_data[2],
+                      f"{graph}_data": function_data[3],
+                      }
+    return graph_data
+
+
 @view_config(
     route_name='css',
     renderer='../resources/charts.jinja2'
 )
-def ja(request):
-    performance = q.graph_performance('score')
-    print(performance)
-    print(performance[1][0])
-    data = {"p": performance[1][1],
-            "k": performance[1][0],
-            "s": performance[1][2],
-            "label": [x for x in range(1, q.max_id())]}
-    return data
+def ja(request):  # TODO more performance graphs
+    performance = generate_graphs('performance', q.graph_performance('score'), True)
+    total_performance = generate_graphs('total_performance', q.graph_total_performance('score'), True)
+    grief_value = generate_graphs('grief', q.graph_grief_value(), True)
+    winrate_last_20 = generate_graphs('winrate_last20', q.graph_winrate_last20(), False)
+    winrate = generate_graphs('winrate', q.graph_winrate(), False)
+    solo_goals = generate_graphs('solo', q.graph_solo_goals(), True)
+    performance_share = generate_graphs('peformance_share', q.graph_performance_share('score'), True)
+    mvp_lvp_share = generate_graphs('mvp_lvp', q.graph_average_mvp_score_over_time(), True)  # TODO Implement LVP
+    cumulative_stat = generate_graphs('cumulative_stat', q.graph_cumulative_stat_over_time('score'), True)
+
+    merged = {**performance, **total_performance, **grief_value, **winrate_last_20, **winrate, **solo_goals,
+              **performance_share, **mvp_lvp_share, **cumulative_stat}
+    return merged
+
+
+@view_config(
+    route_name='test',
+    renderer='../resources/test.jinja2'
+)
+def nein(request):
+    a = construct_graph()
+    print(a)
+    merged = {'graph': a}
+    return merged
 
 
 if __name__ == '__main__':
@@ -50,6 +88,7 @@ if __name__ == '__main__':
         config.include('pyramid_jinja2')
         config.add_route('home', '/')
         config.add_route('css', '/css')
+        config.add_route('test', '/test')
         config.scan()
         app = config.make_wsgi_app()
     server = make_server('0.0.0.0', 6543, app)
