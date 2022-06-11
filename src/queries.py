@@ -880,6 +880,8 @@ def build_record_games():
 # GRAPH QUERIES
 # TODO: OUTPUT: Graph queries as dictionary, keys: {title, x-axis-range; (k, p, s) OR (data)}
 
+# title xmin xmax data
+
 def graph_performance(stat, start=1, end=None):
     if end is None:
         end = max_id()
@@ -895,7 +897,7 @@ def graph_performance(stat, start=1, end=None):
         WHERE kT.gameID >= ? AND kT.gameID <= ?
     """, (start, end))
     data = c.fetchall()
-    return "Player performance over time", data
+    return "Player performance over time", start, end, data
 
 
 def graph_total_performance(stat, start=1, end=None):
@@ -907,7 +909,7 @@ def graph_total_performance(stat, start=1, end=None):
         SELECT gameID, AVG(""" + stat + """) FROM performance WHERE gameID >= ? AND gameID <= ? GROUP BY gameID
     """, (start, end))
     data = c.fetchall()
-    return "Global performance over time", data
+    return stat + " performance over time", start, end, data
 
 
 def graph_grief_value(start=1, end=None):
@@ -925,7 +927,7 @@ def graph_grief_value(start=1, end=None):
         WHERE kT.gameID >= ? AND kT.gameID <= ?
     """, (start, end))
     data = c.fetchall()
-    return "Grief value over time", data
+    return "Grief value over time", start, end, data
 
 
 def graph_winrate_last20(start=20, end=None):
@@ -941,7 +943,7 @@ def graph_winrate_last20(start=20, end=None):
         WHERE gameID >= ? AND gameID <= ?
     """, (start, end))
     data = c.fetchall()
-    return "Winrate last 20 over time", data
+    return "Winrate last 20 over time", start, end, data
 
 
 def graph_winrate(start=1, end=None):
@@ -953,7 +955,7 @@ def graph_winrate(start=1, end=None):
         WHERE gameID >= ? AND gameID <= ?
     """, (start, end))
     data = c.fetchall()
-    return "Winrate over time", data
+    return "Winrate over time", start, end, data
 
 
 def graph_solo_goals(start=1, end=None):
@@ -964,7 +966,7 @@ def graph_solo_goals(start=1, end=None):
         WHERE gameID >= = AND gameID <= ?
     """, (start, end))
     data = c.fetchall()
-    return "Solo goals over time", data
+    return "Solo goals over time", start, end, data
 
 
 # % Share of stat in game range [all stats + mvp share (might need own query)]
@@ -974,11 +976,20 @@ def graph_performance_share(stat, start=1, end=None):
         end = max_id()
     if stat not in possible_stats or stat != 'mvp':
         raise ValueError('Stat not legal')
-    raise NotImplementedError()
+    c.execute("""
+        WITH k AS(SELECT SUM(?) AS ks FROM scores WHERE playerID = 0 AND gameID > ? AND gameID < ?),
+        p AS (SELECT SUM(?) AS ps FROM scores WHERE playerID = 1 AND gameID > ? AND gameID < ?),
+        s AS (SELECT SUM(?) AS ss FROM scores WHERE playerID = 2 AND gameID > ? AND gameID < ?)
+        SELECT CAST(ks AS FLOAT) / CAST((ks+ps+ss) AS FLOAT) AS kp, CAST(ps AS FLOAT) / CAST((ks+ps+ss) AS FLOAT) AS pp, CAST(ss AS FLOAT) / CAST((ks+ps+ss) AS FLOAT) AS sp
+        FROM k, p, s
+    """, (stat, start, end, stat, start, end, stat, start, end))
+    data = c.fetchall()
+    return stat + " performance share", start, end, data
 
 
 # Output: Three dictionaries for K,P,S; {200:v, 250: w, 300: x, 350:y, ..., 500:z}
 # Score is capped, rounded down, 275 -> 250, 301 -> 300, 499 -> 450 (maybe use modulo 50?)
+# Fragen: Was sind v,w,x,y,z? Count? Momentaner Wert?
 def graph_score_performance_pointer(start=1, end=None):
     if end is None:
         end = max_id()
@@ -986,10 +997,17 @@ def graph_score_performance_pointer(start=1, end=None):
 
 
 # Average MVP score over time
+# Fragen: Neue Berechnung für jeden Rahmen oder eine Liste wo nur der Rahmen angezeigt wird? + Score oder Performance? Score ist etwas Aussageschwach
 def graph_average_mvp_score_over_time(start=1, end=None):
     if end is None:
         end = max_id()
-    raise NotImplementedError()
+    c.execute("""
+        SELECT gameID, AVG(score) OVER (ORDER BY gameID) FROM scores
+        WHERE gameID > ? AND gameID < ?
+        GROUP BY gameID HAVING MAX(score)
+    """, (start, end))
+    data = c.fetchall()
+    return "Average mvp score over time", start, end, data
 
 
 # Average LVP score over time
@@ -1000,15 +1018,28 @@ def graph_average_lvp_score_over_time(start=1, end=None):
 
 
 # SUM of all stat over time, also for MVPs
+# Fragen: Was ist mit also for MVPs gemeint? Eigene Query?
 def graph_cumulative_stat_over_time(stat):
     if stat not in possible_stats or stat != 'mvp':
         raise ValueError('Illegal stat')
-    raise NotImplementedError()
+    c.execute("""
+        WITH k AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 0),
+        p AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 1),
+        s AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 2)
+        SELECT k.gameID, k.sc, p.sc, s.sc FROM k LEFT JOIN p ON k.gameID = p.gameID LEFT JOIN s ON k.gameID = s.gameID
+    """, (stat, stat, stat))
+    data = c.fetchall()
+    return "Cumulative value for " + stat , stat, data
 
 
 # ja
 def graph_solo_goals_over_time():
-    raise NotImplementedError()
+    c.execute("""
+        WITH solos AS (SELECT gameID, SUM(goals) - SUM(assists) AS solo FROM scores GROUP BY gameID)
+        SELECT gameID, SUM(solo) OVER (ORDER BY gameID) AS cumulativeSolos FROM solos
+    """)
+    data = c.fetchall()
+    return "Cumulative solo goals", data
 
 
 # K TODO: Session/Season View
