@@ -14,7 +14,7 @@ def max_id() -> int:
     return c.fetchone()[0]
 
 
-def weekdays() -> [[str, int, float, int, int]]:
+def weekdays() -> List[str, int, float, int, int]:
     c.execute('''
     SELECT  STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS WD, 
             COUNT(date), SUM(CASE WHEN goals > against THEN 1 ELSE 0 END),
@@ -717,8 +717,7 @@ def team_concedes_x_times(x, start=1, end=None):
     return c.fetchall()
 
 
-def results():
-    # Result, Amount, %
+def results():  # TODO: Rewrite to dict, {'2:1':[count,share%]}
     c.execute("""
         WITH cG AS (SELECT COUNT(*) allG FROM games)
         SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / cG.allG AS ch  FROM games, cG
@@ -726,6 +725,10 @@ def results():
         ORDER BY c DESC
     """)
     return c.fetchall()
+
+
+def last_result():
+    raise NotImplementedError()
 
 
 # RECORD GAMES
