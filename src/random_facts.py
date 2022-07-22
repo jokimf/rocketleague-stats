@@ -4,17 +4,21 @@ from datetime import date
 
 
 def generate_fun_facts() -> set[str]:
-    return set.union(milestone(), average_high_variance())
+    return set.union(milestone(), average_high_variance(), date_things())
 
 
 # Things related to date
 def date_things() -> set[str]:
-    dates = q.dates()  # data[0] = 1.
-    months = q.months()
-    today = int(date.today().strftime('%d'))  # Last session?
+    facts = set()
 
-    date_data = dates[today - 1]
-    print(date_data)
+    date_data = q.dates()[int(date.today().strftime('%d')) - 1]
+    month_data = q.months()[int(date.today().strftime('%m')) - 1]
+    year_data = q.years()[int(date.today().strftime('%y')) - 18]
+
+    facts.add(f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.')
+    facts.add(f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.')
+    facts.add(f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.')
+    return facts
 
 
 # Last session was xy TODO: needs SQL session view
@@ -76,3 +80,6 @@ def milestone() -> set[str]:
             if overshoot < q.last(p, stat):  # Milestone crossed
                 facts.add(f'{q.player_name(p)} just reached {total - overshoot} {stat}!')
     return facts
+
+
+print(generate_fun_facts())

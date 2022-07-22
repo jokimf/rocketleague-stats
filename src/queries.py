@@ -1,4 +1,5 @@
 import sqlite3
+from typing import List
 
 database_path = '../resources/test.db'
 conn = sqlite3.connect(database_path)
@@ -14,7 +15,7 @@ def max_id() -> int:
     return c.fetchone()[0]
 
 
-def weekdays() -> List[str, int, float, int, int]:
+def weekdays():
     c.execute('''
     SELECT  STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) AS WD, 
             COUNT(date), SUM(CASE WHEN goals > against THEN 1 ELSE 0 END),
