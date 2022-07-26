@@ -166,6 +166,15 @@ def close_to_record() -> set[str]:
     highest_shots = q.record_highest_value_per_stat('shots', one_percent_threshold)
     most_without_goal = q.most_points_without_goal(one_percent_threshold)
     least_with_goal = q.least_points_with_goals(one_percent_threshold)
+    most_against = q.most_against(one_percent_threshold)
+    most_against_and_won = q.most_against_and_won(one_percent_threshold)
+    most_goals_and_lost = q.most_goals_and_lost(one_percent_threshold)
+    most_total_goals = q.most_total_goals(one_percent_threshold)
+    highest_team_score = q.highest_team('score', one_percent_threshold)
+    highest_team_goals = q.highest_team('goals', one_percent_threshold)
+    highest_team_assists = q.highest_team('assists', one_percent_threshold)
+    highest_team_saves = q.highest_team('saves', one_percent_threshold)
+    highest_team_shots = q.highest_team('shots', one_percent_threshold)
 
     # TODO: put into function
     for i in range(0, one_percent_threshold):
@@ -190,13 +199,21 @@ def close_to_record() -> set[str]:
         if least_with_goal[i][2] == last_id:
             facts.add(
                 f'{least_with_goal[i][0]} only reached a total amount of {least_with_goal[i][1]} score, even though he scored... he was in the Bottom 1% of score having scored at least one goal, ranking at spot number {i}!')
-
-        most_against = q.most_against(one_percent_threshold)
-        most_against_and_won = q.most_against_and_won(one_percent_threshold)
-        most_goals_and_lost = q.most_goals_and_lost(one_percent_threshold)
-        most_total_goals = q.most_total_goals(one_percent_threshold)
-
+        if most_against[i][2] == last_id:
+            facts.add(
+                f'Last game you conceded a top 1% amount of goals... {most_against[i][1]} in total. It ranks at number {i} of all games')
+        if most_against_and_won[i][2] == last_id:
+            facts.add(
+                f'Last game you conceded a total of {most_against_and_won[i][1]} goals - but still won. The game ranks at number {i} in that regard.')
+        if most_goals_and_lost[i][2] == last_id:
+            facts.add(
+                f'Last game you scored a total of {most_goals_and_lost[i][1]} goals, but still lost. The game ranks at number {i} in that regard.')
+        if most_total_goals[i][2] == last_id:
+            facts.add(
+                f'Last game you scored a total of {most_total_goals[i][1]} goals. The game ranks at number {i} in that regard.')
     # TODO: Player gets close to performance best/worst
+    # TODO: Player or team gets close to record in absolute value
+    data = q.record_stat_per_session('games', one_percent_threshold)
     return facts
 
 

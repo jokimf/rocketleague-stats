@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 from typing import Any
 
@@ -85,6 +86,8 @@ def dates_table() -> list[Any]:
 def goals_without_assist_between_games(start=1, end=None) -> int:
     if end is None:
         end = max_id()
+    if start > end:
+        raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
     c.execute("""
     SELECT SUM(goalsSum - assistsSum) AS diff FROM (
         SELECT SUM(assists) AS assistsSum, SUM(goals) AS goalsSum 
@@ -195,31 +198,49 @@ def lvp_streak(player_id) -> list[Any]:
     """, (player_id,)).fetchall()
 
 
-def average_games_per_day(start=0, end=None) -> float:
-    if end is None:
-        end = max_id()
-    return (end - start + 1) / 1  # TODO count days, funktion gleicha uf datum sumsihcuioebr XD
+# Calculates average games per day based on start and end dates.
+def average_games_per_day(start_date: str, end_date: str) -> float:
+    if datetime.datetime.strptime(end_date, '%Y-%m-%d') < datetime.datetime.strptime(start_date, '%Y-%m-%d'):
+        raise ValueError(f"start_date can't be before end_date {start_date} - {end_date}")
+    return c.execute(
+        """SELECT CAST(COUNT(gameID) AS FLOAT) / CAST(JULIANDAY(?) - JULIANDAY(?) AS FLOAT) 
+           FROM games WHERE date BETWEEN ? AND ? """, (end_date, start_date, start_date, end_date)).fetchone()[0]
 
 
-def last_x_games_stats(amount):
-    c.execute("""
-        WITH
-            scores0 AS (SELECT * FROM scores WHERE playerID = 0 GROUP BY gameID),
-            scores1 AS (SELECT * FROM scores WHERE playerID = 1 GROUP BY gameID),
-            scores2 AS (SELECT * FROM scores WHERE playerID = 2 GROUP BY gameID)
+# Used for info table at top of the page
+def last_x_games_stats(limit: int = 5) -> list[Any]:
+    return c.execute("""
             SELECT 
-                games.gameID AS ID,    games.date AS 'Date', games.goals As CG, against AS Enemy,
-                scores0.rank, scores0.score, scores0.goals, scores0.assists, scores0.saves, scores0.shots,
-                scores1.rank, scores1.score, scores1.goals, scores1.assists, scores1.saves, scores1.shots,
-                scores2.rank, scores2.score, scores2.goals, scores2.assists, scores2.saves, scores2.shots
-            FROM games JOIN scores ON games.gameID = scores.gameID JOIN scores0 ON games.gameID = scores0.gameID 
-                JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
-            GROUP BY ID ORDER BY ID DESC
-    """)
-    return c.fetchmany(amount)
+                games.gameID AS ID, games.date, games.goals As CG, against AS Enemy,
+                knus.rank, knus.score, knus.goals, knus.assists, knus.saves, knus.shots,
+                puad.rank, puad.score, puad.goals, puad.assists, puad.saves, puad.shots,
+                sticker.rank, sticker.score, sticker.goals, sticker.assists, sticker.saves, sticker.shots
+            FROM games JOIN scores ON games.gameID = scores.gameID JOIN knus ON games.gameID = knus.gameID 
+                JOIN puad ON games.gameID = puad.gameID JOIN sticker ON games.gameID = sticker.gameID
+            GROUP BY ID ORDER BY ID DESC LIMIT ?
+    """, (limit,)).fetchall()
 
 
-def general_game_stats_over_time_period(start=1, end=None):
+def team_goals_in_range(start, end) -> int:
+    return c.execute("SELECT SUM(goals) FROM games WHERE gameID >= ? AND gameID <= ?", (start, end)).fetchone()[0]
+
+
+def team_against_in_range(start, end) -> int:
+    return c.execute("SELECT SUM(against) FROM games WHERE gameID >= ? AND gameID <= ?", (start, end)).fetchone()[0]
+
+
+def wins_in_range(start, end) -> int:
+    return c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= ? AND gameID <= ?",
+                     (start, end)).fetchone()[0]
+
+
+def losses_in_range(start, end) -> int:
+    return c.execute("SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= ? AND gameID <= ?",
+                     (start, end)).fetchone()[0]
+
+
+# Used for general stat tables
+def general_game_stats_over_time_period(start=1, end=None) -> list[Any]:
     # Input validation
     if end is None:
         end = max_id()
@@ -227,372 +248,92 @@ def general_game_stats_over_time_period(start=1, end=None):
         raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
     if start <= 0:
         raise ValueError("StartIndex can't be 0 or lower")
-
-    def over_time_box_query(stat, start2, end2):
-        c.execute("""
-        WITH k AS (SELECT SUM(""" + stat + """) s1, AVG(""" + stat + """) a1 
-            FROM scores WHERE playerID = 0 AND gameID <= ? AND gameID >= ?),
-        p AS (SELECT SUM(""" + stat + """) s2, AVG(""" + stat + """) a2
-            FROM scores WHERE playerID = 1 AND gameID <= ? AND gameID >= ?),
-        s AS (SELECT SUM(""" + stat + """) s3, AVG(""" + stat + """) a3
-            FROM scores WHERE playerID = 2 AND gameID <= ? AND gameID >= ?)
-        SELECT s1, a1, s2, a2, s3, a3
-        FROM k, p, s
-        """, (end2, start2, end2, start2, end2, start2))
-        return c.fetchone()
-
-    def mvp_helper_query(end_index, start_index):
-        c.execute("""
-        WITH 
-        k AS (SELECT SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END), 
-            CAST(SUM(CASE playerID WHEN 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
-        FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score)) 
-        WHERE gameID <= ? AND gameID >= ?),
-        p AS (SELECT SUM(CASE playerID WHEN 1 THEN 1 ELSE 0 END),
-            CAST(SUM(CASE playerID WHEN 1 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
-        FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))
-        WHERE gameID <= ? AND gameID >= ?),
-        s AS (SELECT SUM(CASE playerID WHEN 2 THEN 1 ELSE 0 END),
-            CAST(SUM(CASE playerID WHEN 2 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(playerID) AS FLOAT) * 100
-        FROM(SELECT playerID, gameID, score FROM scores GROUP BY scores.gameID HAVING MAX(score))
-        WHERE gameID <= ? AND gameID >= ?)
-        SELECT * FROM k, p, s
-        """, (end_index, start_index, end_index, start_index, end_index, start_index))
-        return c.fetchone()
-
     wins = wins_in_range(start, end)
     losses = losses_in_range(start, end)
     games = end - start + 1
-    goals = goals_in_range(start, end)
-    against = against_in_range(start, end)
+    goals = team_goals_in_range(start, end)
+    against = team_against_in_range(start, end)
+
+    def formatted_over_time_box_query(stat: str):
+        if stat not in possible_stats:
+            raise ValueError(f'{stat} not in possible stats.')
+
+        return c.execute(f"""
+            SELECT SUM(knus.{stat}), AVG(knus.{stat}), SUM(puad.{stat}), AVG(puad.{stat}), SUM(sticker.{stat}), AVG(sticker.{stat})
+            FROM knus JOIN puad ON knus.gameID = puad.gameID JOIN sticker ON sticker.gameID = knus.gameID
+            WHERE knus.gameID >= ? AND knus.gameID <= ?
+        """, (start, end)).fetchone()
+
+    def mvp_helper_query():
+        query = c.execute(f"""
+        SELECT COUNT(gameID), CAST(COUNT(gameID) AS FLOAT)/CAST({games} AS FLOAT) FROM mvplvp WHERE gameID >= ? AND gameID <= ? GROUP BY MVP
+        """, (start, end)).fetchall()
+        return [stats for tpl in query for stats in tpl]  # Convert three rows to one list
+
     data = {
         "General": [games, wins / games, goals, against, goals / games, against / games, wins, losses],
-        "Score": over_time_box_query("score", start, end),
-        "Goals": over_time_box_query("goals", start, end),
-        "Assists": over_time_box_query("assists", start, end),
-        "Saves": over_time_box_query("saves", start, end),
-        "Shots": over_time_box_query("shots", start, end),
-        "MVPs": mvp_helper_query(end, start)}
+        "Score": formatted_over_time_box_query("score"),
+        "Goals": formatted_over_time_box_query("goals"),
+        "Assists": formatted_over_time_box_query("assists"),
+        "Saves": formatted_over_time_box_query("saves"),
+        "Shots": formatted_over_time_box_query("shots"),
+        "MVPs": mvp_helper_query()}
     return data
 
 
-def goals_in_range(start_index, end_index):
-    c.execute("SELECT SUM(goals) FROM games WHERE gameID >= ? AND gameID <= ?", (start_index, end_index))
-    return c.fetchone()[0]
+# "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
 
-
-def against_in_range(start_index, end_index):
-    c.execute("SELECT SUM(against) FROM games WHERE gameID >= ? AND gameID <= ?", (start_index, end_index))
-    return c.fetchone()[0]
-
-
-def wins_in_range(start_index, end_index):
-    c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= ? AND gameID <= ?",
-              (start_index, end_index))
-    return c.fetchone()[0]
-
-
-def losses_in_range(start_index, end_index):
-    c.execute("SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= ? AND gameID <= ?",
-              (start_index, end_index))
-    return c.fetchone()[0]
-
-
-def sum_of_game_stat(stat):
-    if stat not in possible_game_stats:
-        raise ValueError('Stat: ' + stat + ' is not known for query.')
-    c.execute("SELECT SUM(?) FROM games", stat)
-    return c.fetchone()[0]
-
-
-def mvp(player_id, start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
-        SELECT COUNT(playerID) AS MVPs FROM (
-            SELECT gameID, playerID, score
-            FROM scores
-            WHERE gameId >= ? AND gameId <= ?
-            GROUP BY scores.gameID
-            HAVING MAX(score))
-        WHERE playerID = ?""", (start, end, player_id))
-    return c.fetchone()[0]
-
-
-def mvp_wins(player_id, start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
-        SELECT COUNT(playerID) AS MVPs FROM (
-            SELECT wins.gameID, playerID, score
-            FROM wins
-            LEFT JOIN scores ON scores.gameID = wins.gameID
-            WHERE wins.gameId >= ? AND wins.gameId <= ?
-            GROUP BY wins.gameID
-            HAVING MAX(score))
-        WHERE playerID = ?""", (start, end, player_id))
-    return c.fetchone()[0]
-
-
-# unused
-def player_stats(stat, mode, player_id):
-    if stat not in possible_stats or mode not in possible_modes:
-        raise ValueError(f'Input: {stat}{mode} {str(player_id)}  is not known for query.')
-
-    c.execute("""
-        SELECT name AS 'Player', """ + mode + """(""" + stat + """)
-        FROM scores JOIN players ON scores.playerID = players.playerID
-        WHERE scores.playerID = """ + str(player_id) + """
-        GROUP BY scores.playerID
-    """)
-    return c.fetchall()
-
-
-def solo_goals():
-    c.execute("SELECT SUM(goals) - SUM(assists) FROM scores")
-    return c.fetchone()[0]
-
-
-def total_wins():
-    c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against")
-    return c.fetchone()[0]
-
-
-def total_losses():
-    c.execute("SELECT COUNT(gameID) FROM games WHERE goals < against")
-    return c.fetchone()[0]
-
-
-def one_diff_win():
-    c.execute("SELECT COUNT(gameID) FROM games WHERE goals - against = 1")
-    return c.fetchone()[0]
-
-
-def one_diff_loss():
-    c.execute("SELECT COUNT(gameID) FROM games WHERE against - goals = 1")
-    return c.fetchall()
-
-
-def most_one_day(stat):
-    if stat not in possible_stats and not 'games':
-        raise ValueError(f'Stat: {stat} is not known for most_one_day.')
-
-    if stat == 'games':
-        c.execute("SELECT date, MAX(counter) FROM(SELECT date, COUNT(date) AS counter FROM games GROUP BY date)")
-    else:
-        c.execute("SELECT date, MAX(counter) FROM(SELECT date, SUM(" + stat + ") AS counter FROM games GROUP BY date)")
-    return c.fetchall()
-
-
-def average_mvp_score():
-    c.execute("""
-        SELECT AVG(score)
-        FROM (SELECT score FROM scores
-        GROUP BY scores.gameID
-        HAVING MAX(score))
-    """)
-    return c.fetchall()
-
-
-def average_lvp_score():
-    c.execute("""
-        SELECT AVG(score)
-        FROM (SELECT score FROM scores
-        GROUP BY scores.gameID
-        HAVING MIN(score))
-    """)
-    return c.fetchall()
-
-
-def games_per_weekday():
-    c.execute("""
-        SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) 
-            AS WD, COUNT(date)
-        FROM games
-        GROUP BY WD
-    """)
-    return c.fetchall()
-
-
-def wins_per_weekday():
-    c.execute("""
-        SELECT STRFTIME('%w', '20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)) 
-            AS WD, COUNT(date)
-        FROM (SELECT gameID, date FROM games WHERE goals > against)
-        GROUP BY WD
-    """)
-    return c.fetchall()
-
-
-def latest_date():
-    c.execute(
-        """SELECT MAX(STRFTIME('20' || substr(date, -2, 2) || '-' || substr(date, 4, 2) || '-' || substr(date, 1, 2)))
-        FROM games""")
-    return c.fetchone()[0]
-
-
-def performance_agg(stat, mode, starting_game_id=1, games_considered=20):
-    c.execute("""
-        SELECT name, """ + mode + """(""" + stat + """)
-            FROM(   SELECT scores.playerID, """ + stat + """, name
-                    FROM scores JOIN players 
-                    ON scores.playerID = players.playerID WHERE scores.gameID > """ + str(starting_game_id) + """
-                    ORDER BY scores.gameID ASC LIMIT """ + str(games_considered) + """)
-            GROUP BY playerID
-    """)
-    return c.fetchall()
-
-
-def stat_by_game_id(game_id):
-    c.execute("""
-    WITH
-            scores0 AS (SELECT * FROM scores WHERE playerID = 0 GROUP BY gameID),
-            scores1 AS (SELECT * FROM scores WHERE playerID = 1 GROUP BY gameID),
-            scores2 AS (SELECT * FROM scores WHERE playerID = 2 GROUP BY gameID)
-            SELECT 
-                games.gameID AS ID,    games.date AS 'Date', games.goals As CG, against AS Enemy,
-                scores0.rank, scores0.score, scores0.goals, scores0.assists, scores0.saves, scores0.shots,
-                scores1.rank, scores1.score, scores1.goals, scores1.assists, scores1.saves, scores1.shots,
-                scores2.rank, scores2.score, scores2.goals, scores2.assists, scores2.saves, scores2.shots
-            FROM games JOIN scores ON games.gameID = scores.gameID JOIN scores0 ON games.gameID = scores0.gameID 
-                JOIN scores1 ON games.gameID = scores1.gameID JOIN scores2 ON games.gameID = scores2.gameID
-            WHERE ID = ?
-            GROUP BY ID ORDER BY ID DESC
-    """, (game_id,))
-    return c.fetchmany()
-
-
-def query_last_x(games, stat, mode):
-    if stat not in possible_stats or mode not in possible_modes:
-        raise ValueError(f'stat or mode invalid in query_last_20. stat={stat} mode={mode}')
-    c.execute("""
-        SELECT name, """ + mode + """(""" + stat + """)
-        FROM(   SELECT scores.playerID, """ + stat + """, name
-                FROM scores JOIN players ON scores.playerID = players.playerID
-                ORDER BY scores.gameID DESC LIMIT ?*3)
-        GROUP BY playerID
-    """, (games,))
-    return c.fetchall()
-
-
-def build_fun_facts():
-    raise NotImplementedError()
-
-
-def score_performance(show=5, start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
-        WITH k AS(SELECT gameID,scorePerf FROM performance WHERE playerID = 0),
-        p AS(SELECT gameID,scorePerf FROM performance WHERE playerID = 1),
-        s AS(SELECT gameID,scorePerf FROM performance WHERE playerID = 2)
-        SELECT k.*, p.scorePerf, s.scorePerf 
-        FROM k LEFT JOIN p ON k.gameID = p.gameID LEFT JOIN s ON k.gameID = s.gameID
-        WHERE k.gameID >= ? AND k.gameID <= ? LIMIT ?
-    """, (start, end, show))
-    return c.fetchall()
-
-
-# Ignored because graphs will display better data
-def trend_box():
-    trend = []
-    for stat in possible_stats:
-        c.execute("""
-        SELECT AVG(""" + stat + """) FROM(   
-            SELECT * FROM scores JOIN players ON scores.playerID = players.playerID
-            ORDER BY scores.gameID DESC LIMIT 20*3
-        )
-        GROUP BY playerID
-        """)
-        trend.append([x[0] for x in c.fetchall()])
-    return trend
-
-
-def mvp_count(player_id, start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
-        SELECT CAST(SUM(CASE WHEN playerID = ? THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
-        CAST(SUM(CASE WHEN playerID = ? AND w IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
-        CAST(SUM(CASE WHEN playerID = ? THEN 1 ELSE 0 END) AS FLOAT) AS wr
-        FROM (SELECT scores.gameID, scores.playerID,scores.score, wins.gameID AS w FROM scores
-        LEFT JOIN wins ON scores.gameID = wins.gameID
-        GROUP BY scores.gameID HAVING MAX(score))
-        WHERE gameID >= ? AND gameID <= ?
-    """, (player_id, player_id, player_id, start, end))
-    return c.fetchall()
-
-
-def solo_carry(player_id, start=1, end=None):
-    # p1 > p2+p3
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
-        SELECT CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) / 
-        CAST(COUNT(gameID) AS FLOAT) AS oc, 
-        CAST(SUM(CASE WHEN playerID = ? AND sc = 1 AND w IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
-        CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) AS wr
+# p1 > p2+p3
+def ff_solo_carry(player_id: int) -> tuple:
+    if player_id < 0 or player_id > 2:
+        raise ValueError('No player_id higher than 2 or less than 0 permitted.')
+    return c.execute("""
+        SELECT CAST(SUM(IIF(playerID = ? AND sc = 1, 1, 0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
+        CAST(SUM(IIF(playerID = ? AND sc = 1 AND w IS NOT NULL,1,0)) AS FLOAT) /
+	    CAST(SUM(IIF(playerID = ? AND sc = 1 ,1,0)) AS FLOAT) AS wr
         FROM (SELECT s.gameID, s.playerID, MAX(s.score) > (SUM(s.score) - MAX(s.score)) AS sc, wins.gameID AS w
         FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID GROUP BY s.gameID)
-        WHERE gameID >= ? AND gameID <= ?
-    """, (player_id, player_id, player_id, start, end))
-    return c.fetchall()
+        --WHERE gameID <= ?
+    """, (player_id, player_id, player_id)).fetchone()
 
 
-def more_than_500(player_id, start=1, end=None):
-    # player got more than 500 in one game
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+# player got more than 500 in one game #TODO: rewrite
+def ff_more_than_500(player_id: int) -> tuple:
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(COUNT(gameID)/3 AS FLOAT) AS oc, 
         CAST(SUM(CASE WHEN playerID = ? AND sc = 1 AND w IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN playerID = ? AND sc = 1 THEN 1 ELSE 0 END) AS FLOAT) AS wr
         FROM (SELECT s.gameID, s.playerID, CASE WHEN score >= 500 THEN 1 ELSE 0 END AS sc, wins.gameID AS w
         FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID)
-        WHERE gameID >= ? AND gameID <= ?
-    """, (player_id, player_id, player_id, start, end))
-    return c.fetchall()
+        --WHERE gameID >= ?
+    """, (player_id, player_id, player_id)).fetchone()
 
 
-def everyone_scored(start=1, end=None):
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_everyone_scored() -> tuple:  # TODO: rewrite
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN sc = 1 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
         CAST(SUM(CASE WHEN sc = 1 AND wi IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN sc = 1 THEN 1 ELSE 0 END) AS FLOAT) AS wr
         FROM (SELECT s.gameID, CASE WHEN MIN(s.goals) > 0 THEN 1 ELSE 0 END AS sc, w.gameID AS wi FROM scores s 
         LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY s.gameID)
-        WHERE gameID >= ? AND gameID <= ?
-    """, (start, end))
-    return c.fetchall()
+        --WHERE gameID >= ? AND gameID <= ?
+    """).fetchone()
 
 
-def did_not_score(player_id, start=1, end=None):
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_did_not_score(player_id: int) -> tuple:  # TODO: rewrite
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN sG = 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
         CAST(SUM(CASE WHEN sG = 0 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN sG = 0 THEN 1 ELSE 0 END) AS FLOAT) AS wr
         FROM (SELECT s.gameID AS sID, playerID, s.goals AS sG, w.gameID AS wID FROM scores s
         LEFT JOIN wins w ON s.gameID = w.gameID
         WHERE playerID = ?)
-        WHERE sID >= ? AND sID <= ?
-    """, (player_id, start, end))
-    return c.fetchall()
+    """, (player_id,)).fetchone()
 
 
-def no_solo_goals(start=1, end=None):
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_no_solo_goals() -> tuple:  # TODO: rewrite
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN sG = sA AND sG > 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
         CAST(SUM(CASE WHEN sG = sA AND sG > 0 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN sG = sA AND sG > 0 THEN 1 ELSE 0 END) AS FLOAT) AS wr
@@ -600,15 +341,11 @@ def no_solo_goals(start=1, end=None):
         LEFT JOIN wins w ON s.gameID = w.gameID
         GROUP BY s.gameID)
         WHERE sID >= ? AND sID <= ?
-    """, (start, end))
-    return c.fetchall()
+    """).fetchone()
 
 
-def six_or_more_shots(start=1, end=None):
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_six_or_more_shots() -> tuple:
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN sS >= 6 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
         CAST(SUM(CASE WHEN sS >= 6 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN sS >= 6 THEN 1 ELSE 0 END) AS FLOAT)
@@ -616,15 +353,11 @@ def six_or_more_shots(start=1, end=None):
         LEFT JOIN wins w ON s.gameID = w.gameID
         GROUP BY sID)
         WHERE sID >= ? AND sID <= ?
-    """, (start, end))
-    return c.fetchall()
+    """).fetchone()
 
 
-def at_least_one_assist(player_id, start=1, end=None):
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_at_least_one_assist(player_id: int) -> tuple:
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN sA > 0 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
         CAST(SUM(CASE WHEN sA > 0 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN sA > 0 THEN 1 ELSE 0 END) AS FLOAT)
@@ -632,9 +365,8 @@ def at_least_one_assist(player_id, start=1, end=None):
         LEFT JOIN wins w ON s.gameID = w.gameID
         WHERE playerID = ?
         GROUP BY sID)
-        WHERE sID >= ? AND sID <= ?
-    """, (player_id, start, end))
-    return c.fetchall()
+        --WHERE sID >= ? AND sID <= ?
+    """, (player_id,)).fetchone()
 
 
 def two_or_more_saves(player_id, start=1, end=None):
@@ -738,6 +470,20 @@ def last_result() -> tuple:
 
 
 # -- RECORD GAMES
+def record_stat_per_session(stat: str, limit: int = 1) -> list[Any]:
+    if stat not in possible_stats and not 'games':
+        raise ValueError(f'Stat: {stat} is not known for most_one_day.')
+
+    if stat == 'games':
+        c.execute(
+            "SELECT date, COUNT(date) AS counter FROM games GROUP BY date ORDER BY counter DESC, date ASC LIMIT ?",
+            (limit,))
+    else:
+        c.execute("SELECT date, SUM(goals) AS counter FROM games GROUP BY date ORDER BY counter DESC, date ASC LIMIT ?",
+                  (limit,))
+    return c.fetchall()
+
+
 def record_highest_value_per_stat(stat: str, limit: int = 3) -> list[Any]:
     if stat not in possible_stats:
         raise ValueError(f'{stat} not in possible stats.')
@@ -787,15 +533,14 @@ def most_total_goals(limit: int = 3) -> list[Any]:
                      (limit,)).fetchall()
 
 
-def highest_team(stat):
+def highest_team(stat: str, limit: int = 3):
     if stat == 'goals':
         stat = 'scores.goals'
-    c.execute('''
-            SELECT "", SUM(''' + stat + ''') AS stat, games.gameID, date 
+    return c.execute(f'''
+            SELECT "CG", SUM({stat}) AS stat, games.gameID, date 
             FROM games JOIN scores ON games.gameID = scores.gameID 
-            GROUP BY games.gameID ORDER BY stat DESC
-        ''')
-    return c.fetchmany(3)
+            GROUP BY games.gameID ORDER BY stat DESC LIMIT ?
+        ''', (limit,)).fetchall()
 
 
 def diff_mvp_lvp(order):
@@ -1135,3 +880,68 @@ def games_this_year() -> int:
 
 def month_game_counts():
     return c.execute("SELECT strftime('%m-%Y',date) as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC").fetchall()
+
+
+# UNUSED #
+def build_fun_facts():
+    raise NotImplementedError()
+
+
+def mvp_wins(player_id, start=1, end=None):
+    if end is None:
+        end = max_id()
+    c.execute("""
+        SELECT COUNT(playerID) AS MVPs FROM (
+            SELECT wins.gameID, playerID, score
+            FROM wins
+            LEFT JOIN scores ON scores.gameID = wins.gameID
+            WHERE wins.gameId >= ? AND wins.gameId <= ?
+            GROUP BY wins.gameID
+            HAVING MAX(score))
+        WHERE playerID = ?""", (start, end, player_id))
+    return c.fetchone()[0]
+
+
+def team_solo_goals() -> int:
+    return c.execute("SELECT SUM(goals) - SUM(assists) FROM scores").fetchone()[0]
+
+
+def total_wins() -> int:
+    return c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against").fetchone()[0]
+
+
+def total_losses() -> int:
+    return c.execute("SELECT COUNT(gameID) FROM games WHERE goals < against").fetchone()[0]
+
+
+def one_diff_wins() -> int:
+    return c.execute("SELECT COUNT(gameID) FROM games WHERE goals - against = 1").fetchone()[0]
+
+
+def one_diff_loss() -> int:
+    return c.execute("SELECT COUNT(gameID) FROM games WHERE against - goals = 1").fetchone()[0]
+
+
+def average_mvp_score() -> int:
+    return c.execute(
+        """SELECT AVG(scores.score) 
+        FROM mvplvp JOIN scores ON mvplvp.MVP = scores.playerID AND mvplvp.gameID = scores.gameID""").fetchone()[0]
+
+
+def average_lvp_score() -> int:
+    return c.execute(
+        """SELECT AVG(scores.score) 
+        FROM mvplvp JOIN scores ON mvplvp.LVP = scores.playerID AND mvplvp.gameID = scores.gameID""").fetchone()[0]
+
+
+# ???
+def performance_agg(stat, mode, starting_game_id=1, games_considered=20):
+    c.execute("""
+        SELECT name, """ + mode + """(""" + stat + """)
+            FROM(   SELECT scores.playerID, """ + stat + """, name
+                    FROM scores JOIN players 
+                    ON scores.playerID = players.playerID WHERE scores.gameID > """ + str(starting_game_id) + """
+                    ORDER BY scores.gameID ASC LIMIT """ + str(games_considered) + """)
+            GROUP BY playerID
+    """)
+    return c.fetchall()
