@@ -102,7 +102,7 @@ def days_since_inception() -> int:
     return c.execute('SELECT julianday(DATE()) - julianday(MIN(date)) FROM games').fetchone()[0]
 
 
-# Generates table of longest winning streaks [streak, gameStartID, gameEndID]
+# Generates table of the longest winning streaks [streak, gameStartID, gameEndID]
 def longest_winning_streak() -> list[Any]:
     return c.execute("""
     WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -117,7 +117,7 @@ def longest_winning_streak() -> list[Any]:
     """).fetchone()[0]
 
 
-# Generate table of longest losing streaks [steak, gameStartID, gameEndID]
+# Generate table of the longest losing streaks [steak, gameStartID, gameEndID]
 def longest_losing_streak() -> list[Any]:
     return c.execute("""
     WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -240,7 +240,7 @@ def losses_in_range(start, end) -> int:
 
 
 # Used for general stat tables
-def general_game_stats_over_time_period(start=1, end=None) -> list[Any]:
+def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
     # Input validation
     if end is None:
         end = max_id()
@@ -254,19 +254,21 @@ def general_game_stats_over_time_period(start=1, end=None) -> list[Any]:
     goals = team_goals_in_range(start, end)
     against = team_against_in_range(start, end)
 
-    def formatted_over_time_box_query(stat: str):
+    def formatted_over_time_box_query(stat: str) -> tuple:
         if stat not in possible_stats:
-            raise ValueError(f'{stat} not in possible stats.')
+            raise ValueError(f'{stat} is not in possible stats.')
 
         return c.execute(f"""
-            SELECT SUM(knus.{stat}), AVG(knus.{stat}), SUM(puad.{stat}), AVG(puad.{stat}), SUM(sticker.{stat}), AVG(sticker.{stat})
+            SELECT SUM(knus.{stat}), AVG(knus.{stat}), SUM(puad.{stat}), 
+            AVG(puad.{stat}), SUM(sticker.{stat}), AVG(sticker.{stat})
             FROM knus JOIN puad ON knus.gameID = puad.gameID JOIN sticker ON sticker.gameID = knus.gameID
             WHERE knus.gameID >= ? AND knus.gameID <= ?
         """, (start, end)).fetchone()
 
-    def mvp_helper_query():
+    def mvp_helper_query() -> list[Any]:
         query = c.execute(f"""
-        SELECT COUNT(gameID), CAST(COUNT(gameID) AS FLOAT)/CAST({games} AS FLOAT) FROM mvplvp WHERE gameID >= ? AND gameID <= ? GROUP BY MVP
+        SELECT COUNT(gameID), CAST(COUNT(gameID) AS FLOAT)/CAST({games} AS FLOAT) 
+        FROM mvplvp WHERE gameID >= ? AND gameID <= ? GROUP BY MVP
         """, (start, end)).fetchall()
         return [stats for tpl in query for stats in tpl]  # Convert three rows to one list
 
@@ -290,7 +292,7 @@ def ff_solo_carry(player_id: int) -> tuple:
     return c.execute("""
         SELECT CAST(SUM(IIF(playerID = ? AND sc = 1, 1, 0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
         CAST(SUM(IIF(playerID = ? AND sc = 1 AND w IS NOT NULL,1,0)) AS FLOAT) /
-	    CAST(SUM(IIF(playerID = ? AND sc = 1 ,1,0)) AS FLOAT) AS wr
+        CAST(SUM(IIF(playerID = ? AND sc = 1 ,1,0)) AS FLOAT) AS wr
         FROM (SELECT s.gameID, s.playerID, MAX(s.score) > (SUM(s.score) - MAX(s.score)) AS sc, wins.gameID AS w
         FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID GROUP BY s.gameID)
         --WHERE gameID <= ?
@@ -369,11 +371,8 @@ def ff_at_least_one_assist(player_id: int) -> tuple:
     """, (player_id,)).fetchone()
 
 
-def two_or_more_saves(player_id, start=1, end=None):
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_two_or_more_saves(player_id: int) -> tuple:
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN sS >= 2 THEN 1 ELSE 0 END) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
         CAST(SUM(CASE WHEN sS >= 2 AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN sS >= 2 THEN 1 ELSE 0 END) AS FLOAT)
@@ -381,17 +380,13 @@ def two_or_more_saves(player_id, start=1, end=None):
         LEFT JOIN wins w ON s.gameID = w.gameID
         WHERE playerID = ?
         GROUP BY sID)
-        WHERE sID >= ? AND sID <= ?
-    """, (player_id, start, end))
-    return c.fetchall()
+        --WHERE sID >= ? AND sID <= ?
+    """, (player_id,)).fetchone()
 
 
-def irrelevant(player_id, start=1, end=None):
-    # Irrelevant: Sum of all averages / 7.5
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+# Irrelevant: Sum of all averages / 7.5
+def ff_irrelevant(player_id: int) -> tuple:
+    return c.execute("""
         WITH st AS (
         SELECT s.gameID AS sID, s.playerID, s.score AS stSc, w.gameID AS wID
         FROM scores s LEFT JOIN wins w ON s.gameID = w.gameID
@@ -402,77 +397,50 @@ def irrelevant(player_id, start=1, end=None):
         CAST(SUM(CASE WHEN st.stSc <= at.avgS AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN st.stSc <= at.avgS THEN 1 ELSE 0 END) AS FLOAT) AS wr
         FROM st, at
-        WHERE sID >= ? AND sID <= ?
-    """, (player_id, start, end))
-    return c.fetchall()
+        --WHERE sID >= ? AND sID <= ?
+    """, (player_id,)).fetchone()
 
 
-def team_scores_x_times(x, start=1, end=None):  # pls test2
-    # x = (1) bis (5 or more)
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_team_scores_x_times(x: int) -> tuple:  # TODO: rewrite & test
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN gGoals = ? THEN 1 ELSE 0 END) AS FLOAT) / COUNT(gID) AS oc,
         CAST(SUM(CASE WHEN gGoals = ? AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN gGoals = ? THEN 1 ELSE 0 END) AS FLOAT) AS wr
         FROM (SELECT g.gameID AS gID, g.goals AS gGoals, w.gameID AS wID FROM games g 
         LEFT JOIN wins w ON g.gameID = w.gameID)
         WHERE gID >= ? AND gID <= ?
-    """, (x, x, x, start, end))
-    return c.fetchall()
+    """, (x, x, x)).fetchone()
 
 
-def team_concedes_x_times(x, start=1, end=None):
-    # Output: Occurrence, Winrate
-    if end is None:
-        end = max_id()
-    c.execute("""
+def ff_team_concedes_x_times(x: int) -> tuple:  # TODO: rewrite
+    return c.execute("""
         SELECT CAST(SUM(CASE WHEN gAgainst = ? THEN 1 ELSE 0 END) AS FLOAT) / COUNT(gID) AS oc,
         CAST(SUM(CASE WHEN gAgainst = ? AND wID IS NOT NULL THEN 1 ELSE 0 END) AS FLOAT) / 
         CAST(SUM(CASE WHEN gAgainst = ? THEN 1 ELSE 0 END) AS FLOAT) AS wr
         FROM (SELECT g.gameID AS gID, g.against AS gAgainst, w.gameID AS wID FROM games g 
         LEFT JOIN wins w ON g.gameID = w.gameID)
         WHERE gID >= ? AND gID <= ?
-    """, (x, x, x, start, end))
-    return c.fetchall()
+    """, (x, x, x)).fetchone()
 
 
-def results_table():  # TODO: Rewrite to dict, {'2:1':[count,share%]}
-    c.execute("""
+# - Random facts queries - #
+def results_table() -> list[Any]:  # TODO: rewrite?
+    return c.execute("""
         WITH cG AS (SELECT COUNT(*) allG FROM games)
         SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / cG.allG AS ch  FROM games, cG
         GROUP BY goals, against
         ORDER BY c DESC
-    """)
-    return c.fetchall()
-
-
-def results_table_ordered():
-    data = c.execute("""
-        WITH cG AS (SELECT COUNT(*) allG FROM games)
-        SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / cG.allG AS ch  FROM games, cG
-        GROUP BY goals, against
-        ORDER BY goals ASC
     """).fetchall()
-    d = {}
-    for x in data:
-        key = x[0]
-        if key in d:
-            d[key].append(x)
-        else:
-            d[key] = [x]
-    return d
 
 
 def last_result() -> tuple:
     return c.execute('SELECT goals, against FROM games ORDER BY gameID DESC LIMIT 1').fetchone()
 
 
-# -- RECORD GAMES
+# - RECORD GAME QUERIES - #
 def record_stat_per_session(stat: str, limit: int = 1) -> list[Any]:
     if stat not in possible_stats and not 'games':
-        raise ValueError(f'Stat: {stat} is not known for most_one_day.')
+        raise ValueError(f'{stat} is not in possible stats.')
 
     if stat == 'games':
         c.execute(
@@ -486,7 +454,7 @@ def record_stat_per_session(stat: str, limit: int = 1) -> list[Any]:
 
 def record_highest_value_per_stat(stat: str, limit: int = 3) -> list[Any]:
     if stat not in possible_stats:
-        raise ValueError(f'{stat} not in possible stats.')
+        raise ValueError(f'{stat} is not in possible stats.')
     if stat == 'goals':
         stat = 'scores.goals'
 
@@ -533,7 +501,7 @@ def most_total_goals(limit: int = 3) -> list[Any]:
                      (limit,)).fetchall()
 
 
-def highest_team(stat: str, limit: int = 3):
+def highest_team(stat: str, limit: int = 3) -> list[Any]:
     if stat == 'goals':
         stat = 'scores.goals'
     return c.execute(f'''
@@ -543,10 +511,10 @@ def highest_team(stat: str, limit: int = 3):
         ''', (limit,)).fetchall()
 
 
-def diff_mvp_lvp(order):
+def diff_mvp_lvp(order: str, limit: int = 3) -> list[Any]:  # TODO: rewrite
     if order not in ['ASC', 'DESC']:
         raise ValueError('Order is not DESC or ASC.')
-    c.execute('''
+    return c.execute('''
         WITH
             mvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MAX(score)),
             lvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MIN(score))
@@ -554,55 +522,49 @@ def diff_mvp_lvp(order):
             LEFT JOIN lvp ON mvp.gameID = lvp.gameID
             LEFT JOIN players AS pm ON mvp.playerID = pm.playerID
             LEFT JOIN games ON mvp.gameID = games.gameID
-            ORDER BY diff ''' + order)
-    return c.fetchmany(3)
+            ORDER BY diff ? LIMIT ? ''', (order, limit)).fetchall()
 
 
-def most_solo_goals():
-    c.execute('''
+def most_solo_goals(limit: int = 3) -> list[Any]:
+    return c.execute('''
             SELECT "", games.goals - SUM(assists) AS ja, games.gameID, date FROM games 
             JOIN scores ON games.gameID = scores.gameID
-            GROUP BY games.gameID ORDER BY ja DESC''')
-    return c.fetchmany(3)
+            GROUP BY games.gameID ORDER BY ja DESC LIMIT ?''', (limit,)).fetchall()
 
 
-def trend(stat, minmax):
+def trend(stat: str, minmax: str, limit: int = 3) -> list[Any]:
     if stat not in possible_stats or minmax not in ['MIN', 'MAX']:
-        raise ValueError('stat or MINMAX not known.')
+        raise ValueError(f'{stat} is not in possible stats or {minmax} is not "MIN" or "MAX"')
     if stat == 'goals':
         stat = 'performance.goals'
-    c.execute('''
-        SELECT name, ''' + minmax + '''(''' + stat + ''') AS s, games.gameID, date 
+    return c.execute(f'''
+        SELECT name, {minmax}({stat}) AS s, games.gameID, date 
         FROM performance JOIN games ON games.gameID = performance.gameID NATURAL JOIN players
-        GROUP BY games.gameID ORDER BY s ''' + ('DESC' if minmax == 'MAX' else 'ASC'))
-    return c.fetchmany(3)
+        GROUP BY games.gameID ORDER BY s {('DESC' if minmax == 'MAX' else 'ASC')} LIMIT ?''', (limit,)).fetchall()
 
 
-def highest_points_nothing_else():
-    c.execute('''
+def highest_points_nothing_else(limit: int = 3) -> list[Any]:
+    return c.execute('''
             SELECT name, MAX(score), games.gameID, date     
             FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
             WHERE scores.goals = 0 AND assists=0 AND saves=0 AND shots=0
-            GROUP BY games.gameID ORDER BY score DESC''')
-    return c.fetchmany(3)
+            GROUP BY games.gameID ORDER BY score DESC LIMIT ?''', (limit,)).fetchall()
 
 
-def lowest_points_at_least_1():
-    c.execute('''
+def lowest_points_at_least_1(limit: int = 3) -> list[Any]:
+    return c.execute('''
             SELECT name, MIN(score), games.gameID, date 
             FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
             WHERE scores.goals >= 1 AND assists>=1 AND saves>=1 AND shots>=1
-            GROUP BY games.gameID ORDER BY score ASC ''')
-    return c.fetchmany(3)
+            GROUP BY games.gameID ORDER BY score ASC LIMIT ?''', (limit,)).fetchall()
 
 
-def most_points_without_goal_or_assist():
-    c.execute('''
+def most_points_without_goal_or_assist(limit: int = 3) -> list[Any]:
+    return c.execute('''
             SELECT name, MAX(score), games.gameID, date 
             FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
             WHERE scores.goals = 0 AND assists=0
-            GROUP BY games.gameID ORDER BY score DESC''')
-    return c.fetchmany(3)
+            GROUP BY games.gameID ORDER BY score DESC LIMIT ?''', (limit,)).fetchall()
 
 
 def build_record_games():
@@ -644,15 +606,12 @@ def build_record_games():
 
 
 # GRAPH QUERIES
-# TODO: OUTPUT: Graph queries as dictionary, keys: {title, x-axis-range; (k, p, s) OR (data)}
-
-# title xmin xmax data
-
+# TODO: title:str xmin:int xmax:int data:tuple for all graph queries
 def graph_performance(stat, start=1, end=None):
     if end is None:
         end = max_id()
     if stat not in possible_stats:
-        raise ValueError("Not valid stat.")
+        raise ValueError(f'{stat} is not in possible stats.')
     c.execute("""
         WITH kT AS (SELECT * FROM performance WHERE playerID = 0),
         pT AS (SELECT * FROM performance WHERE playerID = 1),
@@ -670,7 +629,7 @@ def graph_total_performance(stat, start=1, end=None):
     if end is None:
         end = max_id()
     if stat not in possible_stats:
-        raise ValueError("Not valid stat.")
+        raise ValueError(f'{stat} is not in possible stats.')
     c.execute("""
         SELECT gameID, AVG(""" + stat + """) FROM performance WHERE gameID >= ? AND gameID <= ? GROUP BY gameID
     """, (start, end))
@@ -741,7 +700,7 @@ def graph_performance_share(stat, start=1, end=None):
     if end is None:
         end = max_id()
     if stat not in possible_stats or stat != 'mvp':
-        raise ValueError('Stat not legal')
+        raise ValueError(f'{stat} is not in possible stats.')
     c.execute("""
         WITH k AS(SELECT SUM(?) AS ks FROM scores WHERE playerID = 0 AND gameID > ? AND gameID < ?),
         p AS (SELECT SUM(?) AS ps FROM scores WHERE playerID = 1 AND gameID > ? AND gameID < ?),
@@ -787,7 +746,7 @@ def graph_average_lvp_score_over_time(start=1, end=None):
 # Fragen: Was ist mit also for MVPs gemeint? Eigene Query?
 def graph_cumulative_stat_over_time(stat):
     if stat not in possible_stats or stat != 'mvp':
-        raise ValueError('Illegal stat')
+        raise ValueError(f'{stat} is not in possible stats.')
     c.execute("""
         WITH k AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 0),
         p AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 1),
@@ -798,7 +757,6 @@ def graph_cumulative_stat_over_time(stat):
     return "Cumulative value for " + stat, stat, data
 
 
-# ja
 def graph_solo_goals_over_time():
     c.execute("""
         WITH solos AS (SELECT gameID, SUM(goals) - SUM(assists) AS solo FROM scores GROUP BY gameID)
@@ -808,51 +766,51 @@ def graph_solo_goals_over_time():
     return "Cumulative solo goals", data
 
 
-# Random Facts
-def total(player_id, stat):
+# - RANDOM FACTS QUERIES - #
+def player_total_of_stat(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
-        raise ValueError()
-    return c.execute('SELECT SUM(' + stat + ') FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
+        raise ValueError(f'{stat} is not in possible stats.')
+    return c.execute(f'SELECT SUM({stat}) FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
-def last(player_id, stat):
+def player_stat_of_last_game(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
-        raise ValueError()
-    return c.execute('SELECT ' + stat + '  FROM scores WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+        raise ValueError(f'{stat} is not in possible stats.')
+    return c.execute('SELECT {stat} FROM scores WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
-def average(player_id, stat):
+def player_average_all_games(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
-        raise ValueError()
-    return c.execute('SELECT AVG(' + stat + ') FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
+        raise ValueError(f'{stat} is not in possible stats.')
+    return c.execute('SELECT AVG({stat}) FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
-def average_all(player_id, stat):
+def average_all(player_id: int, stat: str) -> list[Any]:
     if stat not in possible_stats:
-        raise ValueError()
-    data = c.execute('SELECT ' + stat + ' FROM performance WHERE playerID = ?', (player_id,)).fetchall()
+        raise ValueError(f'{stat} is not in possible stats.')
+    data = c.execute('SELECT {stat} FROM performance WHERE playerID = ?', (player_id,)).fetchall()
     return [x[0] for x in data]
 
 
-def performance(player_id, stat):
+def performance(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
-        raise ValueError()
-    return c.execute('SELECT ' + stat + '  FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+        raise ValueError(f'{stat} is not in possible stats.')
+    return c.execute('SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
-def performance100(player_id, stat):
+def performance100(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
-        raise ValueError()
-    return c.execute('SELECT ' + stat + '  FROM performance100 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+        raise ValueError(f'{stat} is not in possible stats.')
+    return c.execute('SELECT {stat} FROM performance100 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
-def performance250(player_id, stat):
+def performance250(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
-        raise ValueError()
-    return c.execute('SELECT ' + stat + '  FROM performance250 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+        raise ValueError(f'{stat} is not in possible stats.')
+    return c.execute('SELECT {stat} FROM performance250 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
@@ -860,25 +818,26 @@ def player_name(player_id: int) -> str:
     return c.execute('SELECT name FROM players WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
-def last_session_data():
+def last_session_data() -> list[Any]:
     return c.execute('SELECT * FROM sessions ORDER BY SessionID desc LIMIT 1').fetchone()
 
 
-def last_two_sessions_dates():
+def last_two_sessions_dates() -> list[Any]:
     return c.execute('SELECT date FROM sessions ORDER BY SessionID DESC LIMIT 2').fetchall()
 
 
-def games_this_month() -> int:
+def game_amount_this_month() -> int:
     return c.execute(
-        "SELECT COUNT(*) FROM games WHERE strftime('%m', date) = strftime('%m',DATE()) AND strftime('%Y',date) = strftime('%Y',DATE())").fetchone()[
-        0]
+        """SELECT COUNT(*) FROM games 
+           WHERE strftime('%m', date) = strftime('%m',DATE()) AND 
+           strftime('%Y',date) = strftime('%Y',DATE())""").fetchone()[0]
 
 
-def games_this_year() -> int:
+def game_amount_this_year() -> int:
     return c.execute("SELECT COUNT(*) FROM games WHERE strftime('%Y',date) = strftime('%Y',DATE())").fetchone()[0]
 
 
-def month_game_counts():
+def unique_months_game_count() -> list[Any]:
     return c.execute("SELECT strftime('%m-%Y',date) as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC").fetchall()
 
 
@@ -945,3 +904,20 @@ def performance_agg(stat, mode, starting_game_id=1, games_considered=20):
             GROUP BY playerID
     """)
     return c.fetchall()
+
+
+def results_table_ordered():
+    data = c.execute("""
+        WITH cG AS (SELECT COUNT(*) allG FROM games)
+        SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / cG.allG AS ch  FROM games, cG
+        GROUP BY goals, against
+        ORDER BY goals ASC
+    """).fetchall()
+    d = {}
+    for x in data:
+        key = x[0]
+        if key in d:
+            d[key].append(x)
+        else:
+            d[key] = [x]
+    return d

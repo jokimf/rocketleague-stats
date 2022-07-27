@@ -51,7 +51,7 @@ def last_session_facts() -> set[str]:
 
 def game_count_facts() -> set[str]:
     facts = set()
-    month, year, total = q.games_this_month(), q.games_this_year(), q.max_id()
+    month, year, total = q.game_amount_this_month(), q.game_amount_this_year(), q.max_id()
     if total % 100 == 0:
         facts.add(f'You just played the {total}th game in total.')
 
@@ -66,12 +66,12 @@ def game_count_facts() -> set[str]:
 
 def last_month_summary() -> set[str]:
     facts = set()
-    month = q.games_this_month()
+    month = q.game_amount_this_month()
 
     # Only show if less than 3 games have been played this month and its before the fifth of a month
     if month <= 3 and datetime.today().day < 5:
         last_month_str = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
-        data = q.month_game_counts()
+        data = q.unique_months_game_count()
 
         # Cursed, fix it sometime
         c = 0
@@ -122,9 +122,9 @@ def milestone_facts() -> set[str]:
     for stat in possible_stats:
         for p in range(0, 3):
             milestone_val = 50000 if stat == 'score' else 500 if stat == 'shots' else 250
-            total = q.total(p, stat)
+            total = q.player_total_of_stat(p, stat)
             overshoot = total % milestone_val
-            if overshoot < q.last(p, stat):  # Milestone crossed
+            if overshoot < q.player_stat_of_last_game(p, stat):  # Milestone crossed
                 facts.add(f'{q.player_name(p)} just reached {total - overshoot} {stat}!')
     return facts
 
@@ -140,7 +140,7 @@ def average_high_variance_facts() -> set[str]:
         for p in range(0, 3):
             for s in [(20, q.performance(p, stat)), (100, q.performance100(p, stat)), (250, q.performance250(p, stat))]:
                 for z in z_values.keys():
-                    percentile_value = q.average(p, stat) + z_values[z] * statistics.stdev(q.average_all(p, stat))
+                    percentile_value = q.player_average_all_games(p, stat) + z_values[z] * statistics.stdev(q.average_all(p, stat))
                     if percentile_value < s[1] and z.startswith('Top'):
                         facts.add(f'Over the last {s[0]} games, {q.player_name(p)} {stat} are in the {z} on average.')
                     elif percentile_value > s[1] and z.startswith('Bottom'):
