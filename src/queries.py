@@ -511,10 +511,11 @@ def highest_team(stat: str, limit: int = 3) -> list[Any]:
         ''', (limit,)).fetchall()
 
 
-def diff_mvp_lvp(order: str, limit: int = 3) -> list[Any]:  # TODO: rewrite
+# Difference between MVP and LVP, DESC for most diff, ASC for least diff TODO: rewrite
+def diff_mvp_lvp(order: str, limit: int = 3) -> list[Any]:
     if order not in ['ASC', 'DESC']:
         raise ValueError('Order is not DESC or ASC.')
-    return c.execute('''
+    return c.execute(f'''
         WITH
             mvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MAX(score)),
             lvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MIN(score))
@@ -522,7 +523,7 @@ def diff_mvp_lvp(order: str, limit: int = 3) -> list[Any]:  # TODO: rewrite
             LEFT JOIN lvp ON mvp.gameID = lvp.gameID
             LEFT JOIN players AS pm ON mvp.playerID = pm.playerID
             LEFT JOIN games ON mvp.gameID = games.gameID
-            ORDER BY diff ? LIMIT ? ''', (order, limit)).fetchall()
+            ORDER BY diff {order} LIMIT ? ''', (limit,)).fetchall()
 
 
 def most_solo_goals(limit: int = 3) -> list[Any]:
@@ -776,45 +777,45 @@ def player_total_of_stat(player_id: int, stat: str) -> int:
 def player_stat_of_last_game(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute('SELECT {stat} FROM scores WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+    return c.execute(f'SELECT {stat} FROM scores WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
 def player_average_all_games(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute('SELECT AVG({stat}) FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
+    return c.execute(f'SELECT AVG({stat}) FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
 def average_all(player_id: int, stat: str) -> list[Any]:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute('SELECT {stat} FROM performance WHERE playerID = ?', (player_id,)).fetchall()
+    data = c.execute(f'SELECT {stat} FROM performance WHERE playerID = ?', (player_id,)).fetchall()
     return [x[0] for x in data]
 
 
 def performance(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute('SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+    return c.execute(f'SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
 def performance100(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute('SELECT {stat} FROM performance100 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+    return c.execute(f'SELECT {stat} FROM performance100 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
 def performance250(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute('SELECT {stat} FROM performance250 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
+    return c.execute(f'SELECT {stat} FROM performance250 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
                      (player_id,)).fetchone()[0]
 
 
-def player_name(player_id: int) -> str:
+def p_name(player_id: int) -> str:
     return c.execute('SELECT name FROM players WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
@@ -839,6 +840,10 @@ def game_amount_this_year() -> int:
 
 def unique_months_game_count() -> list[Any]:
     return c.execute("SELECT strftime('%m-%Y',date) as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC").fetchall()
+
+
+def session_count() -> int:
+    return c.execute("SELECT COUNT(1) FROM sessions").fetchone()[0]
 
 
 # UNUSED #
