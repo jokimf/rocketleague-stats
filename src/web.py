@@ -5,8 +5,7 @@ from pyramid.view import view_config
 from collections.abc import Callable
 
 import queries as q
-import json
-from json.encoder import JSONEncoder
+import random_facts as r
 
 
 @view_config(
@@ -29,7 +28,8 @@ def serve(request):
             "performance_data": q.general_game_stats_over_time_period(max_id - 19, max_id),
             # "last_5": q.points_last_5(),
             "record_games": q.build_record_games(),
-            "FunFacts": "q.build_fun_facts()"}
+            "FunFacts": "q.build_fun_facts()",
+            "random_facts": r.generate_random_facts()}
     return data
 
 
@@ -69,17 +69,6 @@ def ja(request):  # TODO more performance graphs
 
     merged = {**performance, **total_performance, **grief_value, **winrate_last_20, **winrate, **solo_goals,
               **performance_share, **mvp_lvp_share, **cumulative_stat}
-    return merged
-
-
-@view_config(
-    route_name='test',
-    renderer='../resources/test.jinja2'
-)
-def nein(request):
-    a = construct_graph()
-    print(a)
-    merged = {'graph': a}
     return merged
 
 

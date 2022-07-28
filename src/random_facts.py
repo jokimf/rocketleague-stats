@@ -3,7 +3,7 @@ import statistics
 from datetime import date, datetime, timedelta
 
 
-def generate_fun_facts():
+def generate_random_facts():
     union = list(set.union(milestone_facts(), average_high_variance_facts(), date_facts(), last_session_facts(),
                            last_month_summary(), result_facts(), game_count_facts(), close_to_record(), outclassed(),
                            at_least_1_streak()))
@@ -239,9 +239,6 @@ def close_to_record() -> set[str]:
     return facts
 
 
-close_to_record()
-
-
 # X has double the amount of Y, also session/season based
 def outclassed() -> set[str]:
     return set()
@@ -250,6 +247,3 @@ def outclassed() -> set[str]:
 # 'At least 1' streak in Goals/Assists/Saves
 def at_least_1_streak() -> set[str]:
     return set()
-
-
-print(generate_fun_facts())

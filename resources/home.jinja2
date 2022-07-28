@@ -47,6 +47,14 @@
             text-align: center;
         }
 
+        sub-headline {
+            font-size: 1em;
+            font-weight: 300;
+            line-height: 1em;
+            text-align: left;
+            color: #1d7aa4;
+        }
+
         .flexbox-item {
             margin: 5px;
         }
@@ -273,6 +281,14 @@
             </tr>
         </table>
     </div>
+</div>
+<div>
+    <div class="sub-headline">
+        RANDOM FACTS
+    </div>
+    {% for fact in random_facts %}
+        {{ fact[0] }}<br>
+    {% endfor %}
 </div>
 <div>
     <table>
