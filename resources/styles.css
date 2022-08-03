@@ -1,0 +1,112 @@
+body {
+    font-size: 1em !important;
+    color: #000000;
+    background-color: #ffffff;
+    font-family: 'Lato', sans-serif;
+    line-height: 1.42em;
+}
+
+h1 {
+    font-size: 3em;
+    font-weight: 300;
+    line-height: 1em;
+    text-align: center;
+    color: #599cbb;
+}
+
+.cg { /* clown gameplay part of headline */
+    font-size: 1.1em;
+    font-weight: 300;
+    line-height: 1em;
+    text-align: center;
+    color: #1d7aa4;
+}
+
+.test {
+    width: 80%;
+    margin: auto;
+    background: #e5e5e5;
+}
+
+.profile-pics {
+    display: flex;
+    justify-content: center;
+}
+
+.pp {
+    margin:10px;
+    border-radius: 100px;
+    border: 2px solid;
+}
+
+.sub-headline {
+    font-size: 1em;
+    font-weight: 300;
+    line-height: 1em;
+    color: #1d7aa4;
+}
+
+.flexbox-item {
+    margin: 5px;
+}
+
+.flexbox-container {
+    display: flex;
+    justify-content: center;
+    background: #d6f6c6;
+}
+
+.random-facts {
+    text-align: center;
+}
+
+/** Reset some basic elements */
+body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, hr, dl, dd, ol, ul, figure {
+    margin: 0;
+    padding: 0;
+}
+
+
+/** Set `margin-bottom` to maintain vertical rhythm */
+h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure, .highlight {
+    margin-bottom: 15px;
+}
+
+table {
+    border-collapse: collapse;
+    font-style: normal;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+caption {
+    font-size: 2em;
+    line-height: 1.8em;
+}
+
+th {
+    color: #000000;
+    font-weight: bold;
+}
+
+td, th {
+    border: 1px solid #999;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+table tr:nth-child(even) {
+    background-color: #f7f7f7;
+}
+
+table th {
+    background-color: #f0f0f0;
+    border: 1px solid #dedede;
+    border-bottom-color: #c9c9c9;
+}
+
+table td {
+    border: 1px solid #cccccc;
+}
+
+

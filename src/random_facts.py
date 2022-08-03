@@ -231,7 +231,7 @@ def close_to_record() -> set[str]:
     for record in record_data:
         for index in range(0, opt):
             if record[0][index][2] == last_id:
-                facts.add(record[1].format(value=record[0][index][1], name=record[0][index][0], rank=index + 1), 4)
+                facts.add((record[1].format(value=record[0][index][1], name=record[0][index][0], rank=index + 1), 4))
 
     # TODO: Session is close to being a record session
     session_count = q.session_count()
