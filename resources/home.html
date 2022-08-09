@@ -6,19 +6,61 @@
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link rel="stylesheet" href="./styles.css">
+    <script src="loadData.js"></script>
 </head>
 <body>
-<div class="test">
+<div class="website-center-setup">
     <h1><span class="cg">CLOWN GAMEPLAY</span> ROCKET LEAGUE STATISTICS</h1>
-    <div class="profile-pics">
-        <img class="pp" src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg" alt="Knus">
-        <img class="pp" src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg" alt="Puad">
-        <img class="pp" src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg" alt="Sticker">
+    <div class="profile-pics-flexbox">
+        <figure>
+            <figcaption><img class="icon" src="icons/c3.png"> Knus</figcaption>
+            <img class="profile-pics"
+                 src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
+                 alt="Knus">
+        </figure>
+        <figure>
+            <figcaption><img class="icon" src="icons/c3.png"> Puad</figcaption>
+            <img class="profile-pics"
+                 src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg"
+                 alt="Puad">
+        </figure>
+        <figure>
+            <figcaption><img class="icon" src="icons/c3.png"> Sticker</figcaption>
+            <img class="profile-pics"
+                 src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
+                 alt="Sticker">
+        </figure>
     </div>
-    <div class="">Days since inception: 1351.0, Total Games: 2406, davon Wins: 1258</div>
-    <div class="last10">
+    <div class="general-info">
+        <table>
+            <tr>
+                <td>Days since inception</td>
+                <td>1351</td>
+            </tr>
+            <tr>
+                <td>Games</td>
+                <td>2406</td>
+            </tr>
+            <tr>
+                <td>Tilt</td>
+                <td>schon</td>
+            </tr>
+        </table>
+    </div>
+    <div class="random-facts">
+        <h2> RANDOM FACTS</h2>
+        <ul>
+            <li>Over the last 20 games, Puad assists are in the Top 15% on average.</li>
+            <li>Last session was 10 days ago...</li>
+            <li>In 2022, CG wins 50.9% of games.</li>
+            <li>In July, CG wins 52.9% of games.</li>
+            <li>The result of the last match was extremely common. It already happened 203 times. (8.4%)</li>
+            <li>On the 30 day of a month, CG wins 49.4% of games.</li>
+        </ul>
+    </div>
+    <div class="last5">
         <table class="container">
-            <caption>Last 10 Games</caption>
+            <caption>Last 5 Games</caption>
             <thead>
             <tr>
                 <th colspan="4">General</th>
@@ -296,9 +338,8 @@
             </tbody>
         </table>
     </div>
-
-    <div class="flexbox-container">
-        <div class="flexbox-item">
+    <div class="total-season-session">
+        <div class="infobox">
             <table>
                 <caption>GRAND TOTAL</caption>
                 <tbody>
@@ -415,7 +456,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="flexbox-item">
+        <div class="infobox">
             <table>
                 <caption>THIS SEASON</caption>
                 <tbody>
@@ -532,7 +573,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="flexbox-item">
+        <div class="infobox">
             <table>
                 <caption>THIS SESSION</caption>
                 <tbody>
@@ -650,24 +691,6 @@
             </table>
         </div>
     </div>
-    <div class="random-facts">
-        <div class="sub-headline">
-            RANDOM FACTS
-        </div>
-
-        Over the last 20 games, Puad assists are in the Top 15% on average.<br>
-
-        Last session was 10 days ago...<br>
-
-        In 2022, CG wins 50.9% of games.<br>
-
-        In July, CG wins 52.9% of games.<br>
-
-        The result of the last match was extremely common. It already happened 203 times. (8.4%)<br>
-
-        On the 30 day of a month, CG wins 49.4% of games.<br>
-
-    </div>
     <div class="fun-facts">
         <table>
             <caption>"FUN" FACTS</caption>
@@ -687,8 +710,8 @@
             </tbody>
         </table>
     </div>
-    <div class="flexbox-container">
-        <div class="flexbox-item">
+    <div class="total-season-session">
+        <div class="infobox">
             <div class="days">
                 <table>
                     <caption>DAYS</caption>
@@ -1325,7 +1348,7 @@
                 </table>
             </div>
         </div>
-        <div class="flexbox-item">
+        <div class="infobox">
             <div class="months">
                 <table>
                     <caption>MONTHS</caption>
@@ -1582,7 +1605,7 @@
                 </table>
             </div>
         </div>
-        <div class="flexbox-item">
+        <div class="infobox">
             <div class="years">
                 <table>
                     <caption>YEARS</caption>
