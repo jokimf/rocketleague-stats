@@ -5,6 +5,7 @@ from pyramid.view import view_config
 from collections.abc import Callable
 
 import queries as q
+import graphs as g
 import random_facts as r
 
 
@@ -16,8 +17,10 @@ def data(request):
     graph = request.path.split('/')[2]
 
     # TODO: Fetch graph data
-    pfd = q.Graph('PFD', 'line', 0, 10, True, ([23, 61, 11, 34, 66], [4, 33, 21, 40, 10], [55, 44, 22, 30, 10]))
-    return pfd.to_dict()
+    #pfd = g.graph_performance('score')
+    #return pfd.to_dict()
+    pfd2 = g.dates_table()
+    return pfd2.to_dict()
 
 
 @view_config(
