@@ -1,14 +1,13 @@
 from matplotlib import pyplot as plt
 import queries as q
 
-data = q.performance_agg('score', 'AVG', games_considered=6000)
+data = q.graph_performance('goals')
 
-names = ([data[0][0], data[1][0], data[2][0]])
-stats = ([data[0][1], data[1][1], data[2][1]])
-print(names, stats)
+print(data)
 plt.title('Trend')
 plt.xlabel('Player')
 plt.ylabel('Score')
-
-plt.bar(names, stats)
+plt.xlim(data[1], data[2])
+plt.bar(data[3])
+# plt.bar(names, stats)
 plt.show()

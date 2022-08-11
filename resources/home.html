@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link rel="stylesheet" href="./styles.css">
-    <script src="loadData.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="website-center-setup">
@@ -31,6 +31,7 @@
                  alt="Sticker">
         </figure>
     </div>
+    <hr>
     <div class="general-info">
         <table>
             <tr>
@@ -58,6 +59,12 @@
             <li>On the 30 day of a month, CG wins 49.4% of games.</li>
         </ul>
     </div>
+    <div class="graphs">
+        <div class="graph-shell">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+    <hr>
     <div class="last5">
         <table class="container">
             <caption>Last 5 Games</caption>
@@ -338,6 +345,7 @@
             </tbody>
         </table>
     </div>
+    <hr>
     <div class="total-season-session">
         <div class="infobox">
             <table>
@@ -691,6 +699,7 @@
             </table>
         </div>
     </div>
+    <hr>
     <div class="fun-facts">
         <table>
             <caption>"FUN" FACTS</caption>
@@ -710,6 +719,7 @@
             </tbody>
         </table>
     </div>
+    <hr>
     <div class="total-season-session">
         <div class="infobox">
             <div class="days">
@@ -1724,8 +1734,7 @@
         </div>
 
     </div>
-
-
+    <hr>
     <div class="records">
         <table>
             <caption>Records</caption>
@@ -3119,4 +3128,5 @@
     </div>
 </div>
 </body>
+<script src="loadData.js"></script>
 </html>

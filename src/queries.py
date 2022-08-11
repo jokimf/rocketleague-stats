@@ -1,6 +1,6 @@
 import datetime
 import sqlite3
-from typing import Any
+from typing import Any, Tuple
 
 database_path = '../resources/test.db'
 conn = sqlite3.connect(database_path)
@@ -607,7 +607,6 @@ def build_record_games():
 
 
 # GRAPH QUERIES
-# TODO: title:str xmin:int xmax:int data:tuple for all graph queries
 def graph_performance(stat, start=1, end=None):
     if end is None:
         end = max_id()
@@ -695,6 +694,15 @@ def graph_solo_goals(start=1, end=None):
     return "Solo goals over time", start, end, data
 
 
+def graph_solo_goals_over_time():
+    c.execute("""
+        WITH solos AS (SELECT gameID, SUM(goals) - SUM(assists) AS solo FROM scores GROUP BY gameID)
+        SELECT gameID, SUM(solo) OVER (ORDER BY gameID) AS cumulativeSolos FROM solos
+    """)
+    data = c.fetchall()
+    return "Cumulative solo goals", data
+
+
 # % Share of stat in game range [all stats + mvp share (might need own query)]
 # Output: [k%,p%,s%]
 def graph_performance_share(stat, start=1, end=None):
@@ -711,15 +719,6 @@ def graph_performance_share(stat, start=1, end=None):
     """, (stat, start, end, stat, start, end, stat, start, end))
     data = c.fetchall()
     return stat + " performance share", start, end, data
-
-
-# Output: Three dictionaries for K,P,S; {200:v, 250: w, 300: x, 350:y, ..., 500:z}
-# Score is capped, rounded down, 275 -> 250, 301 -> 300, 499 -> 450 (maybe use modulo 50?)
-# Fragen: Was sind v,w,x,y,z? Count? Momentaner Wert?
-def graph_score_performance_pointer(start=1, end=None):
-    if end is None:
-        end = max_id()
-    raise NotImplementedError()
 
 
 # Average MVP score over time
@@ -758,13 +757,48 @@ def graph_cumulative_stat_over_time(stat):
     return "Cumulative value for " + stat, stat, data
 
 
-def graph_solo_goals_over_time():
-    c.execute("""
-        WITH solos AS (SELECT gameID, SUM(goals) - SUM(assists) AS solo FROM scores GROUP BY gameID)
-        SELECT gameID, SUM(solo) OVER (ORDER BY gameID) AS cumulativeSolos FROM solos
-    """)
-    data = c.fetchall()
-    return "Cumulative solo goals", data
+class Graph:
+    def __init__(self, title: str, graph_type: str, x_min: int, x_max: int, begin_at_zero: bool, data: Tuple):
+        self.title = title
+        self.graph_type = graph_type
+        self.x_min = x_min
+        self.x_max = x_max
+        self.begin_at_zero = begin_at_zero
+        self.data = data
+
+    def to_dict(self) -> dict:
+        knus = {'label': 'Knus', 'data': self.data[0],
+                'borderColor': 'rgba(47,147,26,0.8)', 'borderWidth': 3}
+        puad = {'label': 'Puad', 'data': self.data[1],
+                'borderColor': 'rgba(147,26,26,0.8)', 'borderWidth': 3}
+        sticker = {'label': 'Sticker', 'data': self.data[2],
+                   'borderColor': 'rgba(26,115,147,0.8)', 'borderWidth': 3}
+
+        json = {'type': self.graph_type,
+                'data': {
+                    'title': self.title,
+                    'labels': [str(x) for x in range(self.x_min, self.x_max + 1)],
+                    'datasets': [knus, puad, sticker]
+                },
+                'options': {
+                    'beginAtZero': self.begin_at_zero
+                }
+                }
+
+        return json
+
+    graphs = {
+        'performance': graph_performance,
+        'total_performance': graph_total_performance,
+        'grief': graph_grief_value,
+        'wins_last_20': graph_winrate_last20,
+        'winrate': graph_winrate,
+        'solo_goals': graph_solo_goals,
+        'performance_share': graph_performance_share,
+        'av_mvp_score': graph_average_mvp_score_over_time,
+        'av_lvp_score': graph_average_lvp_score_over_time,
+        'game_stats': graph_cumulative_stat_over_time,
+    }
 
 
 # - RANDOM FACTS QUERIES - #
