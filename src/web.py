@@ -56,5 +56,5 @@ if __name__ == '__main__':
         config.add_route('data', 'data/{type}')
         config.scan()
         app = config.make_wsgi_app()
-    server = make_server('0.0.0.0', 6543, app)
+    server = make_server('127.0.0.1', 6543, app)
     server.serve_forever()
