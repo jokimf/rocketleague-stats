@@ -21,8 +21,156 @@ let a = {
         }]
     }, "options": {"beginAtZero": false, "x_min": 1, "x_max": 2300}
 }
-//fetch(url).then(res => res.json()).then(out => console.log(out))
-let config = {
+let url = 'https://jok.im/rlstats_python/data/pfd'
+//let b = fetch(url).then(res => res.json()).then(out => console.log(out)) // doesn't work yet because CORS
+let dayChartConfig = {
+    type: a.type,
+    data: {
+        labels: a.data.labels,
+        datasets: [{
+            label: a.data.datasets[0].label,
+            data: a.data.datasets[0].data,
+            borderColor: a.data.datasets[0].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }, {
+            label: a.data.datasets[1].label,
+            data: a.data.datasets[1].data,
+            borderColor: a.data.datasets[1].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }, {
+            label: a.data.datasets[2].label,
+            data: a.data.datasets[2].data,
+            borderColor: a.data.datasets[2].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: a.data.title
+            },
+            legend: {
+                display: false
+            }
+        }
+        ,
+        scales: {
+            x: {
+                min: a.options.x_min,
+                max: a.options.x_max
+            },
+            y: {
+                beginAtZero: a.options.beginAtZero
+            }
+        }
+    },
+    plugins: {}
+}
+let monthChartConfig = {
+    type: a.type,
+    data: {
+        labels: a.data.labels,
+        datasets: [{
+            label: a.data.datasets[0].label,
+            data: a.data.datasets[0].data,
+            borderColor: a.data.datasets[0].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }, {
+            label: a.data.datasets[1].label,
+            data: a.data.datasets[1].data,
+            borderColor: a.data.datasets[1].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }, {
+            label: a.data.datasets[2].label,
+            data: a.data.datasets[2].data,
+            borderColor: a.data.datasets[2].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: a.data.title
+            },
+            legend: {
+                display: false
+            }
+        }
+        ,
+        scales: {
+            x: {
+                min: a.options.x_min,
+                max: a.options.x_max
+            },
+            y: {
+                beginAtZero: a.options.beginAtZero
+            }
+        }
+    },
+    plugins: {}
+}
+let yearsChartConfig = {
+    type: a.type,
+    data: {
+        labels: a.data.labels,
+        datasets: [{
+            label: a.data.datasets[0].label,
+            data: a.data.datasets[0].data,
+            borderColor: a.data.datasets[0].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }, {
+            label: a.data.datasets[1].label,
+            data: a.data.datasets[1].data,
+            borderColor: a.data.datasets[1].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }, {
+            label: a.data.datasets[2].label,
+            data: a.data.datasets[2].data,
+            borderColor: a.data.datasets[2].borderColor,
+            borderWidth: 2,
+            pointRadius: 0
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: a.data.title
+            },
+            legend: {
+                display: false
+            }
+        }
+        ,
+        scales: {
+            x: {
+                min: a.options.x_min,
+                max: a.options.x_max
+            },
+            y: {
+                beginAtZero: a.options.beginAtZero
+            }
+        }
+    },
+    plugins: {}
+}
+let weekdChartConfig = {
     type: a.type,
     data: {
         labels: a.data.labels,
@@ -72,8 +220,10 @@ let config = {
     plugins: {}
 }
 
-const ctx = document.getElementById('myChart').getContext('2d');
-const myChart = new Chart(ctx, config);
+const datesChart = new Chart(document.getElementById('datesChart').getContext('2d'), dayChartConfig);
+const monthChart = new Chart(document.getElementById('monthChart').getContext('2d'), monthChartConfig);
+const yearsChart = new Chart(document.getElementById('yearsChart').getContext('2d'), yearsChartConfig);
+const weekdChart = new Chart(document.getElementById('weekdChart').getContext('2d'), weekdChartConfig);
 
 function changeX() {
     p(myChart);

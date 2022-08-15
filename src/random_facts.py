@@ -14,13 +14,13 @@ def generate_random_facts():
 def date_facts() -> set[str]:
     facts = set()
 
-    date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
-    month_data = q.month_table()[int(date.today().strftime('%m')) - 1]
-    year_data = q.year_table()[int(date.today().strftime('%y')) - 18]
+    #date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
+    #month_data = q.month_table()[int(date.today().strftime('%m')) - 1]
+    #year_data = q.year_table()[int(date.today().strftime('%y')) - 18]
 
-    facts.add((f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.', 1))
-    facts.add((f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.', 1))
-    facts.add((f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.', 1))
+    #facts.add((f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.', 1))
+    #facts.add((f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.', 1))
+    #facts.add((f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.', 1))
     return facts
 
 

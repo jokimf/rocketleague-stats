@@ -2,7 +2,6 @@ from wsgiref.simple_server import make_server
 
 from pyramid.config import Configurator
 from pyramid.view import view_config
-from collections.abc import Callable
 
 import queries as q
 import graphs as g

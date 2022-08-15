@@ -8,60 +8,204 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
-        body {
-            font-size: 1em !important;
-            color: #A7A1AE;
-            background-color: #1F2739;
-            font-family: 'Lato', sans-serif;
-            line-height: 1.42em;
-        }
+    body {
+        font-size: 1em !important;
+        color: #000000;
+        background-color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        line-height: 1.42em;
+    }
 
-        h1 {
-            font-size: 3em;
-            font-weight: 300;
-            line-height: 1em;
-            text-align: center;
-            color: #599cbb;
-        }
+.website-center-setup {
+    width: 80%;
+    margin: auto;
+    background: #fafafa;
+}
 
-        .cg {
-            font-size: 1.1em;
-            font-weight: 300;
-            line-height: 1em;
-            text-align: center;
-            color: #1d7aa4;
-        }
+h1 {
+    font-size: 3em;
+    font-weight: 300;
+    line-height: 1em;
+    text-align: center;
+    color: #599cbb;
+}
 
-        table {
-            border-collapse: collapse;
-            font-style: normal;
-        }
+h1 .cg { /* clown gameplay part of headline */
+    font-size: 1.1em;
+    font-weight: 300;
+    line-height: 1em;
+    text-align: center;
+    color: #1d7aa4;
+}
 
-        th {
-            color: #599cbb
-        }
+h2 {
+    text-align: left;
+    display: block;
+    font-size: 2em;
+    margin-block-start: 0.67em;
+    margin-block-end: 0.67em;
+}
 
-        td, th {
-            border: 1px solid #999;
-            padding: 0.5rem;
-            text-align: center;
-        }
+h3 {
+    text-align: center;
+    display: block;
+    font-size: 2em;
+    margin-block-start: 0.67em;
+    margin-block-end: 0.67em;
+}
 
-        sub-headline {
-            font-size: 1em;
-            font-weight: 300;
-            line-height: 1em;
-            text-align: left;
-            color: #1d7aa4;
-        }
+.profile-pics-flexbox {
+    display: flex;
+    justify-content: center;
+    gap: 150px
+}
 
-        .infobox {
-            margin: 5px;
-        }
+.profile-pics {
+    margin: 10px;
+    border-radius: 100px;
+    border: 1px solid;
+    height: 100px;
+}
 
-        .total-season-session {
-            display: flex;
-        }
+.icon {
+    width: 22px;
+    height: 22px;
+    max-height: 22px;
+    max-width: 22px;
+}
+
+figure {
+    display: flex;
+    flex-flow: column-reverse;
+    padding: 5px;
+    max-width: 220px;
+    margin: auto;
+}
+
+figcaption {
+    font-weight: bolder;
+    font-size: 22px;
+    background-color: #dedede;
+    text-align: center;
+}
+
+.sub-headline {
+    font-size: 1em;
+    font-weight: 300;
+    line-height: 1em;
+    color: #1d7aa4;
+}
+
+.infobox {
+    margin: 5px;
+}
+
+.total-season-session {
+    display: flex;
+    justify-content: center;
+}
+
+.random-facts {
+    text-align: center;
+}
+
+/** Reset some basic elements */
+body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, hr, dl, dd, ol, ul, figure {
+    margin: 0;
+    padding: 0;
+}
+
+
+/** Set `margin-bottom` to maintain vertical rhythm */
+h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure, .highlight {
+    margin-bottom: 15px;
+}
+
+table {
+    border-collapse: collapse;
+    font-style: normal;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+caption {
+    font-size: 2em;
+    line-height: 1.8em;
+}
+
+th {
+    color: #000000;
+    font-weight: bold;
+}
+
+td, th {
+    border: 1px solid #999;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+table tr:nth-child(even) {
+    background-color: #f7f7f7;
+}
+
+table th {
+    background-color: #f0f0f0;
+    border: 1px solid #dedede;
+    border-bottom-color: #c9c9c9;
+}
+
+table td {
+    border: 1px solid #cccccc;
+}
+
+li {
+    text-align: left;
+    color: #353535;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+ul {
+    padding-left: 32px;
+}
+
+.graph-shell {
+    height: 200px;
+    background-color: #eeeeee;
+}
+
+hr {
+    border: 0;
+    padding: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(40, 40, 40, 0.3), rgba(0, 0, 0, 0));
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+}
+
+button {
+    transition: background .25s, border-color .25s;
+    background: rgba(40, 44, 52, .05);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #000000;
+    text-decoration: none !important;
+    display: inline-block;
+    font-size: .8rem;
+    padding: 8px 16px;
+    margin: 0 8px 8px 0;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.records {
+    display: flex;
+    justify-content: center;
+    gap: 25px
+}
     </style>
 </head>
 <body>

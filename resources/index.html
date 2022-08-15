@@ -48,6 +48,7 @@
             </tr>
         </table>
     </div>
+    <hr>
     <div class="random-facts">
         <h2> RANDOM FACTS</h2>
         <ul>
@@ -59,10 +60,20 @@
             <li>On the 30 day of a month, CG wins 49.4% of games.</li>
         </ul>
     </div>
+    <hr>
     <div class="graphs">
         <div class="graph-shell">
-            <canvas id="myChart"></canvas>
+            <canvas id="datesChart"></canvas>
             <!--<button onmousedown="changeX()">Min 📈</button>-->
+        </div>
+        <div class="graph-shell">
+            <canvas id="monthChart"></canvas>
+        </div>
+        <div class="graph-shell">
+            <canvas id="yearsChart"></canvas>
+        </div>
+        <div class="graph-shell">
+            <canvas id="weekdChart"></canvas>
         </div>
     </div>
     <hr>
@@ -359,12 +370,12 @@
                     <th colspan="2">Sticker</th>
                 </tr>
                 <tr>
-                    <td>Total</td>
-                    <td>Average</td>
-                    <td>Total</td>
-                    <td>Average</td>
-                    <td>Total</td>
-                    <td>Average</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
                 </tr>
                 <tr>
                     <td>Score</td>
