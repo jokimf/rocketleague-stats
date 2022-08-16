@@ -13,27 +13,29 @@ def generate_random_facts():
 # Things related to date
 def date_facts() -> set[str]:
     facts = set()
+    # TODO: Do more special date facts
+    # date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
+    # month_data = q.month_table()[int(date.today().strftime('%m')) - 1]
+    # year_data = q.year_table()[int(date.today().strftime('%y')) - 18]
 
-    #date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
-    #month_data = q.month_table()[int(date.today().strftime('%m')) - 1]
-    #year_data = q.year_table()[int(date.today().strftime('%y')) - 18]
-
-    #facts.add((f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.', 1))
-    #facts.add((f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.', 1))
-    #facts.add((f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.', 1))
+    # facts.add((f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.', 1))
+    # facts.add((f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.', 1))
+    # facts.add((f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.', 1))
     return facts
 
 
 # Last session was xy
 def last_session_facts() -> set[str]:
     facts = set()
-    session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, knus_shots, \
+    session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, \
+    knus_shots, \
     puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, sticker_assists, \
     sticker_saves, sticker_shots, quality = q.last_session_data()
     if session_id % 50 == 0:
         facts.add((f'Last session was special, it was the {session_id}th session! 😂', 4))
 
-    # First session in x days, first session in a month, first session in a year, at the same date x years ago TODO: cleanup
+    # First session in x days, first session in a month, first session in a year, at the same date x years ago TODO:
+    #  cleanup
     d1, d2 = q.last_two_sessions_dates()
     diff = (datetime.today() - datetime.strptime(d2[0], "%Y-%m-%d")).days
     if d1[0] == datetime.today().date():
@@ -96,27 +98,32 @@ def result_facts() -> set[str]:
             if percent >= 0.05:
                 facts.add(
                     (
-                        f'The result of the last match was extremely common. It already happened {total} times. ({round(percent * 100, 1)}%)',
+                        f'The result of the last match was extremely common. It already happened {total} times. ('
+                        f'{round(percent * 100, 1)}%)',
                         1))
             elif percent >= 0.025:
                 facts.add(
                     (
-                        f'The result of the last match was common. In total, it happened {total} times. ({round(percent * 100, 2)}%)',
+                        f'The result of the last match was common. In total, it happened {total} times. ('
+                        f'{round(percent * 100, 2)}%)',
                         2))
             elif percent >= 0.0125:
                 facts.add(
                     (
-                        f'The result of last match was rare, in total it happened {total} times ({round(percent * 100, 4)}%)',
+                        f'The result of last match was rare, in total it happened {total} times ('
+                        f'{round(percent * 100, 4)}%)',
                         3))
             elif percent >= 0.00625:
                 facts.add(
                     (
-                        f'The result of last match was really rare, in total it happened {total} times ({round(percent * 100, 4)}%)',
+                        f'The result of last match was really rare, in total it happened {total} times ('
+                        f'{round(percent * 100, 4)}%)',
                         4))
             else:
                 facts.add(
                     (
-                        f"The result of last match only happened for the {total}. time! That's only {round(percent * 100, 4)}%",
+                        f"The result of last match only happened for the {total}. time! That's only "
+                        f"{round(percent * 100, 4)}%",
                         5))
     if not facts:  # set is empty because results has not happened before
         facts.add(
@@ -169,27 +176,38 @@ def close_to_record() -> set[str]:
     last_id = q.max_id()
     opt = 100  # round(last_id / 100) # TODO: find better metric
     record_data = [(q.record_highest_value_per_stat('score', opt * 3),
-                    'The score of {value} reached by {name} last game was in the Top 100 of all scores, ranking at spot number {rank}!'),
+                    'The score of {value} reached by {name} last game was in the Top 100 of all scores, ranking at '
+                    'spot number {rank}!'),
                    (q.record_highest_value_per_stat('goals', opt * 3),
-                    'The goal amount of {value} reached by {name} last game was in the Top 100 of all games, ranking at spot number {rank}!'),
+                    'The goal amount of {value} reached by {name} last game was in the Top 100 of all games, '
+                    'ranking at spot number {rank}!'),
                    (q.record_highest_value_per_stat('assists', opt * 3),
-                    'The assist amount of {value} reached by {name} last game was in the Top 100 of all games, ranking at spot number {rank}!'),
+                    'The assist amount of {value} reached by {name} last game was in the Top 100 of all games, '
+                    'ranking at spot number {rank}!'),
                    (q.record_highest_value_per_stat('saves', opt * 3),
-                    'The save amount of {value} reached by {name} last game was in the Top 100 of all games, ranking at spot number {rank}!'),
+                    'The save amount of {value} reached by {name} last game was in the Top 100 of all games, '
+                    'ranking at spot number {rank}!'),
                    (q.record_highest_value_per_stat('shots', opt * 3),
-                    'The shot amount of {value} reached by {name} last game was in the Top 100 of all games, ranking at spot number {rank}!'),
+                    'The shot amount of {value} reached by {name} last game was in the Top 100 of all games, '
+                    'ranking at spot number {rank}!'),
                    (q.most_points_without_goal(opt),
-                    'A total amount of {value} was reached by {name} last game, without scoring! It was in the Top 100 of score without a goal, ranking at spot number {rank}!'),
+                    'A total amount of {value} was reached by {name} last game, without scoring! It was in the Top '
+                    '100 of score without a goal, ranking at spot number {rank}!'),
                    (q.least_points_with_goals(opt),
-                    '{name} only reached a total amount of {value} score, even though he scored... he was in the Bottom 100 of score having scored at least one goal, ranking at spot number {rank}!'),
+                    '{name} only reached a total amount of {value} score, even though he scored... he was in the '
+                    'Bottom 100 of score having scored at least one goal, ranking at spot number {rank}!'),
                    (q.most_against(opt),
-                    'Last game you conceded a Top 100 amount of goals... {value} in total. It ranks at number {rank} of all games'),
+                    'Last game you conceded a Top 100 amount of goals... {value} in total. It ranks at number {rank} '
+                    'of all games'),
                    (q.most_against_and_won(opt),
-                    'Last game you conceded a total of {value} goals, but still won. The game ranks at number {rank} in that regard.'),
+                    'Last game you conceded a total of {value} goals, but still won. The game ranks at number {rank} '
+                    'in that regard.'),
                    (q.most_goals_and_lost(opt),
-                    'Last game you scored a total of {value} goals, but still lost. The game ranks at number {rank} in that regard.'),
+                    'Last game you scored a total of {value} goals, but still lost. The game ranks at number {rank} '
+                    'in that regard.'),
                    (q.most_total_goals(opt),
-                    'Last game, both teams scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
+                    'Last game, both teams scored a total of {value} goals. The game ranks at number {rank} in that '
+                    'regard.'),
                    (q.highest_team('score', opt),
                     'Last game you scored a total of {value} points. The game ranks at number {rank} in that regard.'),
                    (q.highest_team('goals', opt),
@@ -201,31 +219,43 @@ def close_to_record() -> set[str]:
                    (q.highest_team('shots', opt),
                     'Last game you scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
                    (q.diff_mvp_lvp('ASC', opt),
-                    'Last game the difference between the MVP and LVP was {value} points. That is the {rank}. highest difference.'),
+                    'Last game the difference between the MVP and LVP was {value} points. That is the {rank}. highest '
+                    'difference.'),
                    (q.diff_mvp_lvp('DESC', opt),
-                    'Last game the difference between the MVP and LVP was only {value} points. That is the {rank}. lowest difference.'),
+                    'Last game the difference between the MVP and LVP was only {value} points. That is the {rank}. '
+                    'lowest difference.'),
                    (q.most_solo_goals(opt),
-                    'Last game had with {value} goals an usual amount of solo goals. The game ranks at number {rank} in that regard.'),
+                    'Last game had with {value} goals an usual amount of solo goals. The game ranks at number {rank} '
+                    'in that regard.'),
                    (q.trend('score', 'MIN', opt),
-                    'The point trend of {name} reached a value of {value}, which is the {rank}. lowest value in total.'),
+                    'The point trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
+                    'total.'),
                    (q.trend('score', 'MAX', opt),
-                    'The point trend of {name} reached a value of {value}, which is the {rank}. highest value in total.'),
+                    'The point trend of {name} reached a value of {value}, which is the {rank}. highest value in '
+                    'total.'),
                    (q.trend('goals', 'MIN', opt),
                     'The goal trend of {name} reached a value of {value}, which is the {rank}. lowest value in total.'),
                    (q.trend('goals', 'MAX', opt),
-                    'The goal trend of {name} reached a value of {value}, which is the {rank}. highest value in total.'),
+                    'The goal trend of {name} reached a value of {value}, which is the {rank}. highest value in '
+                    'total.'),
                    (q.trend('assists', 'MIN', opt),
-                    'The assist trend of {name} reached a value of {value}, which is the {rank}. lowest value in total.'),
+                    'The assist trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
+                    'total.'),
                    (q.trend('assists', 'MAX', opt),
-                    'The assist trend of {name} reached a value of {value}, which is the {rank}. highest value in total.'),
+                    'The assist trend of {name} reached a value of {value}, which is the {rank}. highest value in '
+                    'total.'),
                    (q.trend('saves', 'MIN', opt),
-                    'The saves trend of {name} reached a value of {value}, which is the {rank}. lowest value in total.'),
+                    'The saves trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
+                    'total.'),
                    (q.trend('saves', 'MAX', opt),
-                    'The saves trend of {name} reached a value of {value}, which is the {rank}. highest value in total.'),
+                    'The saves trend of {name} reached a value of {value}, which is the {rank}. highest value in '
+                    'total.'),
                    (q.trend('shots', 'MIN', opt),
-                    'The shots trend of {name} reached a value of {value}, which is the {rank}. lowest value in total.'),
+                    'The shots trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
+                    'total.'),
                    (q.trend('shots', 'MAX', opt),
-                    'The shots trend of {name} reached a value of {value}, which is the {rank}. highest value in total.')
+                    'The shots trend of {name} reached a value of {value}, which is the {rank}. highest value in '
+                    'total.')
                    ]
     # Iterate through data and check if last gameID appears
     for record in record_data:
@@ -247,3 +277,7 @@ def outclassed() -> set[str]:
 # 'At least 1' streak in Goals/Assists/Saves
 def at_least_1_streak() -> set[str]:
     return set()
+
+
+if __name__ == '__main__':
+    print(generate_random_facts())

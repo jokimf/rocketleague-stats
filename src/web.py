@@ -16,7 +16,7 @@ def data(request):
     graph = request.path.split('/')[2]
 
     # TODO: Fetch graph data
-    pfd2 = g.graph_winrate()
+    pfd2 = g.dates_table()
     return pfd2.to_dict()
 
 
@@ -30,10 +30,6 @@ def serve(request):
             "total_games": q.max_id(),
             "total_wins": q.total_wins(),
             "games": q.last_x_games_stats(5),
-            # "weekdays": q.weekdays(),
-            #"days": q.dates_table(),
-            #"months": q.month_table(),
-            #"years": q.year_table(),
             "grand_total": q.general_game_stats_over_time_period(1, max_id),
             "season_data": q.general_game_stats_over_time_period(2135, max_id),
             "session_data": q.general_game_stats_over_time_period(2165, max_id),

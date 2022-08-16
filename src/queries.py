@@ -217,7 +217,6 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
 
 
 # "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
-
 # p1 > p2+p3
 def ff_solo_carry(player_id: int) -> tuple:
     if player_id < 0 or player_id > 2:
