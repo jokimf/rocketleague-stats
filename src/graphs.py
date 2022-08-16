@@ -1,6 +1,7 @@
 import random
 import sqlite3
 from typing import List, Any
+import queries as q
 
 database_path = '../resources/test.db'
 conn = sqlite3.connect(database_path)
@@ -18,56 +19,54 @@ def random_color():
 
 # GRAPH QUERIES
 class Graph:
-    def __init__(self, title: str, graph_type: str, data_type: str, x_min: int, x_max: int, begin_at_zero: bool,
-                 data: List):
+    def __init__(self, title: str, graph_type: str, data_type: str, data: List, datapoint_labels: List, x_min: float,
+                 x_max: float, y_min: float, y_max: float, show_legend: bool):
         self.title = title
         self.graph_type = graph_type
         self.data_type = data_type
+        self.data = data
+        self.datapoint_labels = datapoint_labels
         self.x_min = x_min
         self.x_max = x_max
-        self.begin_at_zero = begin_at_zero
-        self.data = data
+        self.y_min = y_min
+        self.y_max = y_max
+        self.show_legend = show_legend
 
     def to_dict(self) -> dict:
-        data = None
-        if self.data_type == 'kps':
+        data: List = None
+        if self.data_type == 'kps':  # TODO remove kps with help of c.description and SQL
             data = [{'label': 'Knus', 'data': [x[1] for x in self.data],
                      'borderColor': 'rgba(47,147,26,0.8)', 'borderWidth': 2},
                     {'label': 'Puad', 'data': [x[2] for x in self.data],
                      'borderColor': 'rgba(147,26,26,0.8)', 'borderWidth': 2},
                     {'label': 'Sticker', 'data': [x[3] for x in self.data],
                      'borderColor': 'rgba(26,115,147,0.8)', 'borderWidth': 2}]
-        elif self.data_type == 'full':
-            pass
-        elif self.data_type == 'one':
-            data = [{'label': 'CG', 'data': self.data[0],
-                     'borderColor': 'rgba(197, 114, 54, 0.84)', 'borderWidth': 2}]
         else:
             data = []
             length = len(self.data[0])
             for x in range(1, length):
-                data.append({'data': [y[x] for y in self.data], 'borderColor': random_color(), 'borderWidth': 2})
-        json = {'type': self.graph_type,
-                'data': {
-                    'title': self.title,
-                    'labels': [x[0] for x in self.data],
-                    'datasets': data
-                },
-                'options': {
-                    'beginAtZero': self.begin_at_zero,
-                    'x_min': self.x_min,
-                    'x_max': self.x_max
-                }
-                }
+                data.append({'data': [y[x] for y in self.data], 'borderColor': random_color(), 'borderWidth': 2,
+                             'label': None if self.datapoint_labels is None else self.datapoint_labels[x]})
+        graph_ctx = {'type': self.graph_type,
+                     'data': {
+                         'title': self.title,
+                         'labels': [x[0] for x in self.data],
+                         'datasets': data
+                     },
+                     'options': {
+                         'x_min': self.x_min,
+                         'x_max': self.x_max,
+                         'y_min': self.y_min,
+                         'y_max': self.y_max,
+                         'show_legend': self.show_legend
+                     }
+                     }
 
-        return json
-
-    def __str__(self) -> str:
-        return f'Graph(title={self.title}, graph_type={self.graph_type}, data_type={self.data_type}, ' \
-               f'x=({self.x_min},{self.x_max}), beginAtZero={self.begin_at_zero}, data={self.data})'
+        return graph_ctx
 
 
-def graph_performance(stat: str) -> Graph:  # TODO rework query
+# TODO: Fix all Graph returns
+def graph_performance(stat: str) -> Graph:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
     data = c.execute(f"""
@@ -78,160 +77,140 @@ def graph_performance(stat: str) -> Graph:  # TODO rework query
         LEFT JOIN pT ON kT.gameID = pT.gameID
         LEFT JOIN sT ON kT.gameID = sT.gameID
     """).fetchall()
-    return Graph(f'Player {stat} performance over time', 'line', 'kps', 0, max_id(), False, data)
+    return Graph(f'Player {stat} performance over time', 'line', 'kps', data, [x[0] for x in c.description], None, None,
+                 None, None, False)
 
 
-def graph_total_performance(stat, start=1, end=None) -> Graph:
-    if end is None:
-        end = max_id()
+def graph_performance_team(stat: str) -> Graph:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    c.execute("""
-        SELECT gameID, AVG(""" + stat + """) FROM performance WHERE gameID >= ? AND gameID <= ? GROUP BY gameID
-    """, (start, end))
-    data = c.fetchall()
-    return stat + " performance over time", start, end, data
+    data = c.execute(f"SELECT gameID, AVG({stat}) FROM performance GROUP BY gameID").fetchall()
+    return Graph(f"Team {stat} performance", "line", "one", 1, q.max_id(), True, data)
 
 
-def graph_grief_value(start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
-        WITH kT AS (SELECT * FROM performance WHERE playerID = 0),
-        pT AS (SELECT * FROM performance WHERE playerID = 1),
-        sT AS (SELECT * FROM performance WHERE playerID = 2),
-        gAvg AS (SELECT gameID, AVG(performance.score) AS gA FROM performance GROUP BY performance.gameID)
-        SELECT kT.gameID, kT.score - gA, pT.score - gA, sT.score - gA FROM kT
-        LEFT JOIN pT ON kT.gameID = pT.gameID
-        LEFT JOIN sT ON kT.gameID = sT.gameID
-        LEFT JOIN gAvg ON kT.gameID = gAvg.gameID
-        WHERE kT.gameID >= ? AND kT.gameID <= ?
-    """, (start, end))
-    data = c.fetchall()
-    return "Grief value over time", start, end, data
+def graph_grief_value() -> Graph:
+    data = c.execute("""
+    WITH 	kT AS (SELECT gameID, score FROM performance WHERE playerID = 0),
+            pT AS (SELECT gameID, score FROM performance WHERE playerID = 1),
+            sT AS (SELECT gameID, score FROM performance WHERE playerID = 2),
+            gAvg AS (SELECT gameID, AVG(performance.score) AS gA FROM performance GROUP BY performance.gameID)
+            SELECT kT.gameID, kT.score - gA, pT.score - gA, sT.score - gA FROM kT
+            LEFT JOIN pT ON kT.gameID = pT.gameID
+            LEFT JOIN sT ON kT.gameID = sT.gameID
+            LEFT JOIN gAvg ON kT.gameID = gAvg.gameID
+    """).fetchall()
+    return Graph(f"Grief value", "line", "one", 20, q.max_id(), False, data)
 
 
-def graph_winrate_last20(start=20, end=None):
-    if end is None:
-        end = max_id()
-    if start < 20:
-        raise ValueError("No values for gameID < 20")
-    c.execute("""
+def graph_winrate_last20() -> Graph:
+    data = c.execute("""
         SELECT gameID, wr FROM(
-        SELECT gameID, CAST(SUM(w) OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 20 AS wr 
-        FROM(  
-        SELECT gameID, CASE WHEN goals > against THEN 1 ELSE 0 END AS w FROM games))
-        WHERE gameID >= ? AND gameID <= ?
-    """, (start, end))
-    data = c.fetchall()
-    return "Winrate last 20 over time", start, end, data
-
-
-def graph_winrate(start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
         SELECT gameID, 
-        CAST(SUM(CASE WHEN goals > against THEN 1 ELSE 0 END) OVER(ORDER BY gameID) AS FLOAT) / gameID AS wr FROM games
-        WHERE gameID >= ? AND gameID <= ?
-    """, (start, end))
-    data = c.fetchall()
-    return "Winrate over time", start, end, data
+		CAST(SUM(w) OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 20 AS wr 
+        FROM(SELECT gameID, IIF(goals > against,1,0) AS w FROM games)) WHERE gameID > 19
+    """).fetchall()
+    return Graph("Winrate last 20 games", "line", "one", 20, q.max_id(), False, data)
 
 
-def graph_solo_goals(start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
+def graph_winrate() -> Graph:
+    data = c.execute("""
+        SELECT gameID, CAST(SUM(IIF(goals > against,1,0)) OVER(ORDER BY gameID) AS FLOAT) / gameID AS wr FROM games
+    """).fetchall()
+    return Graph("Winrate", "line", "ff", data, None, None, None, 0.48, 0.55, False)
+
+
+def graph_solo_goals() -> Graph:
+    data = c.execute("""
         SELECT gameID, SUM(SUM(goals) - SUM(assists)) OVER(ORDER BY gameID) as sumSG FROM scores GROUP BY gameID
-    """, (start, end))
-    data = c.fetchall()
-    return "Solo goals over time", start, end, data
+    """).fetchall()
+    return Graph("Total Solo Goals", "line", "one", 1, q.max_id(), True, data)
 
 
-def graph_solo_goals_over_time():
-    c.execute("""
-        WITH solos AS (SELECT gameID, SUM(goals) - SUM(assists) AS solo FROM scores GROUP BY gameID)
-        SELECT gameID, SUM(solo) OVER (ORDER BY gameID) AS cumulativeSolos FROM solos
-    """)
-    data = c.fetchall()
-    return "Cumulative solo goals", data
-
-
-# % Share of stat in game range [all stats + mvp share (might need own query)]
-# Output: [k%,p%,s%]
-def graph_performance_share(stat, start=1, end=None):
-    if end is None:
-        end = max_id()
-    if stat not in possible_stats or stat != 'mvp':
+def graph_stat_share(stat: str) -> Graph:
+    if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    c.execute("""
-        WITH k AS(SELECT SUM(?) AS ks FROM scores WHERE playerID = 0 AND gameID > ? AND gameID < ?),
-        p AS (SELECT SUM(?) AS ps FROM scores WHERE playerID = 1 AND gameID > ? AND gameID < ?),
-        s AS (SELECT SUM(?) AS ss FROM scores WHERE playerID = 2 AND gameID > ? AND gameID < ?)
-        SELECT CAST(ks AS FLOAT) / CAST((ks+ps+ss) AS FLOAT) AS kp, CAST(ps AS FLOAT) / CAST((ks+ps+ss) AS FLOAT) AS pp, CAST(ss AS FLOAT) / CAST((ks+ps+ss) AS FLOAT) AS sp
-        FROM k, p, s
-    """, (stat, start, end, stat, start, end, stat, start, end))
-    data = c.fetchall()
-    return stat + " performance share", start, end, data
+    data = c.execute(f"""
+        SELECT k.gameID, 
+        CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) / 
+        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS K,
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) / 
+        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS P,
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT) / 
+        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS S
+         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
+    """).fetchall()
+    return Graph(f"{stat} share", "line", "kps", 1, q.max_id(), False, data)
 
 
-# Average MVP score over time
-# Fragen: Neue Berechnung für jeden Rahmen oder eine Liste wo nur der Rahmen angezeigt wird? + Score oder Performance? Score ist etwas Aussageschwach
-def graph_average_mvp_score_over_time(start=1, end=None):
-    if end is None:
-        end = max_id()
-    c.execute("""
-        SELECT gameID, AVG(score) OVER (ORDER BY gameID) FROM scores
-        WHERE gameID > ? AND gameID < ?
-        GROUP BY gameID HAVING MAX(score)
-    """, (start, end))
-    data = c.fetchall()
-    return "Average mvp score over time", start, end, data
-
-
-# Average LVP score over time
-def graph_average_lvp_score_over_time(start=1, end=None):
-    if end is None:
-        end = max_id()
-    raise NotImplementedError()
-
-
-# SUM of all stat over time, also for MVPs
-# Fragen: Was ist mit also for MVPs gemeint? Eigene Query?
-def graph_cumulative_stat_over_time(stat):
-    if stat not in possible_stats or stat != 'mvp':
+def graph_performance_stat_share(stat: str) -> Graph:
+    if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    c.execute("""
+    data = c.execute(f"""
+        SELECT k.gameID, 
+        CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 
+        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS K,
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 
+        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS P,
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 
+        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
+        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
+        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS S
+         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
+    """).fetchall()
+    return Graph(f"{stat} performance share", "line", "kps", 1, q.max_id(), False, data)
+
+
+def graph_average_mvp_score_over_time() -> Graph:
+    data = c.execute("""
+        SELECT gameID, AVG(score) OVER (ORDER BY gameID) FROM scores GROUP BY gameID HAVING MAX(score)
+    """).fetchall()
+    return Graph("Average MVP score", "line", "one", 1, q.max_id(), False, data)
+
+
+def graph_average_lvp_score_over_time() -> Graph:
+    data = c.execute("""
+        SELECT gameID, AVG(score) OVER (ORDER BY gameID) FROM scores GROUP BY gameID HAVING MIN(score)
+    """).fetchall()
+    return Graph("Average LVP score", "line", "one", 1, q.max_id(), False, data)
+
+
+def graph_cumulative_stat(stat: str) -> Graph:
+    if stat not in possible_stats:
+        raise ValueError(f'{stat} is not in possible stats.')
+    data = c.execute("""
         WITH k AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 0),
         p AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 1),
         s AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 2)
         SELECT k.gameID, k.sc, p.sc, s.sc FROM k LEFT JOIN p ON k.gameID = p.gameID LEFT JOIN s ON k.gameID = s.gameID
-    """, (stat, stat, stat))
-    data = c.fetchall()
-    return "Cumulative value for " + stat, stat, data
+    """, (stat, stat, stat)).fetchall()
+    return Graph(f"Cumulative {stat}", "line", "kps", 1, q.max_id(), True, data)
 
 
-# Weekday table, [weekday, count, wins, losses]
-def weekday_table() -> List[Any]:
+def weekday_table() -> Graph:
     c.execute("""
-        SELECT STRFTIME('%w', date) AS weekday, COUNT(date) AS dateCount, SUM(IIF(goals > against, 1, 0)) AS winCount, 
-        SUM(IIF(goals < against, 1, 0)) AS loseCount FROM games GROUP BY weekday
+        SELECT STRFTIME('%w', date) AS weekday, COUNT(date) AS Games, SUM(IIF(goals > against, 1, 0)) AS Wins, 
+        SUM(IIF(goals < against, 1, 0)) AS Losses FROM games GROUP BY weekday
     """)
-    new = []
-
-    # Calculate and insert winrate
-    for x in c.fetchall():
-        helper = list(x)
-        helper.insert(2, x[2] / (x[2] + x[3]))
-        new.append(helper)
-    days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
     # Substitute dayID with corresponding string
+    days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    new = [list(x) for x in c.fetchall()]
     for i in range(0, 7):
         new[i][0] = days[i]
-    new = new[1:] + new[0]  # put Sunday at the back of the list
-    return new
+
+    data = new[1:]  # put Sunday at the back of the list
+    data.append(new[0])
+    return Graph("Weekdays", "bar", "full", data, [x[0] for x in c.description], None, None, None, None, True)
 
 
 # Month table, [name, count, winrate, w, l]
@@ -281,13 +260,13 @@ def dates_table() -> Graph:  # TODO: Games, Wins, Losses
 
 graphs = {
     'performance': graph_performance,
-    'total_performance': graph_total_performance,
+    'total_performance': graph_performance_team,
     'grief': graph_grief_value,
     'wins_last_20': graph_winrate_last20,
     'winrate': graph_winrate,
     'solo_goals': graph_solo_goals,
-    'performance_share': graph_performance_share,
+    'performance_share': graph_stat_share,
     'av_mvp_score': graph_average_mvp_score_over_time,
     'av_lvp_score': graph_average_lvp_score_over_time,
-    'game_stats': graph_cumulative_stat_over_time,
+    'game_stats': graph_cumulative_stat,
 }

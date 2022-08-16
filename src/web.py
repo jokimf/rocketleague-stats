@@ -16,9 +16,7 @@ def data(request):
     graph = request.path.split('/')[2]
 
     # TODO: Fetch graph data
-    #pfd = g.graph_performance('score')
-    #return pfd.to_dict()
-    pfd2 = g.dates_table()
+    pfd2 = g.graph_winrate()
     return pfd2.to_dict()
 
 
