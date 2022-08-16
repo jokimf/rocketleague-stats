@@ -1,6 +1,7 @@
 import queries as q
 import statistics
 from datetime import date, datetime, timedelta
+from typing import Tuple
 
 
 def generate_random_facts():
@@ -11,7 +12,7 @@ def generate_random_facts():
 
 
 # Things related to date
-def date_facts() -> set[str]:
+def date_facts() -> set[Tuple]:
     facts = set()
     # TODO: Do more special date facts
     # date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
@@ -25,12 +26,11 @@ def date_facts() -> set[str]:
 
 
 # Last session was xy
-def last_session_facts() -> set[str]:
+def last_session_facts() -> set[Tuple]:
     facts = set()
     session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, \
-    knus_shots, \
-    puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, sticker_assists, \
-    sticker_saves, sticker_shots, quality = q.last_session_data()
+    knus_shots, puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, \
+    sticker_assists, sticker_saves, sticker_shots, quality = q.last_session_data()
     if session_id % 50 == 0:
         facts.add((f'Last session was special, it was the {session_id}th session! 😂', 4))
 
@@ -52,7 +52,7 @@ def last_session_facts() -> set[str]:
     return facts
 
 
-def game_count_facts() -> set[str]:
+def game_count_facts() -> set[Tuple]:
     facts = set()
     month, year, total = q.game_amount_this_month(), q.game_amount_this_year(), q.max_id()
     if total % 100 == 0:
@@ -66,7 +66,7 @@ def game_count_facts() -> set[str]:
     return facts
 
 
-def last_month_summary() -> set[str]:
+def last_month_summary() -> set[Tuple]:
     facts = set()
     month = q.game_amount_this_month()
 
@@ -88,7 +88,7 @@ def last_month_summary() -> set[str]:
 
 
 # Unusual result
-def result_facts() -> set[str]:
+def result_facts() -> set[Tuple]:
     facts = set()
     data = q.results_table()
     goals, against = q.last_result()
@@ -132,8 +132,8 @@ def result_facts() -> set[str]:
 
 
 # Player reaches milestone in stat y
-def milestone_facts() -> set[str]:
-    facts: set[str] = set()
+def milestone_facts() -> set[Tuple]:
+    facts = set()
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 
     for stat in possible_stats:
@@ -147,8 +147,8 @@ def milestone_facts() -> set[str]:
 
 
 # Player average is higher/lower in last x games than total avg
-def average_high_variance_facts() -> set[str]:
-    facts: set[str] = set()
+def average_high_variance_facts() -> set[Tuple]:
+    facts = set()
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
     z_values = {"Top 1%": 2.32635, "Top 5%": 1.64485, 'Top 15%': 1.03643,
                 'Bottom 15%': -1.03643, 'Bottom 5%': -1.64485, 'Bottom 1%': -2.32635}
@@ -169,7 +169,7 @@ def average_high_variance_facts() -> set[str]:
 
 
 # Came close to a record
-def close_to_record() -> set[str]:
+def close_to_record() -> set[Tuple]:
     facts = set()
 
     # Record games
@@ -270,12 +270,12 @@ def close_to_record() -> set[str]:
 
 
 # X has double the amount of Y, also session/season based
-def outclassed() -> set[str]:
+def outclassed() -> set[Tuple]:
     return set()
 
 
 # 'At least 1' streak in Goals/Assists/Saves
-def at_least_1_streak() -> set[str]:
+def at_least_1_streak() -> set[Tuple]:
     return set()
 
 
