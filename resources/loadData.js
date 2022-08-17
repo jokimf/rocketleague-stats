@@ -1,5 +1,7 @@
 let allCharts = ["datesChart", "monthChart", "yearsChart", "weekdChart", "grief", "wins_last_20", "winrate", "solo_goals",
-    "performance_score", "performance_goals", "performance_assists", "performance_saves", "performance_shots", "performance_share_score", "performance_share_goals", "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists", "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
+    "performance_score", "performance_goals", "performance_assists", "performance_saves", "performance_shots", "performance_share_score", "performance_share_goals",
+    "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists",
+    "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
 
 for (let i = 0; i < allCharts.length; i++) {
     fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {

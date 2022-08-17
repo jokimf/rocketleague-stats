@@ -78,6 +78,11 @@ class Graph:
     def __str__(self):
         return f'{self.title}+,{self.graph_type},{self.datapoint_labels},{self.data}'
 
+    def change_y(self, new_min: Optional[float], new_max: Optional[float]) -> Graph:
+        self.y_min = new_min
+        self.y_max = new_max
+        return self
+
 
 def graph_performance(stat: str) -> Graph:
     if stat not in possible_stats:
@@ -140,8 +145,7 @@ def graph_solo_goals() -> Graph:
     data = c.execute("""
         SELECT gameID AS GameID, SUM(SUM(goals) - SUM(assists)) OVER(ORDER BY gameID) AS CG FROM scores GROUP BY gameID
     """).fetchall()
-    return Graph("Solo Goals", "line", data, [x[0] for x in c.description], None, None, None, None,
-                 False)
+    return Graph("Solo Goals", "line", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def graph_stat_share(stat: str) -> Graph:
@@ -163,8 +167,7 @@ def graph_stat_share(stat: str) -> Graph:
         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS S
         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
-    return Graph(f"{stat} share", "line", data, [x[0] for x in c.description], None, None, None, None,
-                 False)
+    return Graph(f"{stat} share", "line", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def graph_performance_stat_share(stat: str) -> Graph:
@@ -187,8 +190,8 @@ def graph_performance_stat_share(stat: str) -> Graph:
         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
     print(data)
-    return Graph(f"{stat} performance share", "line", data, [x[0] for x in c.description], None, None, None,
-                 None, False)
+    return Graph(f"{stat} performance share", "line", data, [x[0] for x in c.description], None, None, None, None,
+                 False)
 
 
 def graph_average_mvp_score_over_time() -> Graph:
@@ -273,11 +276,11 @@ graphs = {
     'performance_assists': graph_performance('assists').symbiose(graph_performance_team('assists')),
     'performance_saves': graph_performance('saves').symbiose(graph_performance_team('saves')),
     'performance_shots': graph_performance('shots').symbiose(graph_performance_team('shots')),
-    'performance_share_score': graph_stat_share('score'),
-    'performance_share_goals': graph_stat_share('goals'),
-    'performance_share_assists': graph_stat_share('assists'),
-    'performance_share_saves': graph_stat_share('saves'),
-    'performance_share_shots': graph_stat_share('shots'),
+    'performance_share_score': graph_stat_share('score').change_y(0.3, 0.4),
+    'performance_share_goals': graph_stat_share('goals').change_y(0.3, 0.375),
+    'performance_share_assists': graph_stat_share('assists').change_y(0.3, 0.4),
+    'performance_share_saves': graph_stat_share('saves').change_y(0.3, 0.375),
+    'performance_share_shots': graph_stat_share('shots').change_y(0.275, 0.3575),
     'cumulative_stats_score': graph_cumulative_stat('score'),
     'cumulative_stats_goals': graph_cumulative_stat('goals'),
     'cumulative_stats_assists': graph_cumulative_stat('assists'),
