@@ -240,7 +240,7 @@ def month_table() -> Graph:
 
 def year_table() -> Graph:
     c.execute("""
-        SELECT STRFTIME('%Y', date) AS year, COUNT(date) as Games, SUM(IIF(goals > against, 1, 0)) AS Wins,
+        SELECT STRFTIME('%Y', date) AS year, COUNT(date) AS Games, SUM(IIF(goals > against, 1, 0)) AS Wins,
         SUM(IIF(goals < against, 1,0)) AS Losses FROM games GROUP BY year""")
     new = [list(x) for x in c.fetchall()]
     return Graph('Years', 'bar', new, [x[0] for x in c.description], None, None, None, None, True)
@@ -256,14 +256,18 @@ def dates_table() -> Graph:
 
 
 graphs = {
-    'performance': graph_performance,
-    'total_performance': graph_performance_team,
-    'grief': graph_grief_value,
-    'wins_last_20': graph_winrate_last20,
-    'winrate': graph_winrate,
-    'solo_goals': graph_solo_goals,
-    'performance_share': graph_stat_share,
-    'av_mvp_score': graph_average_mvp_score_over_time,
-    'av_lvp_score': graph_average_lvp_score_over_time,
-    'cumulative_stats': graph_cumulative_stat,
+    # 'performance': graph_performance(),
+    # 'total_performance': graph_performance_team(),
+    'grief': graph_grief_value(),
+    'wins_last_20': graph_winrate_last20(),
+    'winrate': graph_winrate(),
+    'solo_goals': graph_solo_goals(),
+    # 'performance_share': graph_stat_share(),
+    'av_mvp_score': graph_average_mvp_score_over_time(),
+    'av_lvp_score': graph_average_lvp_score_over_time(),
+    # 'cumulative_stats': graph_cumulative_stat(),
+    'datesChart': dates_table(),
+    'monthChart': month_table(),
+    'yearsChart': year_table(),
+    'weekdChart': weekday_table()
 }

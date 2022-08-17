@@ -12,12 +12,12 @@ import random_facts as r
     route_name='data',
     renderer='json'
 )
-def data(request):
-    graph = request.path.split('/')[2]
-
-    # TODO: Fetch graph data
-    pfd2 = g.dates_table()
-    return pfd2.to_dict()
+def data(request) -> dict:
+    graph: str = request.path.split('/')[2]
+    if graph not in g.graphs:
+        return {}
+    graph_data: Graph = g.graphs[graph]
+    return graph_data.to_dict()
 
 
 @view_config(
