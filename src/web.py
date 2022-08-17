@@ -1,8 +1,6 @@
 from wsgiref.simple_server import make_server
-
 from pyramid.config import Configurator
 from pyramid.view import view_config
-
 import queries as q
 import graphs as g
 import random_facts as r
@@ -13,18 +11,15 @@ import random_facts as r
     renderer='json'
 )
 def data(request) -> dict:
-    graph: str = request.path.split('/')[2]
-    if graph not in g.graphs:
-        return {}
-    graph_data: Graph = g.graphs[graph]
-    return graph_data.to_dict()
+    graph: str = request.path.split('/')[2]  # determine graph from request
+    return {} if graph not in g.graphs else g.graphs[graph].to_dict()
 
 
 @view_config(
     route_name='home',
     renderer='../resources/home.jinja2'
 )
-def serve(request):
+def serve(request) -> dict:
     max_id = q.max_id()
     data = {"days_since_inception": q.days_since_inception(),
             "total_games": q.max_id(),
@@ -45,7 +40,6 @@ if __name__ == '__main__':
     with Configurator() as config:
         config.include('pyramid_jinja2')
         config.add_route('home', '/')
-        config.add_route('css', '/css')
         config.add_route('data', 'data/{type}')
         config.scan()
         app = config.make_wsgi_app()

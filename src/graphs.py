@@ -5,10 +5,7 @@ from typing import List, Optional, Tuple
 database_path = '../resources/test.db'
 conn = sqlite3.connect(database_path)
 c = conn.cursor()
-
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
-possible_game_stats = ['goals', 'against']
-possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
 
 
 def random_color() -> str:
@@ -18,7 +15,7 @@ def random_color() -> str:
 
 # GRAPH QUERIES
 class Graph:
-    def __init__(self, title: str, graph_type: str, data: List, datapoint_labels: List[Tuple], x_min: Optional[float],
+    def __init__(self, title: str, graph_type: str, data: List, datapoint_labels: List, x_min: Optional[float],
                  x_max: Optional[float], y_min: Optional[float], y_max: Optional[float], show_legend: bool):
         self.title = title
         self.graph_type = graph_type
@@ -31,13 +28,13 @@ class Graph:
         self.show_legend = show_legend
 
     colors = {
-        'Knus': 'rgba(47,147,26,0.8)',
-        'Puad': 'rgba(147,26,26,0.8)',
-        'Sticker': 'rgba(26,115,147,0.8)',
-        'CG': 'rgba(40, 40, 40, 0.8)',
-        'Wins': 'rgba(3, 58, 3, 0.8)',
-        'Losses': 'rgba(58, 3, 3, 0.8)',
-        'Games': 'rgba(17, 3, 58, 0.8)'
+        'K': 'rgba(47,147,26,0.8)',  # Knus
+        'P': 'rgba(147,26,26,0.8)',  # Puad
+        'S': 'rgba(26,115,147,0.8)',  # Sticker
+        'C': 'rgba(40, 40, 40, 0.8)',  # CG
+        'W': 'rgba(3, 58, 3, 0.8)',  # Wins
+        'L': 'rgba(58, 3, 3, 0.8)',  # Losses
+        'G': 'rgba(17, 3, 58, 0.8)'  # Games
     }
 
     def to_dict(self) -> dict:
@@ -45,7 +42,7 @@ class Graph:
         length = len(self.data[0])
         for x in range(1, length):
             label: str = None if self.datapoint_labels is None else self.datapoint_labels[x]
-            border_color: str = self.colors[label] if label in self.colors else random_color()
+            border_color: str = self.colors[label[0]] if label[0] in self.colors else random_color()
             data: List = [entry[x] for entry in self.data]
             datasets.append({'data': data, 'label': label, 'borderColor': border_color, 'borderWidth': 2})
         graph_ctx: dict = {'type': self.graph_type,
@@ -65,8 +62,21 @@ class Graph:
 
         return graph_ctx
 
-    # def symbiose(self, other):
-    #    return Graph(f'{self.title} & {other.title}', 'line', [x for x in self.data] + [x for x in other.data],)
+    def symbiose(self, *others):
+        data = [list(x) for x in self.data]
+        for graph in others:
+            for i, entry in enumerate(graph.data):
+                data[i] = data[i] + list(entry[1:])
+
+        labels = self.datapoint_labels
+        for graph in others:
+            labels = labels + graph.datapoint_labels[1:]
+
+        return Graph(self.title, self.graph_type, data, labels, self.x_min, self.x_max, self.y_min, self.y_max,
+                     self.show_legend)
+
+    def __str__(self):
+        return f'{self.title}+,{self.graph_type},{self.datapoint_labels},{self.data}'
 
 
 def graph_performance(stat: str) -> Graph:
@@ -80,7 +90,8 @@ def graph_performance(stat: str) -> Graph:
         LEFT JOIN pT ON kT.gameID = pT.gameID
         LEFT JOIN sT ON kT.gameID = sT.gameID
     """).fetchall()
-    return Graph(f'Player {stat} performance over time', 'line', data, [x[0] for x in c.description], None, None,
+    return Graph(f'Player {stat} performance over time', 'line', data,
+                 [f'{x[0]}{stat.capitalize()}' for x in c.description], None, None,
                  None, None, False)
 
 
@@ -114,8 +125,7 @@ def graph_winrate_last20() -> Graph:
         CAST(SUM(w) OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 20 AS wr 
         FROM(SELECT gameID, IIF(goals > against,1,0) AS w FROM games)) WHERE gameID > 19
     """).fetchall()
-    return Graph("Winrate last 20 games", "line", data, [x[0] for x in c.description], 20, None, None, None,
-                 False)
+    return Graph("Winrate last 20 games", "line", data, [x[0] for x in c.description], 20, None, 0.15, 0.8, False)
 
 
 def graph_winrate() -> Graph:
@@ -130,7 +140,7 @@ def graph_solo_goals() -> Graph:
     data = c.execute("""
         SELECT gameID AS GameID, SUM(SUM(goals) - SUM(assists)) OVER(ORDER BY gameID) AS CG FROM scores GROUP BY gameID
     """).fetchall()
-    return Graph("Total Solo Goals", "line", data, [x[0] for x in c.description], None, None, None, None,
+    return Graph("Solo Goals", "line", data, [x[0] for x in c.description], None, None, None, None,
                  False)
 
 
@@ -151,7 +161,7 @@ def graph_stat_share(stat: str) -> Graph:
         (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
         CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS S
-         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
+        FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
     return Graph(f"{stat} share", "line", data, [x[0] for x in c.description], None, None, None, None,
                  False)
@@ -174,8 +184,9 @@ def graph_performance_stat_share(stat: str) -> Graph:
         (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
         CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS S
-         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
+        FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
+    print(data)
     return Graph(f"{stat} performance share", "line", data, [x[0] for x in c.description], None, None, None,
                  None, False)
 
@@ -183,17 +194,15 @@ def graph_performance_stat_share(stat: str) -> Graph:
 def graph_average_mvp_score_over_time() -> Graph:
     data = c.execute("""
         SELECT gameID, AVG(score) OVER (ORDER BY gameID) AS CG FROM scores GROUP BY gameID HAVING MAX(score)
-    """).fetchall()
-    return Graph("Average MVP score", "line", data, [x[0] for x in c.description], None, None, None, None,
-                 False)
+    """).fetchall()  # Graph gets joined with LVP, so title is MVP/LVP here
+    return Graph("Average MVP/LVP score", "line", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def graph_average_lvp_score_over_time() -> Graph:
     data = c.execute("""
         SELECT gameID AS GameID, AVG(score) OVER (ORDER BY gameID) AS CG FROM scores GROUP BY gameID HAVING MIN(score)
     """).fetchall()
-    return Graph("Average LVP score", "line", data, [x[0] for x in c.description], None, None, 215, None,
-                 False)
+    return Graph("Average LVP score", "line", data, [x[0] for x in c.description], None, None, 215, None, False)
 
 
 def graph_cumulative_stat(stat: str) -> Graph:
@@ -225,7 +234,7 @@ def weekday_table() -> Graph:
     data = new[1:]  # put Sunday at the back of the list
     data.append(new[0])
 
-    return Graph("Weekdays", "bar", data, [x[0] for x in c.description], None, None, None, None, True)
+    return Graph("Weekdays", "bar", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def month_table() -> Graph:
@@ -238,7 +247,7 @@ def month_table() -> Graph:
 
     for i in range(0, 12):
         new[i][0] = months[i]
-    return Graph('Month', 'bar', new, [x[0] for x in c.description], None, None, None, None, True)
+    return Graph('Month', 'bar', new, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def year_table() -> Graph:
@@ -246,7 +255,7 @@ def year_table() -> Graph:
         SELECT STRFTIME('%Y', date) AS year, COUNT(date) AS Games, SUM(IIF(goals > against, 1, 0)) AS Wins,
         SUM(IIF(goals < against, 1,0)) AS Losses FROM games GROUP BY year""")
     new = [list(x) for x in c.fetchall()]
-    return Graph('Years', 'bar', new, [x[0] for x in c.description], None, None, None, None, True)
+    return Graph('Years', 'bar', new, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def dates_table() -> Graph:
@@ -259,16 +268,26 @@ def dates_table() -> Graph:
 
 
 graphs = {
-    # 'performance': graph_performance(),
-    # 'total_performance': graph_performance_team(),
-    # 'performance_share': graph_stat_share(),
-    # 'cumulative_stats': graph_cumulative_stat(),
+    'performance_score': graph_performance('score').symbiose(graph_performance_team('score')),
+    'performance_goals': graph_performance('goals').symbiose(graph_performance_team('goals')),
+    'performance_assists': graph_performance('assists').symbiose(graph_performance_team('assists')),
+    'performance_saves': graph_performance('saves').symbiose(graph_performance_team('saves')),
+    'performance_shots': graph_performance('shots').symbiose(graph_performance_team('shots')),
+    'performance_share_score': graph_stat_share('score'),
+    'performance_share_goals': graph_stat_share('goals'),
+    'performance_share_assists': graph_stat_share('assists'),
+    'performance_share_saves': graph_stat_share('saves'),
+    'performance_share_shots': graph_stat_share('shots'),
+    'cumulative_stats_score': graph_cumulative_stat('score'),
+    'cumulative_stats_goals': graph_cumulative_stat('goals'),
+    'cumulative_stats_assists': graph_cumulative_stat('assists'),
+    'cumulative_stats_saves': graph_cumulative_stat('saves'),
+    'cumulative_stats_shots': graph_cumulative_stat('shots'),
     'grief': graph_grief_value(),
     'wins_last_20': graph_winrate_last20(),
     'winrate': graph_winrate(),
     'solo_goals': graph_solo_goals(),
-    'av_mvp_score': graph_average_mvp_score_over_time(),
-    'av_lvp_score': graph_average_lvp_score_over_time(),
+    'mvp_lvp_score': graph_average_mvp_score_over_time().symbiose(graph_average_lvp_score_over_time()),
     'datesChart': dates_table(),
     'monthChart': month_table(),
     'yearsChart': year_table(),

@@ -89,28 +89,88 @@
     </div>
     <hr>
     <div class="session">
-        <h2>WIE LÄUFT DIE SESSION, PUDDINGER?</h2>
+        <h2>WIE LÄUFT DIE SESSION, P?</h2>
     </div>
     <hr>
     <div class="graphs">
-        <div class="graph-shell">
+        <div class="graph-shell-small">
             <canvas id="datesChart"></canvas>
             <!--<button onmousedown="changeX()">Min 📈</button>-->
         </div>
-        <div class="graph-shell">
+        <div class="graph-shell-small">
             <canvas id="monthChart"></canvas>
         </div>
-        <div class="graph-shell">
+        <div class="graph-shell-small">
             <canvas id="yearsChart"></canvas>
         </div>
-        <div class="graph-shell">
+        <div class="graph-shell-small">
             <canvas id="weekdChart"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="grief"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="wins_last_20"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="winrate"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="solo_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="mvp_lvp_score"></canvas>
         </div>
     </div>
     <hr>
+    <h3>LAST 5</h3>
     <div class="last5">
         <table class="container">
-            <caption>Last 5 Games</caption>
             <thead>
             <tr>
                 <th colspan="4">General</th>
@@ -518,12 +578,12 @@
                     <th colspan="2">Sticker</th>
                 </tr>
                 <tr>
-                    <td>Total</td>
-                    <td>Average</td>
-                    <td>Total</td>
-                    <td>Average</td>
-                    <td>Total</td>
-                    <td>Average</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
                 </tr>
                 <tr>
                     <td>Score</td>
@@ -635,12 +695,12 @@
                     <th colspan="2">Sticker</th>
                 </tr>
                 <tr>
-                    <td>Total</td>
-                    <td>Average</td>
-                    <td>Total</td>
-                    <td>Average</td>
-                    <td>Total</td>
-                    <td>Average</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
                 </tr>
                 <tr>
                     <td>Score</td>
@@ -743,9 +803,9 @@
         </div>
     </div>
     <hr>
+    <h3>"FUN" FACTS</h3>
     <div class="fun-facts">
         <table>
-            <caption>"FUN" FACTS</caption>
             <tbody>
             <tr>
                 <th>Fact</th>
@@ -763,7 +823,7 @@
         </table>
     </div>
     <hr>
-    <h3>Records</h3>
+    <h3>RECORDS</h3>
     <div class="records">
         <div class="records-part">
             <table>

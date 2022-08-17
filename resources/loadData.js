@@ -1,29 +1,5 @@
-let a = {
-    "type": "bar",
-    "data": {
-        "title": "Years",
-        "labels": ["2018", "2019", "2020", "2021", "2022"],
-        "datasets": [{
-            "data": [96, 689, 855, 499, 338],
-            "label": "Games",
-            "borderColor": "rgba(17, 3, 58, 0.8)",
-            "borderWidth": 2
-        }, {
-            "data": [55, 351, 447, 269, 172],
-            "label": "Wins",
-            "borderColor": "rgba(3, 58, 3, 0.8)",
-            "borderWidth": 2
-        }, {
-            "data": [41, 338, 408, 230, 166],
-            "label": "Losses",
-            "borderColor": "rgba(58, 3, 3, 0.8)",
-            "borderWidth": 2
-        }]
-    },
-    "options": {"x_min": null, "x_max": null, "y_min": null, "y_max": null, "show_legend": true}
-}
-let url = 'https://jok.im/rlstats_python/data/';
-let allCharts = ['datesChart', 'monthChart', 'yearsChart', 'weekdChart'];
+let allCharts = ["datesChart", "monthChart", "yearsChart", "weekdChart", "grief", "wins_last_20", "winrate", "solo_goals",
+    "performance_score", "performance_goals", "performance_assists", "performance_saves", "performance_shots", "performance_share_score", "performance_share_goals", "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists", "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
 
 for (let i = 0; i < allCharts.length; i++) {
     fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {
@@ -32,7 +8,7 @@ for (let i = 0; i < allCharts.length; i++) {
 }
 
 async function fetchData(graphName) {
-    return await fetch(url + graphName).then(json => json.json());
+    return await fetch('https://jok.im/rlstats_python/data/' + graphName).then(json => json.json());
 }
 
 function generateConfig(inputJson) {
