@@ -65,6 +65,9 @@ class Graph:
 
         return graph_ctx
 
+    # def symbiose(self, other):
+    #    return Graph(f'{self.title} & {other.title}', 'line', [x for x in self.data] + [x for x in other.data],)
+
 
 def graph_performance(stat: str) -> Graph:
     if stat not in possible_stats:
@@ -258,14 +261,14 @@ def dates_table() -> Graph:
 graphs = {
     # 'performance': graph_performance(),
     # 'total_performance': graph_performance_team(),
+    # 'performance_share': graph_stat_share(),
+    # 'cumulative_stats': graph_cumulative_stat(),
     'grief': graph_grief_value(),
     'wins_last_20': graph_winrate_last20(),
     'winrate': graph_winrate(),
     'solo_goals': graph_solo_goals(),
-    # 'performance_share': graph_stat_share(),
     'av_mvp_score': graph_average_mvp_score_over_time(),
     'av_lvp_score': graph_average_lvp_score_over_time(),
-    # 'cumulative_stats': graph_cumulative_stat(),
     'datesChart': dates_table(),
     'monthChart': month_table(),
     'yearsChart': year_table(),

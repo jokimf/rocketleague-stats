@@ -1,3 +1,8 @@
+/** Set `margin-bottom` to maintain vertical rhythm */
+h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure {
+    margin-bottom: 15px;
+}
+
 body {
     font-size: 1em !important;
     color: #000000;
@@ -42,6 +47,13 @@ h3 {
     font-size: 2em;
     margin-block-start: 0.67em;
     margin-block-end: 0.67em;
+}
+
+h4 {
+    text-align: center;
+    font-size: 2em;
+    font-weight: 600;
+    margin-top: 0;
 }
 
 .profile-pics-flexbox {
@@ -100,15 +112,9 @@ figcaption {
 }
 
 /** Reset some basic elements */
-body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, hr, dl, dd, ol, ul, figure {
+blockquote, pre, hr, dl, dd, ol, ul, figure {
     margin: 0;
     padding: 0;
-}
-
-
-/** Set `margin-bottom` to maintain vertical rhythm */
-h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure, .highlight {
-    margin-bottom: 15px;
 }
 
 table {
@@ -161,7 +167,7 @@ ul {
 }
 
 .graph-shell {
-    height: 200px;
+    height: 175px;
     background-color: #eeeeee;
 }
 
@@ -195,4 +201,23 @@ button {
     display: flex;
     justify-content: center;
     gap: 25px
+}
+
+.winrate-flexbox, .winrate-desc-flexbox {
+    display: flex;
+    justify-content: center;
+    gap: 100px;
+}
+
+.winrate-desc-flexbox {
+    gap: 160px;
+}
+
+.winrate {
+    font-size: 2em;
+    font-weight: bolder;
+}
+
+.winrate-desc {
+    font-size: smaller;
 }

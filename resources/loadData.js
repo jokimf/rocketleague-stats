@@ -26,7 +26,7 @@ let url = 'https://jok.im/rlstats_python/data/';
 let allCharts = ['datesChart', 'monthChart', 'yearsChart', 'weekdChart'];
 
 for (let i = 0; i < allCharts.length; i++) {
-    fetchData("ff").then(data => generateConfig(data)).then(config => {
+    fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {
         new Chart(document.getElementById(allCharts[i]).getContext('2d'), config);
     });
 }
@@ -36,8 +36,7 @@ async function fetchData(graphName) {
 }
 
 function generateConfig(inputJson) {
-    console.log(inputJson)
-    let datasets = []
+    let datasets = [];
     for (let i = 0; i < inputJson.data.datasets.length; i++) {
         datasets.push({
             label: inputJson.data.datasets[i].label,
