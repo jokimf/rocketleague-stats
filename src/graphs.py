@@ -78,7 +78,7 @@ class Graph:
     def __str__(self):
         return f'{self.title}+,{self.graph_type},{self.datapoint_labels},{self.data}'
 
-    def change_y(self, new_min: Optional[float], new_max: Optional[float]) -> Graph:
+    def change_y(self, new_min: Optional[float], new_max: Optional[float]):
         self.y_min = new_min
         self.y_max = new_max
         return self
@@ -208,7 +208,7 @@ def graph_average_lvp_score_over_time() -> Graph:
     return Graph("Average LVP score", "line", data, [x[0] for x in c.description], None, None, 215, None, False)
 
 
-def graph_cumulative_stat(stat: str) -> Graph:
+def graph_cumulative_stat(stat: str) -> Graph:  # TODO query is broken!
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
     data = c.execute("""

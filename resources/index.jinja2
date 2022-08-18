@@ -1,0 +1,2530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Clown Gameplay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<style>
+    /** Set `margin-bottom` to maintain vertical rhythm */
+    h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure {
+        margin-bottom: 15px;
+    }
+
+    body {
+        font-size: 1em !important;
+        color: #000000;
+        background-color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        line-height: 1.42em;
+    }
+
+    .website-center-setup {
+        width: 80%;
+        margin: auto;
+        background: #fafafa;
+    }
+
+    h1 {
+        font-size: 3em;
+        font-weight: 300;
+        line-height: 1em;
+        text-align: center;
+        color: #599cbb;
+    }
+
+    h1 .cg { /* clown gameplay part of headline */
+        font-size: 1.1em;
+        font-weight: 300;
+        line-height: 1em;
+        text-align: center;
+        color: #1d7aa4;
+    }
+
+    h2 {
+        text-align: left;
+        display: block;
+        font-size: 2em;
+        margin-block-start: 0.67em;
+        margin-block-end: 0.67em;
+    }
+
+    h3 {
+        text-align: center;
+        display: block;
+        font-size: 2em;
+        margin-block-start: 0.67em;
+        margin-block-end: 0.67em;
+    }
+
+    h4 {
+        text-align: center;
+        font-size: 2em;
+        font-weight: 600;
+        margin-top: 0;
+    }
+
+    .profile-pics-flexbox {
+        display: flex;
+        justify-content: center;
+        gap: 150px
+    }
+
+    .profile-pics {
+        margin: 10px;
+        border-radius: 100px;
+        border: 1px solid;
+        height: 100px;
+    }
+
+    .icon {
+        width: 22px;
+        height: 22px;
+        max-height: 22px;
+        max-width: 22px;
+    }
+
+    figure {
+        display: flex;
+        flex-flow: column-reverse;
+        padding: 5px;
+        max-width: 220px;
+        margin: auto;
+    }
+
+    figcaption {
+        font-weight: bolder;
+        font-size: 22px;
+        background-color: #dedede;
+        text-align: center;
+    }
+
+    .sub-headline {
+        font-size: 1em;
+        font-weight: 300;
+        line-height: 1em;
+        color: #1d7aa4;
+    }
+
+    .infobox {
+        margin: 5px;
+    }
+
+    .total-season-session {
+        display: flex;
+        justify-content: center;
+    }
+
+    .random-facts {
+        text-align: center;
+    }
+
+    /** Reset some basic elements */
+    blockquote, pre, hr, dl, dd, ol, ul, figure {
+        margin: 0;
+        padding: 0;
+    }
+
+    table {
+        border-collapse: collapse;
+        font-style: normal;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    caption {
+        font-size: 2em;
+        line-height: 1.8em;
+    }
+
+    th {
+        color: #000000;
+        font-weight: bold;
+    }
+
+    td, th {
+        border: 1px solid #999;
+        padding: 0.5rem;
+        text-align: center;
+    }
+
+    .infobox td {
+        font-size: smaller;
+    }
+
+    table tr:nth-child(even) {
+        background-color: #f7f7f7;
+    }
+
+    table th {
+        background-color: #f0f0f0;
+        border: 1px solid #dedede;
+        border-bottom-color: #c9c9c9;
+    }
+
+    table td {
+        border: 1px solid #cccccc;
+    }
+
+    li {
+        text-align: left;
+        color: #353535;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    ul {
+        padding-left: 32px;
+    }
+
+    .graph-shell-small {
+        height: 200px;
+        background-color: #eeeeee;
+    }
+
+    .graph-shell-big {
+        height: 700px;
+    }
+
+    hr {
+        border: 0;
+        padding: 0;
+        height: 1px;
+        background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(40, 40, 40, 0.3), rgba(0, 0, 0, 0));
+        margin-block-start: 20px;
+        margin-block-end: 20px;
+    }
+
+    button {
+        transition: background .25s, border-color .25s;
+        background: rgba(40, 44, 52, .05);
+        border: 1px solid transparent;
+        border-radius: 6px;
+        color: #000000;
+        text-decoration: none !important;
+        display: inline-block;
+        font-size: .8rem;
+        padding: 8px 16px;
+        margin: 0 8px 8px 0;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+    }
+
+    .records {
+        display: flex;
+        justify-content: center;
+        gap: 25px;
+    }
+
+    .winrate-flexbox {
+        display: flex;
+        justify-content: center;
+        gap: 100px;
+        margin-bottom: 30px;
+    }
+
+    .winrate-desc-flexbox {
+        gap: 160px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .winrate {
+        font-size: 2em;
+        font-weight: bolder;
+    }
+
+    .winrate-desc {
+        font-size: smaller;
+    }
+</style>
+<body>
+<div class="website-center-setup">
+    <h1><span class="cg">CLOWN GAMEPLAY</span> ROCKET LEAGUE STATISTICS</h1>
+    <div class="profile-pics-flexbox">
+        <figure>
+            <figcaption><img alt={{ ranks[0] }} class="icon" src="https://jok.im/static/img/{{ ranks[0] }}.png"> Knus
+            </figcaption>
+            <img class="profile-pics"
+                 src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
+                 alt="Knus">
+        </figure>
+        <figure>
+            <figcaption><img alt={{ ranks[1] }} class="icon" src="https://jok.im/static/img/{{ ranks[1] }}.png"> Puad
+            </figcaption>
+            <img class="profile-pics"
+                 src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg"
+                 alt="Puad">
+        </figure>
+        <figure>
+            <figcaption><img alt={{ ranks[2] }} class="icon" src="https://jok.im/static/img/{{ ranks[2] }}.png"> Sticker
+            </figcaption>
+            <img class="profile-pics"
+                 src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
+                 alt="Sticker">
+        </figure>
+    </div>
+    <hr>
+    <div class="winrates">
+        <div class="winrate-desc-flexbox">
+            <div class="winrate-desc">Total</div>
+            <div class="winrate-desc">Season</div>
+            <div class="winrate-desc">L100</div>
+            <div class="winrate-desc">L20</div>
+            <div class="winrate-desc">Session</div>
+        </div>
+        <div class="winrate-flexbox">
+            <div class="winrate">{{ winrates[0]|round(1) }}%</div>
+            <div class="winrate">{{ winrates[1]|round(1) }}%</div>
+            <div class="winrate">{{ winrates[2]|round(1) }}%</div>
+            <div class="winrate">{{ winrates[3]|round(1) }}%</div>
+            <div class="winrate">{{ winrates[4]|round(1) }}%</div>
+        </div>
+    </div>
+    <hr>
+    <div class="random-facts">
+        <h2>RANDOM FACTS</h2>
+        <ul>
+            <li>Over the last 20 games, Puad assists are in the Top 15% on average.</li>
+            <li>Last session was 10 days ago...</li>
+            <li>In 2022, CG wins 50.9% of games.</li>
+            <li>In July, CG wins 52.9% of games.</li>
+            <li>The result of the last match was extremely common. It already happened 203 times. (8.4%)</li>
+            <li>On the 30 day of a month, CG wins 49.4% of games.</li>
+        </ul>
+    </div>
+    <hr>
+    <div class="session">
+        <h2>WIE LÄUFT DIE SESSION, P?</h2>
+        This section is under construction
+    </div>
+    <hr>
+    <div class="graphs">
+        <div class="graph-shell-small">
+            <canvas id="datesChart"></canvas>
+            <!--<button onmousedown="changeX()">Min 📈</button>-->
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="monthChart"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="yearsChart"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="weekdChart"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="grief"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="wins_last_20"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="winrate"></canvas>
+        </div>
+        <!--div class="graph-shell-small">
+            <canvas id="solo_goals"></canvas>
+        </div>-->
+        <div class="graph-shell-small">
+            <canvas id="performance_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="mvp_lvp_score"></canvas>
+        </div>
+    </div>
+    <hr>
+    <div class="general-info">
+        <table>
+            <tr>
+                <td>Days since inception</td>
+                <td>1351</td>
+            </tr>
+            <tr>
+                <td>Games</td>
+                <td>2406</td>
+            </tr>
+            <tr>
+                <td>Tilt</td>
+                <td>schon</td>
+            </tr>
+        </table>
+    </div>
+    <hr>
+    <h3>LAST 5</h3>
+    <div class="last5">
+        <table class="container">
+            <thead>
+            <tr>
+                <th colspan="4">General</th>
+                <th colspan="6">Knus</th>
+                <th colspan="6">Puad</th>
+                <th colspan="6">Sticker</th>
+            </tr>
+            <tr>
+                <td>#</td>
+                <td>Date</td>
+                <td>Goals</td>
+                <td>Against</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr>
+
+                <td>2406</td>
+
+                <td>2022-07-21</td>
+
+                <td>2</td>
+
+                <td>3</td>
+
+                <td>C3</td>
+
+                <td>152</td>
+
+                <td>0</td>
+
+                <td>0</td>
+
+                <td>0</td>
+
+                <td>2</td>
+
+                <td>C3</td>
+
+                <td>254</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>0</td>
+
+                <td>2</td>
+
+                <td>C2</td>
+
+                <td>283</td>
+
+                <td>1</td>
+
+                <td>0</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+            </tr>
+
+            <tr>
+
+                <td>2405</td>
+
+                <td>2022-07-21</td>
+
+                <td>6</td>
+
+                <td>1</td>
+
+                <td>C3</td>
+
+                <td>587</td>
+
+                <td>3</td>
+
+                <td>2</td>
+
+                <td>0</td>
+
+                <td>4</td>
+
+                <td>C3</td>
+
+                <td>517</td>
+
+                <td>2</td>
+
+                <td>3</td>
+
+                <td>0</td>
+
+                <td>3</td>
+
+                <td>C2</td>
+
+                <td>262</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>0</td>
+
+                <td>2</td>
+
+            </tr>
+
+            <tr>
+
+                <td>2404</td>
+
+                <td>2022-07-21</td>
+
+                <td>3</td>
+
+                <td>2</td>
+
+                <td>C3</td>
+
+                <td>354</td>
+
+                <td>0</td>
+
+                <td>0</td>
+
+                <td>3</td>
+
+                <td>0</td>
+
+                <td>C3</td>
+
+                <td>330</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>2</td>
+
+                <td>C2</td>
+
+                <td>642</td>
+
+                <td>2</td>
+
+                <td>1</td>
+
+                <td>3</td>
+
+                <td>3</td>
+
+            </tr>
+
+            <tr>
+
+                <td>2403</td>
+
+                <td>2022-07-21</td>
+
+                <td>2</td>
+
+                <td>1</td>
+
+                <td>C3</td>
+
+                <td>348</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>C3</td>
+
+                <td>233</td>
+
+                <td>0</td>
+
+                <td>0</td>
+
+                <td>2</td>
+
+                <td>1</td>
+
+                <td>C2</td>
+
+                <td>390</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+            </tr>
+
+            <tr>
+
+                <td>2402</td>
+
+                <td>2022-07-21</td>
+
+                <td>5</td>
+
+                <td>2</td>
+
+                <td>C3</td>
+
+                <td>464</td>
+
+                <td>2</td>
+
+                <td>1</td>
+
+                <td>1</td>
+
+                <td>3</td>
+
+                <td>C3</td>
+
+                <td>406</td>
+
+                <td>1</td>
+
+                <td>2</td>
+
+                <td>2</td>
+
+                <td>2</td>
+
+                <td>C2</td>
+
+                <td>358</td>
+
+                <td>2</td>
+
+                <td>0</td>
+
+                <td>0</td>
+
+                <td>4</td>
+
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+    <hr>
+    <div class="total-season-session">
+        <div class="infobox">
+            <table>
+                <caption>GRAND TOTAL</caption>
+                <tbody>
+                <tr>
+                    <th rowspan="2"></th>
+                    <th colspan="2">Knus</th>
+                    <th colspan="2">Puad</th>
+                    <th colspan="2">Sticker</th>
+                </tr>
+                <tr>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                </tr>
+                <tr>
+                    <td>Score</td>
+
+                    <td>848026</td>
+
+                    <td>352.46</td>
+
+                    <td>777347</td>
+
+                    <td>323.09</td>
+
+                    <td>764173</td>
+
+                    <td>317.61</td>
+
+                </tr>
+                <tr>
+                    <td>Goals</td>
+
+                    <td>2077</td>
+
+                    <td>0.863</td>
+
+                    <td>1940</td>
+
+                    <td>0.806</td>
+
+                    <td>1949</td>
+
+                    <td>0.81</td>
+
+                </tr>
+                <tr>
+                    <td>Assists</td>
+
+                    <td>1573</td>
+
+                    <td>0.654</td>
+
+                    <td>1451</td>
+
+                    <td>0.603</td>
+
+                    <td>1423</td>
+
+                    <td>0.591</td>
+
+                </tr>
+                <tr>
+                    <td>Saves</td>
+
+                    <td>2688</td>
+
+                    <td>1.117</td>
+
+                    <td>2593</td>
+
+                    <td>1.078</td>
+
+                    <td>2471</td>
+
+                    <td>1.027</td>
+
+                </tr>
+                <tr>
+                    <td>Shots</td>
+
+                    <td>6552</td>
+
+                    <td>2.723</td>
+
+                    <td>5504</td>
+
+                    <td>2.288</td>
+
+                    <td>5800</td>
+
+                    <td>2.411</td>
+
+                </tr>
+                <tr>
+                    <td>MVPs</td>
+
+                    <td>978</td>
+
+                    <td>0.4%</td>
+
+                    <td>764</td>
+
+                    <td>0.3%</td>
+
+                    <td>664</td>
+
+                    <td>0.3%</td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="infobox">
+            <table>
+                <caption>THIS SEASON</caption>
+                <tbody>
+                <tr>
+                    <th rowspan="2"></th>
+                    <th colspan="2">Knus</th>
+                    <th colspan="2">Puad</th>
+                    <th colspan="2">Sticker</th>
+                </tr>
+                <tr>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                </tr>
+                <tr>
+                    <td>Score</td>
+
+                    <td>95430</td>
+
+                    <td>350.85</td>
+
+                    <td>90811</td>
+
+                    <td>333.86</td>
+
+                    <td>86084</td>
+
+                    <td>316.49</td>
+
+                </tr>
+                <tr>
+                    <td>Goals</td>
+
+                    <td>260</td>
+
+                    <td>0.956</td>
+
+                    <td>217</td>
+
+                    <td>0.798</td>
+
+                    <td>199</td>
+
+                    <td>0.732</td>
+
+                </tr>
+                <tr>
+                    <td>Assists</td>
+
+                    <td>192</td>
+
+                    <td>0.706</td>
+
+                    <td>172</td>
+
+                    <td>0.632</td>
+
+                    <td>150</td>
+
+                    <td>0.551</td>
+
+                </tr>
+                <tr>
+                    <td>Saves</td>
+
+                    <td>267</td>
+
+                    <td>0.982</td>
+
+                    <td>320</td>
+
+                    <td>1.176</td>
+
+                    <td>321</td>
+
+                    <td>1.18</td>
+
+                </tr>
+                <tr>
+                    <td>Shots</td>
+
+                    <td>788</td>
+
+                    <td>2.897</td>
+
+                    <td>607</td>
+
+                    <td>2.232</td>
+
+                    <td>641</td>
+
+                    <td>2.357</td>
+
+                </tr>
+                <tr>
+                    <td>MVPs</td>
+
+                    <td>99</td>
+
+                    <td>0.4%</td>
+
+                    <td>103</td>
+
+                    <td>0.4%</td>
+
+                    <td>70</td>
+
+                    <td>0.3%</td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="infobox">
+            <table>
+                <caption>THIS SESSION</caption>
+                <tbody>
+                <tr>
+                    <th rowspan="2"></th>
+                    <th colspan="2">Knus</th>
+                    <th colspan="2">Puad</th>
+                    <th colspan="2">Sticker</th>
+                </tr>
+                <tr>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                    <td>Σ</td>
+                    <td>ø</td>
+                </tr>
+                <tr>
+                    <td>Score</td>
+
+                    <td>84232</td>
+
+                    <td>348.07</td>
+
+                    <td>81724</td>
+
+                    <td>337.7</td>
+
+                    <td>76346</td>
+
+                    <td>315.48</td>
+
+                </tr>
+                <tr>
+                    <td>Goals</td>
+
+                    <td>227</td>
+
+                    <td>0.938</td>
+
+                    <td>195</td>
+
+                    <td>0.806</td>
+
+                    <td>178</td>
+
+                    <td>0.736</td>
+
+                </tr>
+                <tr>
+                    <td>Assists</td>
+
+                    <td>172</td>
+
+                    <td>0.711</td>
+
+                    <td>157</td>
+
+                    <td>0.649</td>
+
+                    <td>127</td>
+
+                    <td>0.525</td>
+
+                </tr>
+                <tr>
+                    <td>Saves</td>
+
+                    <td>234</td>
+
+                    <td>0.967</td>
+
+                    <td>293</td>
+
+                    <td>1.211</td>
+
+                    <td>287</td>
+
+                    <td>1.186</td>
+
+                </tr>
+                <tr>
+                    <td>Shots</td>
+
+                    <td>698</td>
+
+                    <td>2.884</td>
+
+                    <td>540</td>
+
+                    <td>2.231</td>
+
+                    <td>566</td>
+
+                    <td>2.339</td>
+
+                </tr>
+                <tr>
+                    <td>MVPs</td>
+
+                    <td>84</td>
+
+                    <td>0.3%</td>
+
+                    <td>96</td>
+
+                    <td>0.4%</td>
+
+                    <td>62</td>
+
+                    <td>0.3%</td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr>
+    <h3>"FUN" FACTS</h3>
+    <div class="fun-facts">
+        <table>
+            <tbody>
+            <tr>
+                <th>Fact</th>
+                <th>Occurence</th>
+                <th>Winrate</th>
+                <th>Change</th>
+            </tr>
+            <tr>
+                <td>Faktastisch</td>
+                <td>0%</td>
+                <td>0%</td>
+                <td>^</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <hr>
+    <h3>RECORDS</h3>
+    <div class="records">
+        <div class="records-part">
+            <table>
+                <tbody>
+                <tr>
+                    <th>Record</th>
+                    <th>Player</th>
+                    <th>Value</th>
+                    <th>Game ID</th>
+                    <th>Date</th>
+                </tr>
+
+                <tr>
+                    <td rowspan="4">
+                        Lowest shots in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.35</td>
+
+                    <td>49</td>
+
+                    <td>2018-12-19</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.35</td>
+
+                    <td>50</td>
+
+                    <td>2018-12-19</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>1.35</td>
+
+                    <td>519</td>
+
+                    <td>2019-07-22</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most goals conceded by team
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>8</td>
+
+                    <td>103</td>
+
+                    <td>2019-01-16</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>8</td>
+
+                    <td>1365</td>
+
+                    <td>2020-08-23</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>8</td>
+
+                    <td>1873</td>
+
+                    <td>2021-04-03</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Highest goals in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.5</td>
+
+                    <td>143</td>
+
+                    <td>2019-03-04</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.45</td>
+
+                    <td>142</td>
+
+                    <td>2019-03-04</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.45</td>
+
+                    <td>225</td>
+
+                    <td>2019-03-31</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Least points with at least one goal
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>114</td>
+
+                    <td>192</td>
+
+                    <td>2019-03-16</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>128</td>
+
+                    <td>1888</td>
+
+                    <td>2021-04-04</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>134</td>
+
+                    <td>2272</td>
+
+                    <td>2022-05-13</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Lowest assists in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>0.0</td>
+
+                    <td>265</td>
+
+                    <td>2019-05-01</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>0.05</td>
+
+                    <td>263</td>
+
+                    <td>2019-05-01</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>0.05</td>
+
+                    <td>264</td>
+
+                    <td>2019-05-01</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Lowest score in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>217.85</td>
+
+                    <td>340</td>
+
+                    <td>2019-05-14</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>221.3</td>
+
+                    <td>342</td>
+
+                    <td>2019-05-17</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>221.85</td>
+
+                    <td>337</td>
+
+                    <td>2019-05-14</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most solo goals by "team"
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td></td>
+
+                    <td>4</td>
+
+                    <td>351</td>
+
+                    <td>2019-05-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td></td>
+
+                    <td>4</td>
+
+                    <td>914</td>
+
+                    <td>2020-02-23</td>
+
+                </tr>
+
+                <tr>
+
+                    <td></td>
+
+                    <td>4</td>
+
+                    <td>1029</td>
+
+                    <td>2020-05-03</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most saves by player
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>7</td>
+
+                    <td>352</td>
+
+                    <td>2019-05-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>7</td>
+
+                    <td>758</td>
+
+                    <td>2019-11-09</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>6</td>
+
+                    <td>424</td>
+
+                    <td>2019-06-07</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most points with no goal
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>811</td>
+
+                    <td>352</td>
+
+                    <td>2019-05-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>717</td>
+
+                    <td>557</td>
+
+                    <td>2019-07-26</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>652</td>
+
+                    <td>1036</td>
+
+                    <td>2020-05-03</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Lowest saves in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>0.35</td>
+
+                    <td>378</td>
+
+                    <td>2019-05-30</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>0.4</td>
+
+                    <td>376</td>
+
+                    <td>2019-05-30</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>0.4</td>
+
+                    <td>377</td>
+
+                    <td>2019-05-30</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Lowest points with all stats being at least 1
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>238</td>
+
+                    <td>539</td>
+
+                    <td>2019-07-25</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>250</td>
+
+                    <td>771</td>
+
+                    <td>2019-11-21</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>262</td>
+
+                    <td>465</td>
+
+                    <td>2019-07-06</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most saves by team
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>12</td>
+
+                    <td>758</td>
+
+                    <td>2019-11-09</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>12</td>
+
+                    <td>1315</td>
+
+                    <td>2020-07-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>11</td>
+
+                    <td>54</td>
+
+                    <td>2018-12-19</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most points with all stats being 0
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>206</td>
+
+                    <td>823</td>
+
+                    <td>2020-02-08</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>196</td>
+
+                    <td>1908</td>
+
+                    <td>2021-04-05</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>196</td>
+
+                    <td>1831</td>
+
+                    <td>2021-03-21</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most shots by player
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>11</td>
+
+                    <td>900</td>
+
+                    <td>2020-02-23</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>10</td>
+
+                    <td>1167</td>
+
+                    <td>2020-06-21</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>10</td>
+
+                    <td>2362</td>
+
+                    <td>2022-06-30</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Highest score in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>456.7</td>
+
+                    <td>918</td>
+
+                    <td>2020-02-23</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>455.6</td>
+
+                    <td>917</td>
+
+                    <td>2020-02-23</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>450.5</td>
+
+                    <td>915</td>
+
+                    <td>2020-02-23</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most shots by team
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>20</td>
+
+                    <td>1024</td>
+
+                    <td>2020-05-01</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>20</td>
+
+                    <td>1499</td>
+
+                    <td>2020-11-15</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>18</td>
+
+                    <td>1586</td>
+
+                    <td>2020-12-06</td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="records-part">
+            <table>
+                <tr>
+                    <th>Record</th>
+                    <th>Player</th>
+                    <th>Value</th>
+                    <th>Game ID</th>
+                    <th>Date</th>
+                </tr>
+                <tr>
+                    <td rowspan="4">
+                        Highest Score by player
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>1034</td>
+
+                    <td>1157</td>
+
+                    <td>2020-06-12</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1023</td>
+
+                    <td>1315</td>
+
+                    <td>2020-07-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>950</td>
+
+                    <td>487</td>
+
+                    <td>2019-07-15</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most goals by player
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>7</td>
+
+                    <td>1157</td>
+
+                    <td>2020-06-12</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>5</td>
+
+                    <td>105</td>
+
+                    <td>2019-01-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>5</td>
+
+                    <td>211</td>
+
+                    <td>2019-03-23</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most assists by team
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>8</td>
+
+                    <td>1157</td>
+
+                    <td>2020-06-12</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>7</td>
+
+                    <td>476</td>
+
+                    <td>2019-07-14</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>7</td>
+
+                    <td>1199</td>
+
+                    <td>2020-07-06</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Lowest goals in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>0.2</td>
+
+                    <td>1157</td>
+
+                    <td>2020-06-12</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>0.2</td>
+
+                    <td>1158</td>
+
+                    <td>2020-06-12</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>0.25</td>
+
+                    <td>229</td>
+
+                    <td>2019-04-04</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most goals scored and still lost
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>6</td>
+
+                    <td>1294</td>
+
+                    <td>2020-07-18</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>6</td>
+
+                    <td>1463</td>
+
+                    <td>2020-11-04</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>5</td>
+
+                    <td>111</td>
+
+                    <td>2019-01-20</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most points by team
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>2277</td>
+
+                    <td>1315</td>
+
+                    <td>2020-07-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>2189</td>
+
+                    <td>54</td>
+
+                    <td>2018-12-19</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>2166</td>
+
+                    <td>2103</td>
+
+                    <td>2021-10-10</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Highest assists in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.25</td>
+
+                    <td>1499</td>
+
+                    <td>2020-11-15</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.25</td>
+
+                    <td>1500</td>
+
+                    <td>2020-11-15</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>1.25</td>
+
+                    <td>1501</td>
+
+                    <td>2020-11-15</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Highest shots in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>4.0</td>
+
+                    <td>1515</td>
+
+                    <td>2020-11-17</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>3.85</td>
+
+                    <td>1514</td>
+
+                    <td>2020-11-17</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>3.8</td>
+
+                    <td>1516</td>
+
+                    <td>2020-11-17</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Highest score diff between MVP and LVP
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>736</td>
+
+                    <td>1915</td>
+
+                    <td>2021-04-05</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>734</td>
+
+                    <td>383</td>
+
+                    <td>2019-05-31</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>725</td>
+
+                    <td>831</td>
+
+                    <td>2020-02-08</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most goals by team
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>10</td>
+
+                    <td>2047</td>
+
+                    <td>2021-09-15</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>9</td>
+
+                    <td>1157</td>
+
+                    <td>2020-06-12</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>8</td>
+
+                    <td>1345</td>
+
+                    <td>2020-08-18</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most goals conceded and still won
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>6</td>
+
+                    <td>2047</td>
+
+                    <td>2021-09-15</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>5</td>
+
+                    <td>586</td>
+
+                    <td>2019-08-01</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>5</td>
+
+                    <td>1098</td>
+
+                    <td>2020-05-22</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most total goals in one game
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>16</td>
+
+                    <td>2047</td>
+
+                    <td>2021-09-15</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>13</td>
+
+                    <td>1294</td>
+
+                    <td>2020-07-18</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>CG</td>
+
+                    <td>13</td>
+
+                    <td>1463</td>
+
+                    <td>2020-11-04</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most assists by player
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>5</td>
+
+                    <td>2053</td>
+
+                    <td>2021-09-15</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>4</td>
+
+                    <td>476</td>
+
+                    <td>2019-07-14</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>4</td>
+
+                    <td>818</td>
+
+                    <td>2020-02-07</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Most points without scoring or assisting
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>574</td>
+
+                    <td>2104</td>
+
+                    <td>2021-10-17</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>564</td>
+
+                    <td>1056</td>
+
+                    <td>2020-05-08</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>558</td>
+
+                    <td>1734</td>
+
+                    <td>2021-02-24</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Highest saves in Trend
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>2.25</td>
+
+                    <td>2186</td>
+
+                    <td>2022-03-03</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>2.25</td>
+
+                    <td>2188</td>
+
+                    <td>2022-03-03</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Sticker</td>
+
+                    <td>2.2</td>
+
+                    <td>2187</td>
+
+                    <td>2022-03-03</td>
+
+                </tr>
+
+
+                <tr>
+                    <td rowspan="4">
+                        Lowest score diff between MVP and LVP
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>4</td>
+
+                    <td>2220</td>
+
+                    <td>2022-03-13</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Knus</td>
+
+                    <td>6</td>
+
+                    <td>1813</td>
+
+                    <td>2021-03-20</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>Puad</td>
+
+                    <td>7</td>
+
+                    <td>371</td>
+
+                    <td>2019-05-30</td>
+
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+<!--<script src="loadData.js"></script>-->
+<script>
+    let allCharts = ["datesChart", "monthChart", "yearsChart", "weekdChart", "grief", "wins_last_20", "winrate", "solo_goals",
+        "performance_score", "performance_goals", "performance_assists", "performance_saves", "performance_shots", "performance_share_score", "performance_share_goals",
+        "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists",
+        "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
+
+    for (let i = 0; i < allCharts.length; i++) {
+        fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {
+            new Chart(document.getElementById(allCharts[i]).getContext('2d'), config);
+        });
+    }
+
+    async function fetchData(graphName) {
+        return await fetch('https://jok.im/rlstats_python/data/' + graphName).then(json => json.json());
+    }
+
+    function generateConfig(inputJson) {
+        let datasets = [];
+        for (let i = 0; i < inputJson.data.datasets.length; i++) {
+            datasets.push({
+                label: inputJson.data.datasets[i].label,
+                data: inputJson.data.datasets[i].data,
+                borderColor: inputJson.data.datasets[i].borderColor,
+                borderWidth: 4,
+                pointRadius: 0
+            })
+        }
+        return {
+            type: inputJson.type,
+            data: {
+                labels: inputJson.data.labels,
+                datasets: datasets
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: inputJson.data.title
+                    },
+                    legend: {
+                        display: inputJson.options.show_legend
+                    }
+                },
+                scales: {
+                    x: {
+                        min: inputJson.options.x_min,
+                        max: inputJson.options.x_max
+                    },
+                    y: {
+                        min: inputJson.options.y_min,
+                        max: inputJson.options.y_max
+                    }
+                }
+            },
+            plugins: {}
+        }
+    }
+
+    function changeX() {
+        p(myChart);
+    }
+
+    function p(chart) {
+        //chart.options.plugins.title.text = 'new title';
+        let xmin = chart.scales.x.min
+        let xmax = chart.scales.x.max
+        chart.options.scales.x.min = xmin + 100;
+        chart.update();
+    }
+</script>
+</html>

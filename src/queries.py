@@ -596,6 +596,34 @@ def session_count() -> int:
     return c.execute("SELECT COUNT(1) FROM sessions").fetchone()[0]
 
 
+def ranks() -> List:
+    ranks_list = []
+    for i in range(0, 3):
+        ranks_list.append(c.execute(
+            "SELECT rank FROM scores WHERE playerID = ? ORDER BY gameID desc LIMIT 1", (i,)).fetchone()[0].lower())
+    return ranks_list
+
+
+def season_start_id() -> int:  # TODO proper query
+    return 2329
+
+
+def winrates() -> List:
+    latest_game_id = max_id()
+    season_start = season_start_id()
+    last_session = last_session_data()
+    games_last_session = last_session[2] + last_session[3]
+    winrates_list = [total_wins() / latest_game_id * 100,
+                     wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
+                     float(wins_in_range(latest_game_id - 99, latest_game_id)),
+                     wins_in_range(latest_game_id - 19, latest_game_id) / 20 * 100,
+                     last_session[2] / games_last_session * 100
+                     ]
+
+    return winrates_list
+
+
+# TODO: Season queries
 # UNUSED #
 def build_fun_facts():
     raise NotImplementedError()

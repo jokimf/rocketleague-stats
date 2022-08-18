@@ -17,10 +17,10 @@ def data(request) -> dict:
 
 @view_config(
     route_name='home',
-    renderer='../resources/home.jinja2'
+    renderer='../resources/index.jinja2'
 )
 def serve(request) -> dict:
-    max_id = q.max_id()
+    '''
     data = {"days_since_inception": q.days_since_inception(),
             "total_games": q.max_id(),
             "total_wins": q.total_wins(),
@@ -30,9 +30,17 @@ def serve(request) -> dict:
             "session_data": q.general_game_stats_over_time_period(2165, max_id),
             "performance_data": q.general_game_stats_over_time_period(max_id - 19, max_id),
             # "last_5": q.points_last_5(),
-            "record_games": q.build_record_games(),
-            "FunFacts": "q.build_fun_facts()",
-            "random_facts": r.generate_random_facts()}
+            "record_games": q.build_record_games()
+            # "FunFacts": "q.build_fun_facts()",
+            # "random_facts": r.generate_random_facts()
+            }
+    '''
+    max_id = q.max_id()
+    data = {
+        "ranks": q.ranks(),
+        "winrates": q.winrates()
+    }
+
     return data
 
 
