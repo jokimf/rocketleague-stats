@@ -20,28 +20,20 @@ def data(request) -> dict:
     renderer='../resources/index.jinja2'
 )
 def serve(request) -> dict:
-    '''
-    data = {"days_since_inception": q.days_since_inception(),
-            "total_games": q.max_id(),
-            "total_wins": q.total_wins(),
-            "games": q.last_x_games_stats(5),
-            "grand_total": q.general_game_stats_over_time_period(1, max_id),
-            "season_data": q.general_game_stats_over_time_period(2135, max_id),
-            "session_data": q.general_game_stats_over_time_period(2165, max_id),
-            "performance_data": q.general_game_stats_over_time_period(max_id - 19, max_id),
-            # "last_5": q.points_last_5(),
-            "record_games": q.build_record_games()
-            # "FunFacts": "q.build_fun_facts()",
-            # "random_facts": r.generate_random_facts()
-            }
-    '''
     max_id = q.max_id()
-    data = {
+    return {
         "ranks": q.ranks(),
-        "winrates": q.winrates()
+        "winrates": q.winrates(),
+        "random_facts": r.generate_random_facts(),
+        "days_since_inception": q.days_since_inception(),
+        "total_games": max_id,
+        "tilt": 50,  # q.tilt(),
+        "last_games": q.last_x_games_stats(5),
+        "grand_total": q.general_game_stats_over_time_period(1, max_id),
+        "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),
+        "session_data": q.general_game_stats_over_time_period(q.session_start_id(), max_id),
+        "fun_facts": q.build_fun_facts()
     }
-
-    return data
 
 
 if __name__ == '__main__':

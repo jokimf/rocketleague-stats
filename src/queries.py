@@ -608,6 +608,10 @@ def season_start_id() -> int:  # TODO proper query
     return 2329
 
 
+def session_start_id() -> int:  # TODO proper query
+    return 2400
+
+
 def winrates() -> List:
     latest_game_id = max_id()
     season_start = season_start_id()
@@ -623,12 +627,46 @@ def winrates() -> List:
     return winrates_list
 
 
+def build_fun_facts() -> List:
+    def format_ff(title: str, function):
+        return [title] + list(function)
+
+    return [[format_ff("CG shot six or more times", ff_six_or_more_shots()),
+             format_ff("Everyone scored", ff_everyone_scored()),
+             format_ff("No solo goals were scored", ff_no_solo_goals()),
+             format_ff("CG concedes zero goals", ff_team_concedes_x_times(0)),
+             format_ff("CG concedes one goals", ff_team_concedes_x_times(1)),
+             format_ff("CG concedes two goals", ff_team_concedes_x_times(2)),
+             format_ff("CG concedes three goals", ff_team_concedes_x_times(3)),
+             format_ff("CG concedes four goals", ff_team_concedes_x_times(4)),
+             format_ff("CG concedes five goals", ff_team_concedes_x_times(5)),
+             format_ff("CG scored zero goals", ff_team_scores_x_times(0)),
+             format_ff("CG scored one goal", ff_team_scores_x_times(1)),
+             format_ff("CG scored two goals", ff_team_scores_x_times(2)),
+             format_ff("CG scored three goals", ff_team_scores_x_times(3)),
+             format_ff("CG scored four goals", ff_team_scores_x_times(4)),
+             format_ff("CG scored five goals", ff_team_scores_x_times(5))],
+            [format_ff("Knus is irrelevant", ff_irrelevant(0)),
+             format_ff("Puad is irrelevant", ff_irrelevant(1)),
+             format_ff("Sticker is irrelevant", ff_irrelevant(2)),
+             format_ff("Knus has at least one assist", ff_at_least_one_assist(0)),
+             format_ff("Puad has at least one assist", ff_at_least_one_assist(1)),
+             format_ff("Sticker has at least one assist", ff_at_least_one_assist(2)),
+             format_ff("Knus did not score", ff_did_not_score(0)),
+             format_ff("Puad did not score", ff_did_not_score(1)),
+             format_ff("Sticker did not score", ff_did_not_score(2)),
+             format_ff("Knus scored more than 500 points", ff_more_than_500(0)),
+             format_ff("Puad scored more than 500 points", ff_more_than_500(1)),
+             format_ff("Sticker scored more than 500 points", ff_more_than_500(2)),
+             format_ff("Knus has two or more saves", ff_two_or_more_saves(0)),
+             format_ff("Puad has two or more saves", ff_two_or_more_saves(1)),
+             format_ff("Sticker has two or more saves", ff_two_or_more_saves(2)),
+             ]]
+
+
 # TODO: Season queries
+
 # UNUSED #
-def build_fun_facts():
-    raise NotImplementedError()
-
-
 def mvp_wins(player_id, start=1, end=None):
     if end is None:
         end = max_id()
@@ -642,10 +680,6 @@ def mvp_wins(player_id, start=1, end=None):
             HAVING MAX(score))
         WHERE playerID = ?""", (start, end, player_id))
     return c.fetchone()[0]
-
-
-def team_solo_goals() -> int:
-    return c.execute("SELECT SUM(goals) - SUM(assists) FROM scores").fetchone()[0]
 
 
 def total_wins() -> int:
@@ -662,31 +696,6 @@ def one_diff_wins() -> int:
 
 def one_diff_loss() -> int:
     return c.execute("SELECT COUNT(gameID) FROM games WHERE against - goals = 1").fetchone()[0]
-
-
-def average_mvp_score() -> int:
-    return c.execute(
-        """SELECT AVG(scores.score) 
-        FROM mvplvp JOIN scores ON mvplvp.MVP = scores.playerID AND mvplvp.gameID = scores.gameID""").fetchone()[0]
-
-
-def average_lvp_score() -> int:
-    return c.execute(
-        """SELECT AVG(scores.score) 
-        FROM mvplvp JOIN scores ON mvplvp.LVP = scores.playerID AND mvplvp.gameID = scores.gameID""").fetchone()[0]
-
-
-# ???
-def performance_agg(stat, mode, starting_game_id=1, games_considered=20):
-    c.execute("""
-        SELECT name, """ + mode + """(""" + stat + """)
-            FROM(   SELECT scores.playerID, """ + stat + """, name
-                    FROM scores JOIN players 
-                    ON scores.playerID = players.playerID WHERE scores.gameID > """ + str(starting_game_id) + """
-                    ORDER BY scores.gameID ASC LIMIT """ + str(games_considered) + """)
-            GROUP BY playerID
-    """)
-    return c.fetchall()
 
 
 def results_table_ordered():

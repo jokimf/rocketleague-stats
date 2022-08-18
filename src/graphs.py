@@ -95,7 +95,7 @@ def graph_performance(stat: str) -> Graph:
         LEFT JOIN pT ON kT.gameID = pT.gameID
         LEFT JOIN sT ON kT.gameID = sT.gameID
     """).fetchall()
-    return Graph(f'Player {stat} performance over time', 'line', data,
+    return Graph(f'{stat.capitalize()} performance', 'line', data,
                  [f'{x[0]}{stat.capitalize()}' for x in c.description], None, None,
                  None, None, False)
 
@@ -104,8 +104,7 @@ def graph_performance_team(stat: str) -> Graph:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
     data = c.execute(f"SELECT gameID AS GameID, AVG({stat}) AS CG FROM performance GROUP BY gameID").fetchall()
-    return Graph(f"Team {stat} performance", "line", data, [x[0] for x in c.description], None, None, None, None,
-                 False)
+    return Graph(f"Team {stat} performance", "line", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def graph_grief_value() -> Graph:
@@ -119,8 +118,7 @@ def graph_grief_value() -> Graph:
             LEFT JOIN sT ON kT.gameID = sT.gameID
             LEFT JOIN gAvg ON kT.gameID = gAvg.gameID
     """).fetchall()
-    return Graph(f"Grief value", "line", data, [x[0] for x in c.description], None, None, None, None,
-                 False)
+    return Graph(f"Grief Value", "line", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def graph_winrate_last20() -> Graph:
@@ -130,7 +128,7 @@ def graph_winrate_last20() -> Graph:
         CAST(SUM(w) OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 20 AS wr 
         FROM(SELECT gameID, IIF(goals > against,1,0) AS w FROM games)) WHERE gameID > 19
     """).fetchall()
-    return Graph("Winrate last 20 games", "line", data, [x[0] for x in c.description], 20, None, 0.15, 0.8, False)
+    return Graph("Winrate Last20", "line", data, [x[0] for x in c.description], 20, None, 0.15, 0.8, False)
 
 
 def graph_winrate() -> Graph:
@@ -167,7 +165,7 @@ def graph_stat_share(stat: str) -> Graph:
         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS S
         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
-    return Graph(f"{stat} share", "line", data, [x[0] for x in c.description], None, None, None, None, False)
+    return Graph(f"{stat.capitalize()} Share", "line", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def graph_performance_stat_share(stat: str) -> Graph:
@@ -190,7 +188,7 @@ def graph_performance_stat_share(stat: str) -> Graph:
         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
     print(data)
-    return Graph(f"{stat} performance share", "line", data, [x[0] for x in c.description], None, None, None, None,
+    return Graph(f"{stat.capitalize()} performance share", "line", data, [x[0] for x in c.description], None, None, None, None,
                  False)
 
 
@@ -198,14 +196,14 @@ def graph_average_mvp_score_over_time() -> Graph:
     data = c.execute("""
         SELECT gameID, AVG(score) OVER (ORDER BY gameID) AS CG FROM scores GROUP BY gameID HAVING MAX(score)
     """).fetchall()  # Graph gets joined with LVP, so title is MVP/LVP here
-    return Graph("Average MVP/LVP score", "line", data, [x[0] for x in c.description], None, None, None, None, False)
+    return Graph("Average MVP/LVP Score", "line", data, [x[0] for x in c.description], None, None, None, None, False)
 
 
 def graph_average_lvp_score_over_time() -> Graph:
     data = c.execute("""
         SELECT gameID AS GameID, AVG(score) OVER (ORDER BY gameID) AS CG FROM scores GROUP BY gameID HAVING MIN(score)
     """).fetchall()
-    return Graph("Average LVP score", "line", data, [x[0] for x in c.description], None, None, 215, None, False)
+    return Graph("Average LVP Score", "line", data, [x[0] for x in c.description], None, None, 215, None, False)
 
 
 def graph_cumulative_stat(stat: str) -> Graph:  # TODO query is broken!
@@ -218,7 +216,7 @@ def graph_cumulative_stat(stat: str) -> Graph:  # TODO query is broken!
         SELECT k.gameID AS GameID, k.sc AS Knus, p.sc AS Puad, s.sc AS Sticker 
         FROM k LEFT JOIN p ON k.gameID = p.gameID LEFT JOIN s ON k.gameID = s.gameID
     """, (stat, stat, stat)).fetchall()
-    return Graph(f"Cumulative {stat}", "line", data, [x[0] for x in c.description], None, None, None, None,
+    return Graph(f"Cumulative {stat.capitalize()}", "line", data, [x[0] for x in c.description], None, None, None, None,
                  False)
 
 
@@ -280,7 +278,7 @@ graphs = {
     'performance_share_goals': graph_stat_share('goals').change_y(0.3, 0.375),
     'performance_share_assists': graph_stat_share('assists').change_y(0.3, 0.4),
     'performance_share_saves': graph_stat_share('saves').change_y(0.3, 0.375),
-    'performance_share_shots': graph_stat_share('shots').change_y(0.275, 0.3575),
+    'performance_share_shots': graph_stat_share('shots').change_y(0.285, 0.4),
     'cumulative_stats_score': graph_cumulative_stat('score'),
     'cumulative_stats_goals': graph_cumulative_stat('goals'),
     'cumulative_stats_assists': graph_cumulative_stat('assists'),

@@ -215,7 +215,7 @@
         user-select: none;
     }
 
-    .records {
+    .records, .fun-facts {
         display: flex;
         justify-content: center;
         gap: 25px;
@@ -289,13 +289,8 @@
     <hr>
     <div class="random-facts">
         <h2>RANDOM FACTS</h2>
-        <ul>
-            <li>Over the last 20 games, Puad assists are in the Top 15% on average.</li>
-            <li>Last session was 10 days ago...</li>
-            <li>In 2022, CG wins 50.9% of games.</li>
-            <li>In July, CG wins 52.9% of games.</li>
-            <li>The result of the last match was extremely common. It already happened 203 times. (8.4%)</li>
-            <li>On the 30 day of a month, CG wins 49.4% of games.</li>
+        <ul>{% for fact in random_facts %}
+            <li>{{ fact[0] }}</li>{% endfor %}
         </ul>
     </div>
     <hr>
@@ -306,26 +301,10 @@
     <hr>
     <div class="graphs">
         <div class="graph-shell-small">
-            <canvas id="datesChart"></canvas>
-            <!--<button onmousedown="changeX()">Min 📈</button>-->
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="monthChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="yearsChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="weekdChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
             <canvas id="grief"></canvas>
         </div>
         <div class="graph-shell-small">
             <canvas id="wins_last_20"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="winrate"></canvas>
         </div>
         <!--div class="graph-shell-small">
             <canvas id="solo_goals"></canvas>
@@ -361,22 +340,17 @@
             <canvas id="performance_share_shots"></canvas>
         </div>
         <div class="graph-shell-small">
-            <canvas id="cumulative_stats_score"></canvas>
+            <canvas id="datesChart"></canvas>
+            <!--<button onmousedown="changeX()">Min 📈</button>-->
         </div>
         <div class="graph-shell-small">
-            <canvas id="cumulative_stats_goals"></canvas>
+            <canvas id="monthChart"></canvas>
         </div>
         <div class="graph-shell-small">
-            <canvas id="cumulative_stats_assists"></canvas>
+            <canvas id="yearsChart"></canvas>
         </div>
         <div class="graph-shell-small">
-            <canvas id="cumulative_stats_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="mvp_lvp_score"></canvas>
+            <canvas id="weekdChart"></canvas>
         </div>
     </div>
     <hr>
@@ -384,15 +358,15 @@
         <table>
             <tr>
                 <td>Days since inception</td>
-                <td>1351</td>
+                <td>{{ days_since_inception | int }}</td>
             </tr>
             <tr>
                 <td>Games</td>
-                <td>2406</td>
+                <td>{{ total_games }}</td>
             </tr>
             <tr>
                 <td>Tilt</td>
-                <td>schon</td>
+                <td>{{ tilt }}%</td>
             </tr>
         </table>
     </div>
@@ -432,249 +406,10 @@
                 <td>S</td>
             </tr>
             </thead>
-
-            <tbody>
-            <tr>
-
-                <td>2406</td>
-
-                <td>2022-07-21</td>
-
-                <td>2</td>
-
-                <td>3</td>
-
-                <td>C3</td>
-
-                <td>152</td>
-
-                <td>0</td>
-
-                <td>0</td>
-
-                <td>0</td>
-
-                <td>2</td>
-
-                <td>C3</td>
-
-                <td>254</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>0</td>
-
-                <td>2</td>
-
-                <td>C2</td>
-
-                <td>283</td>
-
-                <td>1</td>
-
-                <td>0</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-            </tr>
-
-            <tr>
-
-                <td>2405</td>
-
-                <td>2022-07-21</td>
-
-                <td>6</td>
-
-                <td>1</td>
-
-                <td>C3</td>
-
-                <td>587</td>
-
-                <td>3</td>
-
-                <td>2</td>
-
-                <td>0</td>
-
-                <td>4</td>
-
-                <td>C3</td>
-
-                <td>517</td>
-
-                <td>2</td>
-
-                <td>3</td>
-
-                <td>0</td>
-
-                <td>3</td>
-
-                <td>C2</td>
-
-                <td>262</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>0</td>
-
-                <td>2</td>
-
-            </tr>
-
-            <tr>
-
-                <td>2404</td>
-
-                <td>2022-07-21</td>
-
-                <td>3</td>
-
-                <td>2</td>
-
-                <td>C3</td>
-
-                <td>354</td>
-
-                <td>0</td>
-
-                <td>0</td>
-
-                <td>3</td>
-
-                <td>0</td>
-
-                <td>C3</td>
-
-                <td>330</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>2</td>
-
-                <td>C2</td>
-
-                <td>642</td>
-
-                <td>2</td>
-
-                <td>1</td>
-
-                <td>3</td>
-
-                <td>3</td>
-
-            </tr>
-
-            <tr>
-
-                <td>2403</td>
-
-                <td>2022-07-21</td>
-
-                <td>2</td>
-
-                <td>1</td>
-
-                <td>C3</td>
-
-                <td>348</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>C3</td>
-
-                <td>233</td>
-
-                <td>0</td>
-
-                <td>0</td>
-
-                <td>2</td>
-
-                <td>1</td>
-
-                <td>C2</td>
-
-                <td>390</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-            </tr>
-
-            <tr>
-
-                <td>2402</td>
-
-                <td>2022-07-21</td>
-
-                <td>5</td>
-
-                <td>2</td>
-
-                <td>C3</td>
-
-                <td>464</td>
-
-                <td>2</td>
-
-                <td>1</td>
-
-                <td>1</td>
-
-                <td>3</td>
-
-                <td>C3</td>
-
-                <td>406</td>
-
-                <td>1</td>
-
-                <td>2</td>
-
-                <td>2</td>
-
-                <td>2</td>
-
-                <td>C2</td>
-
-                <td>358</td>
-
-                <td>2</td>
-
-                <td>0</td>
-
-                <td>0</td>
-
-                <td>4</td>
-
-            </tr>
-
-            </tbody>
+            {% for row in last_games %}
+                <tr>{% for data in row %}
+                    <td>{{ data }}</td>{% endfor %}</tr>
+            {% endfor %}
         </table>
     </div>
     <hr>
@@ -682,7 +417,6 @@
         <div class="infobox">
             <table>
                 <caption>GRAND TOTAL</caption>
-                <tbody>
                 <tr>
                     <th rowspan="2"></th>
                     <th colspan="2">Knus</th>
@@ -699,107 +433,45 @@
                 </tr>
                 <tr>
                     <td>Score</td>
-
-                    <td>848026</td>
-
-                    <td>352.46</td>
-
-                    <td>777347</td>
-
-                    <td>323.09</td>
-
-                    <td>764173</td>
-
-                    <td>317.61</td>
-
+                    {% for goal in grand_total["Score"] %}
+                        <td>{{ goal|round(2) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Goals</td>
-
-                    <td>2077</td>
-
-                    <td>0.863</td>
-
-                    <td>1940</td>
-
-                    <td>0.806</td>
-
-                    <td>1949</td>
-
-                    <td>0.81</td>
-
+                    {% for goal in grand_total["Goals"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Assists</td>
-
-                    <td>1573</td>
-
-                    <td>0.654</td>
-
-                    <td>1451</td>
-
-                    <td>0.603</td>
-
-                    <td>1423</td>
-
-                    <td>0.591</td>
-
+                    {% for goal in grand_total["Assists"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Saves</td>
-
-                    <td>2688</td>
-
-                    <td>1.117</td>
-
-                    <td>2593</td>
-
-                    <td>1.078</td>
-
-                    <td>2471</td>
-
-                    <td>1.027</td>
-
+                    {% for goal in grand_total["Saves"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Shots</td>
-
-                    <td>6552</td>
-
-                    <td>2.723</td>
-
-                    <td>5504</td>
-
-                    <td>2.288</td>
-
-                    <td>5800</td>
-
-                    <td>2.411</td>
-
+                    {% for goal in grand_total["Shots"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>MVPs</td>
-
-                    <td>978</td>
-
-                    <td>0.4%</td>
-
-                    <td>764</td>
-
-                    <td>0.3%</td>
-
-                    <td>664</td>
-
-                    <td>0.3%</td>
-
+                    {% for goal in grand_total["MVPs"] %}
+                        <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+                    {% endfor %}
                 </tr>
-                </tbody>
             </table>
         </div>
         <div class="infobox">
             <table>
                 <caption>THIS SEASON</caption>
-                <tbody>
                 <tr>
                     <th rowspan="2"></th>
                     <th colspan="2">Knus</th>
@@ -816,107 +488,45 @@
                 </tr>
                 <tr>
                     <td>Score</td>
-
-                    <td>95430</td>
-
-                    <td>350.85</td>
-
-                    <td>90811</td>
-
-                    <td>333.86</td>
-
-                    <td>86084</td>
-
-                    <td>316.49</td>
-
+                    {% for goal in season_data["Score"] %}
+                        <td>{{ goal|round(2) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Goals</td>
-
-                    <td>260</td>
-
-                    <td>0.956</td>
-
-                    <td>217</td>
-
-                    <td>0.798</td>
-
-                    <td>199</td>
-
-                    <td>0.732</td>
-
+                    {% for goal in season_data["Goals"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Assists</td>
-
-                    <td>192</td>
-
-                    <td>0.706</td>
-
-                    <td>172</td>
-
-                    <td>0.632</td>
-
-                    <td>150</td>
-
-                    <td>0.551</td>
-
+                    {% for goal in season_data["Assists"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Saves</td>
-
-                    <td>267</td>
-
-                    <td>0.982</td>
-
-                    <td>320</td>
-
-                    <td>1.176</td>
-
-                    <td>321</td>
-
-                    <td>1.18</td>
-
+                    {% for goal in season_data["Saves"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Shots</td>
-
-                    <td>788</td>
-
-                    <td>2.897</td>
-
-                    <td>607</td>
-
-                    <td>2.232</td>
-
-                    <td>641</td>
-
-                    <td>2.357</td>
-
+                    {% for goal in season_data["Shots"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>MVPs</td>
-
-                    <td>99</td>
-
-                    <td>0.4%</td>
-
-                    <td>103</td>
-
-                    <td>0.4%</td>
-
-                    <td>70</td>
-
-                    <td>0.3%</td>
-
+                    {% for goal in season_data["MVPs"] %}
+                        <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+                    {% endfor %}
                 </tr>
-                </tbody>
             </table>
         </div>
         <div class="infobox">
             <table>
                 <caption>THIS SESSION</caption>
-                <tbody>
                 <tr>
                     <th rowspan="2"></th>
                     <th colspan="2">Knus</th>
@@ -933,123 +543,86 @@
                 </tr>
                 <tr>
                     <td>Score</td>
-
-                    <td>84232</td>
-
-                    <td>348.07</td>
-
-                    <td>81724</td>
-
-                    <td>337.7</td>
-
-                    <td>76346</td>
-
-                    <td>315.48</td>
-
+                    {% for goal in session_data["Score"] %}
+                        <td>{{ goal|round(2) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Goals</td>
-
-                    <td>227</td>
-
-                    <td>0.938</td>
-
-                    <td>195</td>
-
-                    <td>0.806</td>
-
-                    <td>178</td>
-
-                    <td>0.736</td>
-
+                    {% for goal in session_data["Goals"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Assists</td>
-
-                    <td>172</td>
-
-                    <td>0.711</td>
-
-                    <td>157</td>
-
-                    <td>0.649</td>
-
-                    <td>127</td>
-
-                    <td>0.525</td>
-
+                    {% for goal in session_data["Assists"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Saves</td>
-
-                    <td>234</td>
-
-                    <td>0.967</td>
-
-                    <td>293</td>
-
-                    <td>1.211</td>
-
-                    <td>287</td>
-
-                    <td>1.186</td>
-
+                    {% for goal in session_data["Saves"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>Shots</td>
-
-                    <td>698</td>
-
-                    <td>2.884</td>
-
-                    <td>540</td>
-
-                    <td>2.231</td>
-
-                    <td>566</td>
-
-                    <td>2.339</td>
-
+                    {% for goal in session_data["Shots"] %}
+                        <td>{{ goal|round(3) }}</td>
+                    {% endfor %}
                 </tr>
                 <tr>
                     <td>MVPs</td>
-
-                    <td>84</td>
-
-                    <td>0.3%</td>
-
-                    <td>96</td>
-
-                    <td>0.4%</td>
-
-                    <td>62</td>
-
-                    <td>0.3%</td>
-
+                    {% for goal in session_data["MVPs"] %}
+                        <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+                    {% endfor %}
                 </tr>
-                </tbody>
             </table>
         </div>
     </div>
     <hr>
     <h3>"FUN" FACTS</h3>
     <div class="fun-facts">
-        <table>
-            <tbody>
-            <tr>
-                <th>Fact</th>
-                <th>Occurence</th>
-                <th>Winrate</th>
-                <th>Change</th>
-            </tr>
-            <tr>
-                <td>Faktastisch</td>
-                <td>0%</td>
-                <td>0%</td>
-                <td>^</td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="fact-container">
+            <table>
+                <tr>
+                    <th style="width: 300px">Fact</th>
+                    <th>Occurrence</th>
+                    <th>Winrate</th>
+                    <th>Change</th>
+                </tr>
+                <tbody>
+                {% for fact in fun_facts[0] %}
+                    <tr>
+                        <td>{{ fact[0] }}</td>
+                        <td>{{ (fact[1]*100) | round(1) }}%</td>
+                        <td>{{ (fact[2]*100) | round(1) }}%</td>
+                        <td>O</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="fact-container">
+            <table>
+                <tr>
+                    <th style="width: 300px">Fact</th>
+                    <th>Occurrence</th>
+                    <th>Winrate</th>
+                    <th>Change</th>
+                </tr>
+                <tbody>
+                {% for fact in fun_facts[1] %}
+                    <tr>
+                        <td>{{ fact[0] }}</td>
+                        <td>{{ (fact[1]*100) | round(1) }}%</td>
+                        <td>{{ (fact[2]*100) | round(1) }}%</td>
+                        <td>O</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     <hr>
     <h3>RECORDS</h3>
@@ -2450,6 +2023,29 @@
 
                 </tr>
             </table>
+        </div>
+    </div>
+    <div class="graphs">
+        <div class="graph-shell-small">
+            <canvas id="winrate"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="cumulative_stats_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="mvp_lvp_score"></canvas>
         </div>
     </div>
 </div>
