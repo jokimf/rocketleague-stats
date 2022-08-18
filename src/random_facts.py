@@ -28,9 +28,7 @@ def date_facts() -> set[Tuple]:
 # Last session was xy
 def last_session_facts() -> set[Tuple]:
     facts = set()
-    session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, \
-    knus_shots, puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, \
-    sticker_assists, sticker_saves, sticker_shots, quality = q.last_session_data()
+    session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, knus_shots, puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, sticker_assists, sticker_saves, sticker_shots, quality = q.last_session_data()
     if session_id % 50 == 0:
         facts.add((f'Last session was special, it was the {session_id}th session! 😂', 4))
 
@@ -39,7 +37,7 @@ def last_session_facts() -> set[Tuple]:
     d1, d2 = q.last_two_sessions_dates()
     diff = (datetime.today() - datetime.strptime(d2[0], "%Y-%m-%d")).days
     if d1[0] == datetime.today().date():
-        facts.add(f'The last session before today was {diff} days ago... 🤡', 2)
+        facts.add((f'The last session before today was {diff} days ago... 🤡', 2))
     else:
         if diff <= 7:
             facts.add((f'The last session was {diff} days ago.', 2))
@@ -68,10 +66,10 @@ def game_count_facts() -> set[Tuple]:
 
 def last_month_summary() -> set[Tuple]:
     facts = set()
-    month = q.game_amount_this_month()
+    games_this_month = q.game_amount_this_month()
 
     # Only show if less than 3 games have been played this month and its before the fifth of a month
-    if month <= 3 and datetime.today().day < 5:
+    if games_this_month <= 5 and datetime.today().day < 5:
         last_month_str = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
         data = q.unique_months_game_count()
 
@@ -127,7 +125,7 @@ def result_facts() -> set[Tuple]:
                         5))
     if not facts:  # set is empty because results has not happened before
         facts.add(
-            f'Last game was the first time that this result happened. {goals}:{against}, a real rarity.', 5)
+            (f'Last game was the first time that this result happened. {goals}:{against}, a real rarity.', 5))
     return facts
 
 
@@ -150,8 +148,8 @@ def milestone_facts() -> set[Tuple]:
 def average_high_variance_facts() -> set[Tuple]:
     facts = set()
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
-    z_values = {"Top 1%": 2.32635, "Top 5%": 1.64485, 'Top 15%': 1.03643,
-                'Bottom 15%': -1.03643, 'Bottom 5%': -1.64485, 'Bottom 1%': -2.32635}
+    z_values = {'Top 1%': 2.32635, 'Top 5%': 1.64485, 'Top 15%': 1.03643,
+                'Bottom 1%': -2.32635, 'Bottom 5%': -1.64485, 'Bottom 15%': -1.03643}
 
     for stat in possible_stats:
         for p in range(0, 3):
@@ -161,111 +159,113 @@ def average_high_variance_facts() -> set[Tuple]:
                         q.average_all(p, stat))
                     if percentile_value < s[1] and z.startswith('Top'):
                         facts.add((f'Over the last {s[0]} games, {q.p_name(p)} {stat} are in the {z} on average.', 3))
+                        break
                     elif percentile_value > s[1] and z.startswith('Bottom'):
                         facts.add(
                             (f'Over the last {s[0]} games, {q.p_name(p)} {stat} are only in the {z} on average.', 3))
+                        break
 
     return facts
 
 
 # Came close to a record
-def close_to_record() -> set[Tuple]:
+def close_to_record() -> set[Tuple]:  # TODO: make it faster
     facts = set()
 
     # Record games
     last_id = q.max_id()
-    opt = 100  # round(last_id / 100) # TODO: find better metric
-    record_data = [(q.record_highest_value_per_stat('score', opt * 3),
+    limit = 100  # round(last_id / 100) # TODO: find better metric, some crash for max_id
+    record_data = [(q.record_highest_value_per_stat('score', limit),
                     'The score of {value} reached by {name} last game was in the Top 100 of all scores, ranking at '
                     'spot number {rank}!'),
-                   (q.record_highest_value_per_stat('goals', opt * 3),
+                   (q.record_highest_value_per_stat('goals', limit),
                     'The goal amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.record_highest_value_per_stat('assists', opt * 3),
+                   (q.record_highest_value_per_stat('assists', limit),
                     'The assist amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.record_highest_value_per_stat('saves', opt * 3),
+                   (q.record_highest_value_per_stat('saves', limit),
                     'The save amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.record_highest_value_per_stat('shots', opt * 3),
+                   (q.record_highest_value_per_stat('shots', limit),
                     'The shot amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.most_points_without_goal(opt),
-                    'A total amount of {value} was reached by {name} last game, without scoring! It was in the Top '
-                    '100 of score without a goal, ranking at spot number {rank}!'),
-                   (q.least_points_with_goals(opt),
+                   (q.most_points_without_goal(limit),
+                    '''A total amount of {value} points was reached by {name} last game, without scoring! 
+                       It was in the Top 100 of score without a goal, ranking at spot number {rank}!'''),
+                   (q.least_points_with_goals(limit),
                     '{name} only reached a total amount of {value} score, even though he scored... he was in the '
                     'Bottom 100 of score having scored at least one goal, ranking at spot number {rank}!'),
-                   (q.most_against(opt),
+                   (q.most_against(limit),
                     'Last game you conceded a Top 100 amount of goals... {value} in total. It ranks at number {rank} '
                     'of all games'),
-                   (q.most_against_and_won(opt),
+                   (q.most_against_and_won(limit),
                     'Last game you conceded a total of {value} goals, but still won. The game ranks at number {rank} '
                     'in that regard.'),
-                   (q.most_goals_and_lost(opt),
+                   (q.most_goals_and_lost(limit),
                     'Last game you scored a total of {value} goals, but still lost. The game ranks at number {rank} '
                     'in that regard.'),
-                   (q.most_total_goals(opt),
+                   (q.most_total_goals(limit),
                     'Last game, both teams scored a total of {value} goals. The game ranks at number {rank} in that '
                     'regard.'),
-                   (q.highest_team('score', opt),
+                   (q.highest_team('score', limit),
                     'Last game you scored a total of {value} points. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('goals', opt),
+                   (q.highest_team('goals', limit),
                     'Last game you scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('assists', opt),
+                   (q.highest_team('assists', limit),
                     'Last game you got a total of {value} assists. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('saves', opt),
+                   (q.highest_team('saves', limit),
                     'Last game you scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('shots', opt),
+                   (q.highest_team('shots', limit),
                     'Last game you scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
-                   (q.diff_mvp_lvp('ASC', opt),
+                   (q.diff_mvp_lvp('DESC', limit),
                     'Last game the difference between the MVP and LVP was {value} points. That is the {rank}. highest '
                     'difference.'),
-                   (q.diff_mvp_lvp('DESC', opt),
+                   (q.diff_mvp_lvp('ASC', limit),
                     'Last game the difference between the MVP and LVP was only {value} points. That is the {rank}. '
                     'lowest difference.'),
-                   (q.most_solo_goals(opt),
+                   (q.most_solo_goals(limit),
                     'Last game had with {value} goals an usual amount of solo goals. The game ranks at number {rank} '
                     'in that regard.'),
-                   (q.trend('score', 'MIN', opt),
+                   (q.trend('score', 'MIN', limit),
                     'The point trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('score', 'MAX', opt),
+                   (q.trend('score', 'MAX', limit),
                     'The point trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('goals', 'MIN', opt),
+                   (q.trend('goals', 'MIN', limit),
                     'The goal trend of {name} reached a value of {value}, which is the {rank}. lowest value in total.'),
-                   (q.trend('goals', 'MAX', opt),
+                   (q.trend('goals', 'MAX', limit),
                     'The goal trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('assists', 'MIN', opt),
+                   (q.trend('assists', 'MIN', limit),
                     'The assist trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('assists', 'MAX', opt),
+                   (q.trend('assists', 'MAX', limit),
                     'The assist trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('saves', 'MIN', opt),
+                   (q.trend('saves', 'MIN', limit),
                     'The saves trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('saves', 'MAX', opt),
+                   (q.trend('saves', 'MAX', limit),
                     'The saves trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('shots', 'MIN', opt),
+                   (q.trend('shots', 'MIN', limit),
                     'The shots trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('shots', 'MAX', opt),
+                   (q.trend('shots', 'MAX', limit),
                     'The shots trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.')
                    ]
     # Iterate through data and check if last gameID appears
     for record in record_data:
-        for index in range(0, opt):
+        for index in range(0, limit):
             if record[0][index][2] == last_id:
                 facts.add((record[1].format(value=record[0][index][1], name=record[0][index][0], rank=index + 1), 4))
 
     # TODO: Session is close to being a record session
     session_count = q.session_count()
-    record_data = q.record_stat_per_session('games', opt)
+    record_data = q.record_stat_per_session('games', limit)
     return facts
 
 
