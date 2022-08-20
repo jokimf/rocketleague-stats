@@ -1,4 +1,6 @@
 from wsgiref.simple_server import make_server
+
+import pyramid.response
 from pyramid.config import Configurator
 from pyramid.view import view_config
 import queries as q
@@ -16,10 +18,10 @@ def data(request) -> dict:
 
 
 @view_config(
-    route_name='home',
+    route_name='main',
     renderer='../resources/index.jinja2'
 )
-def serve(request) -> dict:
+def main(request) -> dict:
     max_id = q.max_id()
     return {
         "ranks": q.ranks(),
@@ -36,11 +38,19 @@ def serve(request) -> dict:
     }
 
 
+@view_config(
+    route_name='insert',
+)
+def insert(request):
+    return pyramid.response.FileResponse('../resources/insert.html')
+
+
 if __name__ == '__main__':
     with Configurator() as config:
         config.include('pyramid_jinja2')
-        config.add_route('home', '/')
+        config.add_route('main', '/')
         config.add_route('data', 'data/{type}')
+        config.add_route('insert', 'insert')
         config.scan()
         app = config.make_wsgi_app()
     server = make_server('127.0.0.1', 6543, app)
