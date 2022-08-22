@@ -40,9 +40,18 @@ def main(request) -> dict:
 
 @view_config(
     route_name='insert',
+    request_method='GET'
 )
-def insert(request):
+def insert_get(request):
     return pyramid.response.FileResponse('../resources/insert.html')
+
+
+@view_config(
+    route_name='insert',
+    request_method='POST'
+)
+def insert_post(request):
+    return None  # TODO
 
 
 if __name__ == '__main__':
