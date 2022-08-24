@@ -30,6 +30,7 @@ def main(request) -> dict:
         "days_since_inception": q.days_since_inception(),
         "total_games": max_id,
         "tilt": 50,  # q.tilt(),
+        "avg_session_length": q.average_session_length(),
         "last_games": q.last_x_games_stats(5),
         "grand_total": q.general_game_stats_over_time_period(1, max_id),
         "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),

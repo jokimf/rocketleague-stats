@@ -349,18 +349,10 @@ def last_result() -> tuple:
 
 
 # - RECORD GAME QUERIES - #
-def record_stat_per_session(stat: str, limit: int = 1) -> list[Any]:
-    if stat not in possible_stats and not 'games':
-        raise ValueError(f'{stat} is not in possible stats.')
-
-    if stat == 'games':
-        c.execute(
-            "SELECT date, COUNT(date) AS counter FROM games GROUP BY date ORDER BY counter DESC, date ASC LIMIT ?",
-            (limit,))
-    else:
-        c.execute("SELECT date, SUM(goals) AS counter FROM games GROUP BY date ORDER BY counter DESC, date ASC LIMIT ?",
-                  (limit,))
-    return c.fetchall()
+def record_games_per_session(limit: int = 1) -> list[Any]:
+    # "SELECT date, COUNT(date) AS counter FROM games GROUP BY date ORDER BY counter DESC, date ASC LIMIT ?"
+    return c.execute('SELECT sessionID, wins+losses FROM sessions ORDER BY wins+losses DESC LIMIT ?',
+                     (limit,)).fetchall()
 
 
 def record_highest_value_per_stat(stat: str, limit: int = 3) -> list[Any]:
@@ -517,6 +509,14 @@ def build_record_games():
     return {k: v for k, v in sorted(data.items(), key=lambda item: item[1][0][2])}  # Sort by gameID
 
 
+def tilt():  # TODO
+    return 5
+
+
+def average_session_length() -> int:
+    return c.execute('SELECT AVG(wins+losses) FROM sessions').fetchone[0]
+
+
 # - RANDOM FACTS QUERIES - #
 def player_total_of_stat(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
@@ -565,7 +565,7 @@ def performance250(player_id: int, stat: str) -> int:
                      (player_id,)).fetchone()[0]
 
 
-def p_name(player_id: int) -> str:
+def player_name(player_id: int) -> str:
     return c.execute('SELECT name FROM players WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
