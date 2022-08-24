@@ -604,12 +604,18 @@ def ranks() -> List:
     return ranks_list
 
 
-def season_start_id() -> int:  # TODO proper query
-    return 2329
+def season_start_id() -> int:
+    return c.execute("""SELECT g.gameID
+        FROM games g 
+        LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date 
+        GROUP BY se.seasonID
+        HAVING MIN(g.gameID)
+        ORDER BY g.gameID DESC
+        LIMIT 1""").fetchone()
 
 
 def session_start_id() -> int:  # TODO proper query
-    return 2400
+    return c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1").fetchone()
 
 
 def winrates() -> List:
@@ -665,6 +671,22 @@ def build_fun_facts() -> List:
 
 
 # TODO: Season queries
+
+def seasons_dashboard():
+    return c.execute("""SELECT se.season_name, 
+        SUM(IIF(g.goals > g.against,1,0)) 'wins', 
+        SUM(IIF(g.goals < g.against,1,0)) 'losses', 
+        CAST(SUM(IIF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT) 'wr', 
+        AVG(k.score) 'k_score', AVG(k.goals) 'k_goals', AVG(k.assists) 'k_assists', AVG(k.saves) 'k_saves', AVG(k.shots) 'k_shots',
+        AVG(p.score) 'p_score', AVG(p.goals) 'p_goals', AVG(p.assists) 'p_assists', AVG(p.saves) 'p_saves', AVG(p.shots) 'p_shots',
+        AVG(s.score) 's_score', AVG(s.goals) 's_goals', AVG(s.assists) 's_assists', AVG(s.saves) 's_saves', AVG(s.shots) 's_shots'
+        FROM games g 
+        LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date 
+        LEFT JOIN knus k ON g.gameID = k.gameID
+        LEFT JOIN puad p ON g.gameID = p.gameID
+        LEFT JOIN sticker s ON g.gameID = s.gameID
+        GROUP BY seasonID"""
+    ).fetchall()
 
 # UNUSED #
 def mvp_wins(player_id, start=1, end=None):
