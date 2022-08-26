@@ -1,3 +1,5 @@
+import math
+
 import queries as q
 import statistics
 from datetime import date, datetime, timedelta
@@ -30,7 +32,7 @@ def last_session_facts() -> set[Tuple]:
     facts = set()
     session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, knus_shots, puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, sticker_assists, sticker_saves, sticker_shots, quality = q.last_session_data()
     if session_id % 50 == 0:
-        facts.add((f'Last session was special, it was the {session_id}th session! 😂', 4))
+        facts.add((f'This session is special, it was the {session_id}th session! 😂', 4))
 
     # First session in x days, first session in a month, first session in a year, at the same date x years ago TODO:
     #  cleanup
@@ -140,7 +142,7 @@ def milestone_facts() -> set[Tuple]:
             total = q.player_total_of_stat(p, stat)
             overshoot = total % milestone_val
             if overshoot < q.player_stat_of_last_game(p, stat):  # Milestone crossed
-                facts.add((f'{q.p_name(p)} just reached {total - overshoot} {stat}!', 4))
+                facts.add((f'{q.player_name(p)} just reached {total - overshoot} {stat}!', 4))
     return facts
 
 
@@ -158,11 +160,13 @@ def average_high_variance_facts() -> set[Tuple]:
                     percentile_value = q.player_average_all_games(p, stat) + z_values[z] * statistics.stdev(
                         q.average_all(p, stat))
                     if percentile_value < s[1] and z.startswith('Top'):
-                        facts.add((f'Over the last {s[0]} games, {q.p_name(p)} {stat} are in the {z} on average.', 3))
+                        facts.add(
+                            (f'Over the last {s[0]} games, {q.player_name(p)} {stat} are in the {z} on average.', 3))
                         break
                     elif percentile_value > s[1] and z.startswith('Bottom'):
                         facts.add(
-                            (f'Over the last {s[0]} games, {q.p_name(p)} {stat} are only in the {z} on average.', 3))
+                            (f'Over the last {s[0]} games, {q.player_name(p)} {stat} are only in the {z} on average.',
+                             3))
                         break
 
     return facts
@@ -257,7 +261,7 @@ def close_to_record() -> set[Tuple]:  # TODO: make it faster
                     'The shots trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.')
                    ]
-    # Iterate through data and check if last gameID appears
+    # Iterate through data and check if last gameID appears # TODO Check only threshold
     for record in record_data:
         for index in range(0, limit):
             if record[0][index][2] == last_id:
@@ -265,7 +269,25 @@ def close_to_record() -> set[Tuple]:  # TODO: make it faster
 
     # TODO: Session is close to being a record session
     session_count = q.session_count()
-    record_data = q.record_stat_per_session('games', limit)
+    session_limit = math.ceil(session_count)  # top 2%
+
+    session_record_data = q.record_games_per_session(session_limit)
+    next_milestone_rank = None
+    next_milestone_value = None
+    for rank in range(0, session_limit):
+        if (rank + 1) % 5 == 0 and session_record_data[rank][0] != session_count:
+            next_milestone_rank = rank + 1
+            next_milestone_value = session_record_data[rank][1]
+        if session_record_data[rank][0] == session_count:
+            facts.add((
+                f'You played {session_record_data[rank][1]} games this session. It ranks at spot number {rank + 1} in that regard.',
+                4))
+            if next_milestone_value is not None and next_milestone_rank is not None:
+                games_to_reach_milestone = next_milestone_value - session_record_data[rank][1]
+                facts.add((
+                    f'To reach rank {next_milestone_rank} in games played this session, you need to play {1 if games_to_reach_milestone == 0 else games_to_reach_milestone} more games.',
+                    4))
+
     return facts
 
 
@@ -276,6 +298,11 @@ def outclassed() -> set[Tuple]:
 
 # 'At least 1' streak in Goals/Assists/Saves
 def at_least_1_streak() -> set[Tuple]:
+    return set()
+
+
+# Streak of stats
+def streak() -> set[Tuple]:
     return set()
 
 

@@ -1,4 +1,3 @@
-from sqlite3 import Error
 import sqlite3
 
 """
@@ -12,10 +11,9 @@ c = conn.cursor()
 
 # Drop tables
 try:
-    c.execute("DROP TABLE players")
     c.execute("DROP TABLE games")
     c.execute("DROP TABLE scores")
-except Error as e:
+except sqlite3.Error as e:
     print(e)
 
 # Create them anew
@@ -42,19 +40,8 @@ try:
             against INTEGER NOT NULL
         ); 
         """)
-
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS players (
-            playerID INTEGER PRIMARY KEY,
-            name TEXT NOT NULL
-        );
-        """)
-
-    c.execute("INSERT INTO players VALUES(0,'Knus')")
-    c.execute("INSERT INTO players VALUES(1,'Puad')")
-    c.execute("INSERT INTO players VALUES(2,'Sticker')")
     conn.commit()
-except Error as e:
+except sqlite3.Error as e:
     print(e)
 
 # Add data from .csv
