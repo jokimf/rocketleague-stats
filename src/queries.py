@@ -216,23 +216,20 @@ def ff_team_scores_x_times(x: int) -> tuple:
     """, (x, x, x)).fetchone()
 
 
-def ff_team_concedes_x_times(x: int) -> tuple:  # TODO: rewrite
+def ff_team_concedes_x_times(x: int) -> tuple:
     return c.execute("""
-    SELECT CAST(SUM(IIF(gAgainst = ?,1,0)) AS FLOAT) / COUNT(gID) AS oc,
-        CAST(SUM(IIF(gAgainst = ? AND wID IS NOT NULL,1,0)) AS FLOAT) / 
-        CAST(SUM(IIF(gAgainst = ?,1,0)) AS FLOAT) AS wr
-        FROM (SELECT g.gameID AS gID, g.against AS gAgainst, w.gameID AS wID FROM games g 
-        LEFT JOIN wins w ON g.gameID = w.gameID)
+    SELECT CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) / COUNT(g.gameID) AS oc,
+        CAST(SUM(IIF(g.against = ? AND w.gameID IS NOT NULL,1,0)) AS FLOAT) / 
+		CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) AS wr
+        FROM games g LEFT JOIN wins w ON g.gameID = w.gameID
     """, (x, x, x)).fetchone()
 
 
 # - Random facts queries - #
-def results_table() -> list[Any]:  # TODO: rewrite?
+def results_table() -> list[Any]:
     return c.execute("""
-        WITH cG AS (SELECT COUNT(*) allG FROM games)
-        SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / cG.allG AS ch  FROM games, cG
-        GROUP BY goals, against
-        ORDER BY c DESC
+        SELECT goals, against, COUNT(g.gameID) AS c, CAST(COUNT(g.gameID) AS FLOAT) / MAX(g.gameID) AS ch  FROM games g
+        GROUP BY goals, against ORDER BY c DESC
     """).fetchall()
 
 
@@ -306,19 +303,18 @@ def highest_team(stat: str, limit: int = 3) -> list[Any]:
         ''', (limit,)).fetchall()
 
 
-# Difference between MVP and LVP, DESC for most diff, ASC for least diff TODO: rewrite
+# Difference between MVP and LVP, DESC for most diff, ASC for least diff
 def diff_mvp_lvp(order: str, limit: int = 3) -> list[Any]:
     if order not in ['ASC', 'DESC']:
         raise ValueError('Order is not DESC or ASC.')
     return c.execute(f'''
-        WITH
-            mvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MAX(score)),
-            lvp AS (SELECT gameID, playerID, score FROM scores GROUP BY scores.gameID HAVING MIN(score))
-            SELECT pm.name, mvp.score - lvp.score AS diff, mvp.gameID, games.date FROM mvp
-            LEFT JOIN lvp ON mvp.gameID = lvp.gameID
-            LEFT JOIN players AS pm ON mvp.playerID = pm.playerID
-            LEFT JOIN games ON mvp.gameID = games.gameID
-            ORDER BY diff {order} LIMIT ? ''', (limit,)).fetchall()
+        SELECT p.name, msc.score - lsc.score AS diff, ml.gameID, g.date
+        FROM mvplvp ml
+        LEFT JOIN scores msc ON ml.gameID = msc.gameID AND ml.MVP = msc.playerID
+        LEFT JOIN scores lsc ON ml.gameID = lsc.gameID AND ml.LVP = lsc.playerID
+        LEFT JOIN players p ON msc.playerID = p.playerID
+        LEFT JOIN games g ON ml.gameID = g.gameID
+        ORDER BY msc.score-lsc.score {order} LIMIT ? ''', (limit,)).fetchall()
 
 
 def most_solo_goals(limit: int = 3) -> list[Any]:
@@ -506,7 +502,7 @@ def season_start_id() -> int:
         LIMIT 1""").fetchone()[0]
 
 
-def session_start_id() -> int:  # TODO proper query
+def session_start_id() -> int:
     return c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1").fetchone()[0]
 
 
