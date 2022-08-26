@@ -12,132 +12,24 @@ possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
 
 
 def max_id() -> int:
-    c.execute("SELECT MAX(gameID) FROM games")
-    return c.fetchone()[0]
+    return c.execute("SELECT MAX(gameID) FROM games").fetchone()[0]
 
 
-def goals_without_assist_between_games(start=1, end=None) -> int:
-    if end is None:
-        end = max_id()
-    if start > end:
-        raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
-    c.execute("""
-    SELECT SUM(goalsSum - assistsSum) AS diff FROM (
-        SELECT SUM(assists) AS assistsSum, SUM(goals) AS goalsSum 
-        FROM scores WHERE gameID >= ? AND gameID <= ? GROUP BY gameID
-    )
-    """, (start, end))
-    return c.fetchone()[0]
+def insert_game_data(d) -> None:
+    new_id: int = max_id() + 1
+    c.execute('INSERT INTO games VALUES (?,?,?,?)', (new_id, d['date'], d['goals'], d['against']))
+    c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
+              (new_id, 0, d['kRank'], d['kScore'], d['kGoals'], d['kAssists'], d['kSaves'], d['kShots']))
+    c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
+              (new_id, 1, d['pRank'], d['pScore'], d['pGoals'], d['pAssists'], d['pSaves'], d['pShots']))
+    c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
+              (new_id, 2, d['sRank'], d['sScore'], d['sGoals'], d['sAssists'], d['sSaves'], d['sShots']))
+    conn.commit()
 
 
 # Returns number of days since first game played
 def days_since_inception() -> int:
     return c.execute('SELECT julianday(DATE()) - julianday(MIN(date)) FROM games').fetchone()[0]
-
-
-# Generates table of the longest winning streaks [streak, gameStartID, gameEndID]
-def longest_winning_streak() -> list[Any]:
-    return c.execute("""
-    WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-    FROM (SELECT gameID
-        FROM games
-        WHERE goals > against)h)
-        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-        FROM Streaks
-        GROUP BY grouper
-        ORDER BY 1 DESC, 2 ASC
-    """).fetchone()[0]
-
-
-# Generate table of the longest losing streaks [steak, gameStartID, gameEndID]
-def longest_losing_streak() -> list[Any]:
-    return c.execute("""
-    WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-    FROM (SELECT gameID
-        FROM games
-        WHERE goals < against)h)
-        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-        FROM Streaks
-        GROUP BY grouper
-        ORDER BY 1 DESC, 2 ASC
-    """).fetchone()[0]
-
-
-# Table of [streak, startGameID, endGameID]
-def mvp_streak(player_id: int) -> list[Any]:
-    return c.execute("""
-    WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-    FROM (SELECT gameID, score, playerID
-        FROM scores
-        GROUP BY gameID
-        HAVING MAX(score) AND playerID = ?) AS MVPTable
-        )
-        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-        FROM MVPs
-        GROUP BY grouper
-        ORDER BY 1 DESC, 2 ASC
-    """, (player_id,)).fetchall()
-
-
-# Table of [streak, startGameID, endGameID]
-def not_mvp_streak(player_id: int) -> list[Any]:
-    return c.execute("""
-    WITH helperTable AS(
-        SELECT gameID AS helperID, score, playerID
-        FROM scores GROUP BY helperID
-        HAVING MAX(score) AND playerID = ?),
-    NotMVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
-    SELECT gameID FROM games,helperTable 
-    GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
-        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-        FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
-    """, (player_id,)).fetchall()
-
-
-# Table of [streak, startGameID, endGameID]
-def not_lvp_streak(player_id) -> list[Any]:
-    return c.execute("""
-    WITH helperTable AS(
-        SELECT gameID AS helperID, score, playerID
-        FROM scores GROUP BY helperID
-        HAVING MIN(score) AND playerID = ?),
-    NotMVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
-    SELECT gameID FROM games,helperTable
-    GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
-        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-        FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
-    """, (player_id,)).fetchall()
-
-
-# Table of [streak, startGameID, endGameID]
-def lvp_streak(player_id) -> list[Any]:
-    return c.execute("""
-    WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-    FROM (SELECT gameID, score, playerID
-        FROM scores
-        GROUP BY gameID
-        HAVING MIN(score) AND playerID = ?) AS MVPTable
-        )
-        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-        FROM MVPs
-        GROUP BY grouper
-        ORDER BY 1 DESC, 2 ASC
-    """, (player_id,)).fetchall()
-
-
-# Calculates average games per day based on start and end dates.
-def average_games_per_day(start_date: str, end_date: str) -> float:
-    if datetime.datetime.strptime(end_date, '%Y-%m-%d') < datetime.datetime.strptime(start_date, '%Y-%m-%d'):
-        raise ValueError(f"start_date can't be before end_date {start_date} - {end_date}")
-    return c.execute(
-        """SELECT CAST(COUNT(gameID) AS FLOAT) / CAST(JULIANDAY(?) - JULIANDAY(?) AS FLOAT) 
-           FROM games WHERE date BETWEEN ? AND ? """, (end_date, start_date, start_date, end_date)).fetchone()[0]
 
 
 # Used for info table at top of the page
@@ -514,7 +406,7 @@ def tilt():  # TODO
 
 
 def average_session_length() -> int:
-    return c.execute('SELECT AVG(wins+losses) FROM sessions').fetchone[0]
+    return c.execute('SELECT AVG(wins+losses) FROM sessions').fetchone()[0]
 
 
 # - RANDOM FACTS QUERIES - #
@@ -611,11 +503,11 @@ def season_start_id() -> int:
         GROUP BY se.seasonID
         HAVING MIN(g.gameID)
         ORDER BY g.gameID DESC
-        LIMIT 1""").fetchone()
+        LIMIT 1""").fetchone()[0]
 
 
 def session_start_id() -> int:  # TODO proper query
-    return c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1").fetchone()
+    return c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1").fetchone()[0]
 
 
 def winrates() -> List:
@@ -670,7 +562,7 @@ def build_fun_facts() -> List:
              ]]
 
 
-# TODO: Season queries
+# Season queries
 
 def seasons_dashboard():
     return c.execute("""SELECT se.season_name, 
@@ -686,7 +578,8 @@ def seasons_dashboard():
         LEFT JOIN puad p ON g.gameID = p.gameID
         LEFT JOIN sticker s ON g.gameID = s.gameID
         GROUP BY seasonID"""
-    ).fetchall()
+                     ).fetchall()
+
 
 # UNUSED #
 def mvp_wins(player_id, start=1, end=None):
@@ -735,3 +628,122 @@ def results_table_ordered():
         else:
             d[key] = [x]
     return d
+
+
+def goals_without_assist_between_games(start=1, end=None) -> int:
+    if end is None:
+        end = max_id()
+    if start > end:
+        raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
+    c.execute("""
+    SELECT SUM(goalsSum - assistsSum) AS diff FROM (
+        SELECT SUM(assists) AS assistsSum, SUM(goals) AS goalsSum 
+        FROM scores WHERE gameID >= ? AND gameID <= ? GROUP BY gameID
+    )
+    """, (start, end))
+    return c.fetchone()[0]
+
+
+# Generates table of the longest winning streaks [streak, gameStartID, gameEndID]
+def longest_winning_streak() -> list[Any]:
+    return c.execute("""
+    WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID
+        FROM games
+        WHERE goals > against)h)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM Streaks
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """).fetchone()[0]
+
+
+# Generate table of the longest losing streaks [steak, gameStartID, gameEndID]
+def longest_losing_streak() -> list[Any]:
+    return c.execute("""
+    WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID
+        FROM games
+        WHERE goals < against)h)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM Streaks
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """).fetchone()[0]
+
+
+# Table of [streak, startGameID, endGameID]
+def mvp_streak(player_id: int) -> list[Any]:
+    return c.execute("""
+    WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID, score, playerID
+        FROM scores
+        GROUP BY gameID
+        HAVING MAX(score) AND playerID = ?) AS MVPTable
+        )
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM MVPs
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """, (player_id,)).fetchall()
+
+
+# Table of [streak, startGameID, endGameID]
+def not_mvp_streak(player_id: int) -> list[Any]:
+    return c.execute("""
+    WITH helperTable AS(
+        SELECT gameID AS helperID, score, playerID
+        FROM scores GROUP BY helperID
+        HAVING MAX(score) AND playerID = ?),
+    NotMVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
+    SELECT gameID FROM games,helperTable 
+    GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
+    """, (player_id,)).fetchall()
+
+
+# Table of [streak, startGameID, endGameID]
+def not_lvp_streak(player_id) -> list[Any]:
+    return c.execute("""
+    WITH helperTable AS(
+        SELECT gameID AS helperID, score, playerID
+        FROM scores GROUP BY helperID
+        HAVING MIN(score) AND playerID = ?),
+    NotMVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
+    SELECT gameID FROM games,helperTable
+    GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
+    """, (player_id,)).fetchall()
+
+
+# Table of [streak, startGameID, endGameID]
+def lvp_streak(player_id) -> list[Any]:
+    return c.execute("""
+    WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+    gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+    FROM (SELECT gameID, score, playerID
+        FROM scores
+        GROUP BY gameID
+        HAVING MIN(score) AND playerID = ?) AS MVPTable
+        )
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM MVPs
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """, (player_id,)).fetchall()
+
+
+# Calculates average games per day based on start and end dates.
+def average_games_per_day(start_date: str, end_date: str) -> float:
+    if datetime.datetime.strptime(end_date, '%Y-%m-%d') < datetime.datetime.strptime(start_date, '%Y-%m-%d'):
+        raise ValueError(f"start_date can't be before end_date {start_date} - {end_date}")
+    return c.execute(
+        """SELECT CAST(COUNT(gameID) AS FLOAT) / CAST(JULIANDAY(?) - JULIANDAY(?) AS FLOAT) 
+           FROM games WHERE date BETWEEN ? AND ? """, (end_date, start_date, start_date, end_date)).fetchone()[0]
