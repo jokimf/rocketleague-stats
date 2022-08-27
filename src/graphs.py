@@ -206,15 +206,12 @@ def graph_average_lvp_score_over_time() -> Graph:
     return Graph("Average LVP Score", "line", data, [x[0] for x in c.description], None, None, 215, None, False)
 
 
-def graph_cumulative_stat(stat: str) -> Graph:  # TODO query is broken!
+def graph_cumulative_stat(stat: str) -> Graph:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute("""
-        WITH k AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 0),
-        p AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 1),
-        s AS (SELECT gameID, SUM(?) OVER (ORDER BY gameID) AS sc FROM scores WHERE playerID = 2)
-        SELECT k.gameID AS GameID, k.sc AS Knus, p.sc AS Puad, s.sc AS Sticker 
-        FROM k LEFT JOIN p ON k.gameID = p.gameID LEFT JOIN s ON k.gameID = s.gameID
+    data = c.execute(f"""
+        SELECT k.gameID, SUM(k.{stat}) OVER (ORDER BY k.gameID) 'Knus', SUM(p.{stat}) OVER (ORDER BY k.gameID) 'Puad', SUM(s.{stat}) OVER (ORDER BY k.gameID) 'Sticker'
+        FROM knus k LEFT JOIN puad p ON k.gameID = p.gameID LEFT JOIN sticker s ON k.gameID = s.gameID
     """, (stat, stat, stat)).fetchall()
     return Graph(f"Cumulative {stat.capitalize()}", "line", data, [x[0] for x in c.description], None, None, None, None,
                  False)
