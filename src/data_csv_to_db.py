@@ -22,12 +22,12 @@ try:
         CREATE TABLE IF NOT EXISTS scores (
             gameID INTEGER,
             playerID INTEGER,
-            rank TEXT NOT NULL,
-            score INTEGER NOT NULL,
-            goals INTEGER NOT NULL,
-            assists INTEGER NOT NULL,
-            saves INTEGER NOT NULL,
-            shots INTEGER NOT NULL,
+            rank TEXT NOT NULL CHECK(rank IN ('',' ','GC','D1','D2','D3','C1','C2','C3','GC1','GC2','GC3','SSL')),
+            score INTEGER NOT NULL CHECK(score>=0),
+            goals INTEGER NOT NULL CHECK(goals>=0),
+            assists INTEGER NOT NULL CHECK(assists>=0),
+            saves INTEGER NOT NULL CHECK(saves>=0),
+            shots INTEGER NOT NULL CHECK(shots>=0),
             PRIMARY KEY(gameID,playerID)
         );       
         """)
@@ -35,9 +35,9 @@ try:
     c.execute("""
         CREATE TABLE IF NOT EXISTS games (
             gameID INTEGER PRIMARY KEY,
-            date TEXT NOT NULL,
-            goals INTEGER NOT NULL,
-            against INTEGER NOT NULL
+            date TEXT NOT NULL CHECK(date IS strftime('%Y-%m-%d', date)),
+            goals INTEGER NOT NULL CHECK(goals>=0),
+            against INTEGER NOT NULL CHECK(against>=0)
         ); 
         """)
     conn.commit()

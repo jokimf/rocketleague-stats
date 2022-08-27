@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Insert</title>
+    <link rel="icon" type="image/svg+xml" href="http://localhost:6543/img/icon_red.svg">
 </head>
 <body>
 
@@ -10,53 +11,78 @@
     <label for="date">Date</label>
     <input id="date" name="date" required><br>
     <label for="goals">Goals</label>
-    <input id="goals" name="goals" required><br>
+    <input type="number" id="goals" name="goals" required><br>
     <label for="against">Against</label>
-    <input id="against" name="against" required><br>
+    <input type="number" id="against" name="against" required><br>
     <br>
     <label for="kRank">Knus Rank</label>
     <input id="kRank" name="kRank" required><br>
     <label for="kScore">Knus Score</label>
-    <input id="kScore" name="kScore" required><br>
+    <input type="number" id="kScore" name="kScore" required><br>
     <label for="kGoals">Knus Goals</label>
-    <input id="kGoals" name="kGoals" required><br>
+    <input type="number" id="kGoals" name="kGoals" required><br>
     <label for="kAssists">Knus Assists</label>
-    <input id="kAssists" name="kAssists" required><br>
+    <input type="number" id="kAssists" name="kAssists" required><br>
     <label for="kSaves">Knus Saves</label>
-    <input id="kSaves" name="kSaves" required><br>
+    <input type="number" id="kSaves" name="kSaves" required><br>
     <label for="kShots">Knus Shots</label>
-    <input id="kShots" name="kShots" required><br>
+    <input type="number" id="kShots" name="kShots" required><br>
     <br>
     <label for="pRank">Puad Rank</label>
     <input id="pRank" name="pRank" required><br>
     <label for="pScore">Puad Score</label>
-    <input id="pScore" name="pScore" required><br>
+    <input type="number" id="pScore" name="pScore" required><br>
     <label for="pGoals">Puad Goals</label>
-    <input id="pGoals" name="pGoals" required><br>
+    <input type="number" id="pGoals" name="pGoals" required><br>
     <label for="pAssists">Puad Assists</label>
-    <input id="pAssists" name="pAssists" required><br>
+    <input type="number" id="pAssists" name="pAssists" required><br>
     <label for="pSaves">Puad Saves</label>
-    <input id="pSaves" name="pSaves" required><br>
+    <input type="number" id="pSaves" name="pSaves" required><br>
     <label for="pShots">Puad Shots</label>
-    <input id="pShots" name="pShots" required><br>
+    <input type="number" id="pShots" name="pShots" required><br>
     <br>
     <label for="sRank">Sticker Rank</label>
     <input id="sRank" name="sRank" required><br>
     <label for="sScore">Sticker Score</label>
-    <input id="sScore" name="sScore" required><br>
+    <input type="number" id="sScore" name="sScore" required><br>
     <label for="sGoals">Sticker Goals</label>
-    <input id="sGoals" name="sGoals" required><br>
+    <input type="number" id="sGoals" name="sGoals" required><br>
     <label for="sAssists">Sticker Assists</label>
-    <input id="sAssists" name="sAssists" required><br>
+    <input type="number" id="sAssists" name="sAssists" required><br>
     <label for="sSaves">Sticker Saves</label>
-    <input id="sSaves" name="sSaves" required><br>
+    <input type="number" id="sSaves" name="sSaves" required><br>
     <label for="sShots">Sticker Shots</label>
-    <input id="sShots" name="sShots" required><br>
+    <input type="number" id="sShots" name="sShots" required><br>
     <br>
     <input type="submit">
 </form>
 </body>
 <style>
 
+    input {
+        width: 4em;
+    }
+
+    #date {
+        width: 5.5em;
+    }
+
+    input:invalid {
+        border: 2px red;
+    }
+
+    input:invalid:required {
+        background-image: linear-gradient(to right, pink, lightgreen);
+    }
+
+    input:valid {
+        border: 2px solid black;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 </style>
 </html>

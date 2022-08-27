@@ -3,6 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Clown Gameplay</title>
+    <!--<link rel="icon" type="image/svg+xml" href="http://localhost:6543/img/icon_red.svg">-->
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -299,124 +300,6 @@
         This section is under construction
     </div>
     <hr>
-    <div class="graphs">
-        <div class="graph-shell-small">
-            <canvas id="grief"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="wins_last_20"></canvas>
-        </div>
-        <!--div class="graph-shell-small">
-            <canvas id="solo_goals"></canvas>
-        </div>-->
-        <div class="graph-shell-small">
-            <canvas id="performance_score"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_goals"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_score"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_goals"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="datesChart"></canvas>
-            <!--<button onmousedown="changeX()">Min 📈</button>-->
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="monthChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="yearsChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="weekdChart"></canvas>
-        </div>
-    </div>
-    <hr>
-    <div class="general-info">
-        <table>
-            <tr>
-                <td>Days since inception</td>
-                <td>{{ days_since_inception | int }}</td>
-            </tr>
-            <tr>
-                <td>Games</td>
-                <td>{{ total_games }}</td>
-            </tr>
-            <tr>
-                <td>Tilt</td>
-                <td>{{ tilt }}%</td>
-            </tr>
-            <tr>
-                <td>Average Session Length</td>
-                <td>{{ average_session_length | int }}</td>
-            </tr>
-        </table>
-    </div>
-    <hr>
-    <h3>LAST 5</h3>
-    <div class="last5">
-        <table class="container">
-            <thead>
-            <tr>
-                <th colspan="4">General</th>
-                <th colspan="6">Knus</th>
-                <th colspan="6">Puad</th>
-                <th colspan="6">Sticker</th>
-            </tr>
-            <tr>
-                <td>#</td>
-                <td>Date</td>
-                <td>Goals</td>
-                <td>Against</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            </thead>
-            {% for row in last_games %}
-                <tr>{% for data in row %}
-                    <td>{{ data }}</td>{% endfor %}</tr>
-            {% endfor %}
-        </table>
-    </div>
-    <hr>
     <div class="total-season-session">
         <div class="infobox">
             <table>
@@ -583,6 +466,124 @@
                 </tr>
             </table>
         </div>
+    </div>
+    <hr>
+    <div class="graphs">
+        <div class="graph-shell-small">
+            <canvas id="grief"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="wins_last_20"></canvas>
+        </div>
+        <!--div class="graph-shell-small">
+            <canvas id="solo_goals"></canvas>
+        </div>-->
+        <div class="graph-shell-small">
+            <canvas id="performance_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_score"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_goals"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_assists"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_saves"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="performance_share_shots"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="datesChart"></canvas>
+            <!--<button onmousedown="changeX()">Min 📈</button>-->
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="monthChart"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="yearsChart"></canvas>
+        </div>
+        <div class="graph-shell-small">
+            <canvas id="weekdChart"></canvas>
+        </div>
+    </div>
+    <hr>
+    <div class="general-info">
+        <table>
+            <tr>
+                <td>Days since inception</td>
+                <td>{{ days_since_inception | int }}</td>
+            </tr>
+            <tr>
+                <td>Games</td>
+                <td>{{ total_games }}</td>
+            </tr>
+            <tr>
+                <td>Tilt</td>
+                <td>{{ tilt }}%</td>
+            </tr>
+            <tr>
+                <td>Average Session Length</td>
+                <td>{{ average_session_length | int }}</td>
+            </tr>
+        </table>
+    </div>
+    <hr>
+    <h3>LAST 5</h3>
+    <div class="last5">
+        <table class="container">
+            <thead>
+            <tr>
+                <th colspan="4">General</th>
+                <th colspan="6">Knus</th>
+                <th colspan="6">Puad</th>
+                <th colspan="6">Sticker</th>
+            </tr>
+            <tr>
+                <td>#</td>
+                <td>Date</td>
+                <td>Goals</td>
+                <td>Against</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            </thead>
+            {% for row in last_games %}
+                <tr>{% for data in row %}
+                    <td>{{ data }}</td>{% endfor %}</tr>
+            {% endfor %}
+        </table>
     </div>
     <hr>
     <h3>"FUN" FACTS</h3>

@@ -7,24 +7,27 @@ conn = sqlite3.connect(database_path)
 c = conn.cursor()
 
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
-possible_game_stats = ['goals', 'against']
-possible_modes = ['AVG', 'SUM', 'MAX', 'MIN']
 
 
 def max_id() -> int:
     return c.execute("SELECT MAX(gameID) FROM games").fetchone()[0]
 
 
-def insert_game_data(d) -> None:
+def insert_game_data(d) -> bool:
     new_id: int = max_id() + 1
-    c.execute('INSERT INTO games VALUES (?,?,?,?)', (new_id, d['date'], d['goals'], d['against']))
-    c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-              (new_id, 0, d['kRank'], d['kScore'], d['kGoals'], d['kAssists'], d['kSaves'], d['kShots']))
-    c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-              (new_id, 1, d['pRank'], d['pScore'], d['pGoals'], d['pAssists'], d['pSaves'], d['pShots']))
-    c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-              (new_id, 2, d['sRank'], d['sScore'], d['sGoals'], d['sAssists'], d['sSaves'], d['sShots']))
-    conn.commit()
+    try:
+        c.execute('INSERT INTO games VALUES (?,?,?,?)', (new_id, d['date'], d['goals'], d['against']))
+        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
+                  (new_id, 0, d['kRank'], d['kScore'], d['kGoals'], d['kAssists'], d['kSaves'], d['kShots']))
+        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
+                  (new_id, 1, d['pRank'], d['pScore'], d['pGoals'], d['pAssists'], d['pSaves'], d['pShots']))
+        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
+                  (new_id, 2, d['sRank'], d['sScore'], d['sGoals'], d['sAssists'], d['sSaves'], d['sShots']))
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(e)
+        return False
 
 
 # Returns number of days since first game played

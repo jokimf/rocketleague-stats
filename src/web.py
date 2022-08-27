@@ -3,8 +3,9 @@ from wsgiref.simple_server import make_server
 import pyramid.response
 from pyramid.config import Configurator
 from pyramid.view import view_config
-import queries as q
+
 import graphs as g
+import queries as q
 import random_facts as r
 
 
@@ -40,27 +41,31 @@ def main(request) -> dict:
 
 
 @view_config(
-    route_name='insert',
+    route_name='insert'
 )
 def insert_get(request):
-    def validate_request(request_dict) -> bool:
-        date = request_dict.get('dict')
-
-        return True
-
     request_data = request.params
-    if request_data and validate_request(request_data):
-        q.insert_game_data(request_data)
+    if not request_data or q.insert_game_data(request_data):
+        return pyramid.response.FileResponse('../resources/insert.html')
+    else:
+        return pyramid.response.FileResponse('../resources/insert_error.html')
 
-    return pyramid.response.FileResponse('../resources/insert.html')
+
+@view_config(
+    route_name='img'
+)
+def img(request):
+    image = request.path.split('/')[2]
+    return pyramid.response.FileResponse(f'../resources/img/{image}')
 
 
 if __name__ == '__main__':
     with Configurator() as config:
         config.include('pyramid_jinja2')
         config.add_route('main', '/')
-        config.add_route('data', 'data/{type}')
         config.add_route('insert', 'insert')
+        config.add_route('data', 'data/{type}')
+        config.add_route('img', 'img/{img}')
         config.scan()
         app = config.make_wsgi_app()
     server = make_server('127.0.0.1', 6543, app)
