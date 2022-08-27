@@ -379,7 +379,8 @@ def build_record_games():
         'Most goals conceded by team': most_against(),
         'Most goals conceded and still won': most_against_and_won(),
         'Most goals scored and still lost': most_goals_and_lost(),
-        'Most total goals in one game': most_total_goals(),
+        'Most total goals in one game': most_total_goals()}
+    data2 = {
         'Highest score diff between MVP and LVP': diff_mvp_lvp('DESC'),
         'Lowest score diff between MVP and LVP': diff_mvp_lvp('ASC'),
         'Most solo goals by "team"': most_solo_goals(),
@@ -397,7 +398,9 @@ def build_record_games():
         'Lowest points with all stats being at least 1': lowest_points_at_least_1(),
         'Most points without scoring or assisting': most_points_without_goal_or_assist()
     }
-    return {k: v for k, v in sorted(data.items(), key=lambda item: item[1][0][2])}  # Sort by gameID
+    # Segmentation for two separate tables
+    return ({k: v for k, v in sorted(data.items(), key=lambda item: item[1][0][2])},
+            {k: v for k, v in sorted(data2.items(), key=lambda item: item[1][0][2])})
 
 
 def tilt():  # TODO

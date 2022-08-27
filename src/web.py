@@ -4,6 +4,7 @@ import pyramid.response
 from pyramid.config import Configurator
 from pyramid.view import view_config
 
+import itertools
 import graphs as g
 import queries as q
 import random_facts as r
@@ -25,6 +26,7 @@ def data(request) -> dict:
 )
 def main(request) -> dict:
     max_id = q.max_id()
+    record_games = q.build_record_games()
     return {
         "ranks": q.ranks(),
         "winrates": q.winrates(),
@@ -37,7 +39,9 @@ def main(request) -> dict:
         "grand_total": q.general_game_stats_over_time_period(1, max_id),
         "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),
         "session_data": q.general_game_stats_over_time_period(q.session_start_id(), max_id),
-        "fun_facts": q.build_fun_facts()
+        "fun_facts": q.build_fun_facts(),
+        "record_games": record_games[0],
+        "record_games2": record_games[1]
     }
 
 
