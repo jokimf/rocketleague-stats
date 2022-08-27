@@ -9,6 +9,7 @@ import queries as q
 import random_facts as r
 
 
+# TODO: Links ändern zu rlstats/XD
 @view_config(
     route_name='data',
     renderer='json'
