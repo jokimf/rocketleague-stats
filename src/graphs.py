@@ -165,7 +165,8 @@ def graph_stat_share(stat: str) -> Graph:
         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS S
         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
-    return Graph(f"{stat.capitalize()} Share", "line", data, [x[0] for x in c.description], None, None, None, None, False)
+    return Graph(f"{stat.capitalize()} Share", "line", data, [x[0] for x in c.description], None, None, None, None,
+                 False)
 
 
 def graph_performance_stat_share(stat: str) -> Graph:
@@ -188,7 +189,8 @@ def graph_performance_stat_share(stat: str) -> Graph:
         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
     print(data)
-    return Graph(f"{stat.capitalize()} performance share", "line", data, [x[0] for x in c.description], None, None, None, None,
+    return Graph(f"{stat.capitalize()} performance share", "line", data, [x[0] for x in c.description], None, None,
+                 None, None,
                  False)
 
 
@@ -210,9 +212,10 @@ def graph_cumulative_stat(stat: str) -> Graph:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')
     data = c.execute(f"""
-        SELECT k.gameID, SUM(k.{stat}) OVER (ORDER BY k.gameID) 'Knus', SUM(p.{stat}) OVER (ORDER BY k.gameID) 'Puad', SUM(s.{stat}) OVER (ORDER BY k.gameID) 'Sticker'
-        FROM knus k LEFT JOIN puad p ON k.gameID = p.gameID LEFT JOIN sticker s ON k.gameID = s.gameID
-    """, (stat, stat, stat)).fetchall()
+        SELECT k.gameID, SUM(k.{stat}) OVER (ORDER BY k.gameID) 'Knus', SUM(p.{stat}) OVER (ORDER BY k.gameID) 'Puad', 
+        SUM(s.{stat}) OVER (ORDER BY k.gameID) 'Sticker' FROM knus k LEFT JOIN puad p ON k.gameID = p.gameID 
+        LEFT JOIN sticker s ON k.gameID = s.gameID
+    """).fetchall()
     return Graph(f"Cumulative {stat.capitalize()}", "line", data, [x[0] for x in c.description], None, None, None, None,
                  False)
 

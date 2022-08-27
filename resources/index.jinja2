@@ -3,247 +3,13 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Clown Gameplay</title>
-    <!--<link rel="icon" type="image/svg+xml" href="http://localhost:6543/img/icon_red.svg">-->
+    <link rel="icon" href="https://jok.im/img/logo_grey.png">
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link rel="stylesheet" href="https://jok.im/static/styles.css">
+    <script src="https://jok.im/static/loadData.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<style>
-    /** Set `margin-bottom` to maintain vertical rhythm */
-    h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure {
-        margin-bottom: 15px;
-    }
-
-    body {
-        font-size: 1em !important;
-        color: #000000;
-        background-color: #ffffff;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        line-height: 1.42em;
-    }
-
-    .website-center-setup {
-        width: 80%;
-        margin: auto;
-        background: #fafafa;
-    }
-
-    h1 {
-        font-size: 3em;
-        font-weight: 300;
-        line-height: 1em;
-        text-align: center;
-        color: #599cbb;
-    }
-
-    h1 .cg { /* clown gameplay part of headline */
-        font-size: 1.1em;
-        font-weight: 300;
-        line-height: 1em;
-        text-align: center;
-        color: #1d7aa4;
-    }
-
-    h2 {
-        text-align: left;
-        display: block;
-        font-size: 2em;
-        margin-block-start: 0.67em;
-        margin-block-end: 0.67em;
-    }
-
-    h3 {
-        text-align: center;
-        display: block;
-        font-size: 2em;
-        margin-block-start: 0.67em;
-        margin-block-end: 0.67em;
-    }
-
-    h4 {
-        text-align: center;
-        font-size: 2em;
-        font-weight: 600;
-        margin-top: 0;
-    }
-
-    .profile-pics-flexbox {
-        display: flex;
-        justify-content: center;
-        gap: 150px
-    }
-
-    .profile-pics {
-        margin: 10px;
-        border-radius: 100px;
-        border: 1px solid;
-        height: 100px;
-    }
-
-    .icon {
-        width: 22px;
-        height: 22px;
-        max-height: 22px;
-        max-width: 22px;
-    }
-
-    figure {
-        display: flex;
-        flex-flow: column-reverse;
-        padding: 5px;
-        max-width: 220px;
-        margin: auto;
-    }
-
-    figcaption {
-        font-weight: bolder;
-        font-size: 22px;
-        background-color: #dedede;
-        text-align: center;
-    }
-
-    .sub-headline {
-        font-size: 1em;
-        font-weight: 300;
-        line-height: 1em;
-        color: #1d7aa4;
-    }
-
-    .infobox {
-        margin: 5px;
-    }
-
-    .total-season-session {
-        display: flex;
-        justify-content: center;
-    }
-
-    .random-facts {
-        text-align: center;
-    }
-
-    /** Reset some basic elements */
-    blockquote, pre, hr, dl, dd, ol, ul, figure {
-        margin: 0;
-        padding: 0;
-    }
-
-    table {
-        border-collapse: collapse;
-        font-style: normal;
-        margin-right: auto;
-        margin-left: auto;
-    }
-
-    caption {
-        font-size: 2em;
-        line-height: 1.8em;
-    }
-
-    th {
-        color: #000000;
-        font-weight: bold;
-    }
-
-    td, th {
-        border: 1px solid #999;
-        padding: 0.5rem;
-        text-align: center;
-    }
-
-    .infobox td {
-        font-size: smaller;
-    }
-
-    table tr:nth-child(even) {
-        background-color: #f7f7f7;
-    }
-
-    table th {
-        background-color: #f0f0f0;
-        border: 1px solid #dedede;
-        border-bottom-color: #c9c9c9;
-    }
-
-    table td {
-        border: 1px solid #cccccc;
-    }
-
-    li {
-        text-align: left;
-        color: #353535;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: 1.5;
-    }
-
-    ul {
-        padding-left: 32px;
-    }
-
-    .graph-shell-small {
-        height: 200px;
-        background-color: #eeeeee;
-    }
-
-    .graph-shell-big {
-        height: 700px;
-    }
-
-    hr {
-        border: 0;
-        padding: 0;
-        height: 1px;
-        background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(40, 40, 40, 0.3), rgba(0, 0, 0, 0));
-        margin-block-start: 20px;
-        margin-block-end: 20px;
-    }
-
-    button {
-        transition: background .25s, border-color .25s;
-        background: rgba(40, 44, 52, .05);
-        border: 1px solid transparent;
-        border-radius: 6px;
-        color: #000000;
-        text-decoration: none !important;
-        display: inline-block;
-        font-size: .8rem;
-        padding: 8px 16px;
-        margin: 0 8px 8px 0;
-        cursor: pointer;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        user-select: none;
-    }
-
-    .records, .fun-facts {
-        display: flex;
-        justify-content: center;
-        gap: 25px;
-    }
-
-    .winrate-flexbox {
-        display: flex;
-        justify-content: center;
-        gap: 100px;
-        margin-bottom: 30px;
-    }
-
-    .winrate-desc-flexbox {
-        gap: 160px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .winrate {
-        font-size: 2em;
-        font-weight: bolder;
-    }
-
-    .winrate-desc {
-        font-size: smaller;
-    }
-</style>
 <body>
 <div class="website-center-setup">
     <h1><span class="cg">CLOWN GAMEPLAY</span> ROCKET LEAGUE STATISTICS</h1>
@@ -524,24 +290,26 @@
     </div>
     <hr>
     <div class="general-info">
-        <table>
-            <tr>
-                <td>Days since inception</td>
-                <td>{{ days_since_inception | int }}</td>
-            </tr>
-            <tr>
-                <td>Games</td>
-                <td>{{ total_games }}</td>
-            </tr>
-            <tr>
-                <td>Tilt</td>
-                <td>{{ tilt }}%</td>
-            </tr>
-            <tr>
-                <td>Average Session Length</td>
-                <td>{{ average_session_length | int }}</td>
-            </tr>
-        </table>
+        <div class="general-info-container">
+            <table>
+                <tr>
+                    <td>Days since inception</td>
+                    <td>{{ days_since_inception | int }}</td>
+                </tr>
+                <tr>
+                    <td>Games</td>
+                    <td>{{ total_games }}</td>
+                </tr>
+                <tr>
+                    <td>Tilt</td>
+                    <td>{{ tilt }}%</td>
+                </tr>
+                <tr>
+                    <td>Average Session Length</td>
+                    <td>{{ average_session_length | int }}</td>
+                </tr>
+            </table>
+        </div>
     </div>
     <hr>
     <h3>LAST 5</h3>
@@ -2055,77 +1823,4 @@
     </div>
 </div>
 </body>
-<!--<script src="loadData.js"></script>-->
-<script>
-    let allCharts = ["datesChart", "monthChart", "yearsChart", "weekdChart", "grief", "wins_last_20", "winrate", "solo_goals",
-        "performance_score", "performance_goals", "performance_assists", "performance_saves", "performance_shots", "performance_share_score", "performance_share_goals",
-        "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists",
-        "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
-
-    for (let i = 0; i < allCharts.length; i++) {
-        fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {
-            new Chart(document.getElementById(allCharts[i]).getContext('2d'), config);
-        });
-    }
-
-    async function fetchData(graphName) {
-        return await fetch('https://jok.im/rlstats_python/data/' + graphName).then(json => json.json());
-    }
-
-    function generateConfig(inputJson) {
-        let datasets = [];
-        for (let i = 0; i < inputJson.data.datasets.length; i++) {
-            datasets.push({
-                label: inputJson.data.datasets[i].label,
-                data: inputJson.data.datasets[i].data,
-                borderColor: inputJson.data.datasets[i].borderColor,
-                borderWidth: 4,
-                pointRadius: 0
-            })
-        }
-        return {
-            type: inputJson.type,
-            data: {
-                labels: inputJson.data.labels,
-                datasets: datasets
-            },
-            options: {
-                maintainAspectRatio: false,
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: inputJson.data.title
-                    },
-                    legend: {
-                        display: inputJson.options.show_legend
-                    }
-                },
-                scales: {
-                    x: {
-                        min: inputJson.options.x_min,
-                        max: inputJson.options.x_max
-                    },
-                    y: {
-                        min: inputJson.options.y_min,
-                        max: inputJson.options.y_max
-                    }
-                }
-            },
-            plugins: {}
-        }
-    }
-
-    function changeX() {
-        p(myChart);
-    }
-
-    function p(chart) {
-        //chart.options.plugins.title.text = 'new title';
-        let xmin = chart.scales.x.min
-        let xmax = chart.scales.x.max
-        chart.options.scales.x.min = xmin + 100;
-        chart.update();
-    }
-</script>
 </html>

@@ -59,6 +59,14 @@ def img(request):
     return pyramid.response.FileResponse(f'../resources/img/{image}')
 
 
+@view_config(
+    route_name='static'
+)
+def static(request):
+    file = request.path.split('/')[2]
+    return pyramid.response.FileResponse(f'../resources/{file}')
+
+
 if __name__ == '__main__':
     with Configurator() as config:
         config.include('pyramid_jinja2')
@@ -66,6 +74,7 @@ if __name__ == '__main__':
         config.add_route('insert', 'insert')
         config.add_route('data', 'data/{type}')
         config.add_route('img', 'img/{img}')
+        config.add_route('static', 'static/{file}')
         config.scan()
         app = config.make_wsgi_app()
     server = make_server('127.0.0.1', 6543, app)

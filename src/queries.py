@@ -576,8 +576,7 @@ def seasons_dashboard():
         LEFT JOIN knus k ON g.gameID = k.gameID
         LEFT JOIN puad p ON g.gameID = p.gameID
         LEFT JOIN sticker s ON g.gameID = s.gameID
-        GROUP BY seasonID"""
-                     ).fetchall()
+        GROUP BY seasonID""").fetchall()
 
 
 # UNUSED #
