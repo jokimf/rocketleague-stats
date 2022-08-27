@@ -10,7 +10,7 @@ for (let i = 0; i < allCharts.length; i++) {
 }
 
 async function fetchData(graphName) {
-    return await fetch('https://jok.im/rlstats_python/data/' + graphName).then(json => json.json());
+    return await fetch('https://jok.im/rl/data/' + graphName).then(json => json.json());
 }
 
 function generateConfig(inputJson) {
