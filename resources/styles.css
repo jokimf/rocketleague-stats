@@ -68,6 +68,15 @@ h4 {
     height: 100px;
 }
 
+.profile {
+    display: flex;
+    justify-content: center;
+}
+
+.profile-stats {
+
+}
+
 .icon {
     width: 22px;
     height: 22px;

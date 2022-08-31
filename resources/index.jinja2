@@ -14,27 +14,33 @@
 <div class="website-center-setup">
     <h1><span class="cg">CLOWN GAMEPLAY</span> ROCKET LEAGUE STATISTICS</h1>
     <div class="profile-pics-flexbox">
-        <figure>
-            <figcaption><img alt={{ ranks[0] }} class="icon" src="https://jok.im/rl/img/{{ ranks[0] }}.png"> Knus
-            </figcaption>
-            <img class="profile-pics"
-                 src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
-                 alt="Knus">
-        </figure>
-        <figure>
-            <figcaption><img alt={{ ranks[1] }} class="icon" src="https://jok.im/rl/img/{{ ranks[1] }}.png"> Puad
-            </figcaption>
-            <img class="profile-pics"
-                 src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg"
-                 alt="Puad">
-        </figure>
-        <figure>
-            <figcaption><img alt={{ ranks[2] }} class="icon" src="https://jok.im/rl/img/{{ ranks[2] }}.png"> Sticker
-            </figcaption>
-            <img class="profile-pics"
-                 src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
-                 alt="Sticker">
-        </figure>
+        <div class="profile">
+            <figure>
+                <figcaption><img alt={{ ranks[0] }} class="icon" src="https://jok.im/rl/img/{{ ranks[0] }}.png"> Knus
+                </figcaption>
+                <img class="profile-pics"
+                     src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
+                     alt="Knus">
+            </figure>
+        </div>
+        <div class="profile">
+            <figure>
+                <figcaption><img alt={{ ranks[1] }} class="icon" src="https://jok.im/rl/img/{{ ranks[1] }}.png"> Puad
+                </figcaption>
+                <img class="profile-pics"
+                     src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg"
+                     alt="Puad">
+            </figure>
+        </div>
+        <div class="profile">
+            <figure>
+                <figcaption><img alt={{ ranks[2] }} class="icon" src="https://jok.im/rl/img/{{ ranks[2] }}.png"> Sticker
+                </figcaption>
+                <img class="profile-pics"
+                     src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
+                     alt="Sticker">
+            </figure>
+        </div>
     </div>
     <hr>
     <div class="winrates">
@@ -234,6 +240,7 @@
         </div>
     </div>
     <hr>
+    <h3>Graphs</h3>
     <div class="graphs">
         <div class="graph-shell-small">
             <canvas id="grief"></canvas>
@@ -306,7 +313,7 @@
                 </tr>
                 <tr>
                     <td>Average Session Length</td>
-                    <td>{{ average_session_length | int }}</td>
+                    <td>{{ average_session_length | round(2) }}</td>
                 </tr>
             </table>
         </div>
@@ -402,7 +409,6 @@
     <div class="records">
         <div class="records-part">
             <table>
-                <caption>Records</caption>
                 <tr>
                     <th>Record</th>
                     <th>Player</th>
@@ -429,7 +435,6 @@
         </div>
         <div class="records-part">
             <table>
-                <caption>Records</caption>
                 <tr>
                     <th>Record</th>
                     <th>Player</th>
@@ -455,6 +460,8 @@
             </table>
         </div>
     </div>
+    <hr>
+    <h3>GRAPHS</h3>
     <div class="graphs">
         <div class="graph-shell-small">
             <canvas id="winrate"></canvas>
