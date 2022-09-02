@@ -3,75 +3,92 @@ import math
 import queries as q
 import statistics
 from datetime import date, datetime, timedelta
-from typing import Tuple
+from typing import Tuple, List
+
+import time
+import timeit
+
+
+def timer_func(func):
+    def function_timer(*args, **kwargs):
+        start = time.time()
+        value = func(*args, **kwargs)
+        runtime = time.time() - start
+        print(f"{func.__name__} took {runtime} seconds to complete its execution.")
+        return value
+
+    return function_timer
 
 
 def generate_random_facts():
-    union = list(set.union(milestone_facts(), average_high_variance_facts(), date_facts(), last_session_facts(),
-                           last_month_summary(), result_facts(), game_count_facts(), close_to_record(), outclassed(),
-                           at_least_1_streak()))
+    union = milestone_facts() + date_facts() + last_session_facts() + last_month_summary() + result_facts() + game_count_facts() + close_to_record() + outclassed() + at_least_1_streak()
+    # average_high_variance_facts()
     return sorted(union, key=lambda i: i[1], reverse=True)
 
 
 # Things related to date
-def date_facts() -> set[Tuple]:
-    facts = set()
+@timer_func
+def date_facts() -> List[Tuple]:
+    facts = []
     # TODO: Do more special date facts
     # date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
     # month_data = q.month_table()[int(date.today().strftime('%m')) - 1]
     # year_data = q.year_table()[int(date.today().strftime('%y')) - 18]
 
-    # facts.add((f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.', 1))
-    # facts.add((f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.', 1))
-    # facts.add((f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.', 1))
+    # facts.append((f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.', 1))
+    # facts.append((f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.', 1))
+    # facts.append((f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.', 1))
     return facts
 
 
 # Last session was xy
-def last_session_facts() -> set[Tuple]:
-    facts = set()
+@timer_func
+def last_session_facts() -> List[Tuple]:
+    facts = []
     session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, knus_shots, puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, sticker_assists, sticker_saves, sticker_shots, quality = q.last_session_data()
     if session_id % 50 == 0:
-        facts.add((f'This session is special, it was the {session_id}th session! 😂', 4))
+        facts.append((f'This session is special, it was the {session_id}th session! 😂', 4))
 
     # First session in x days, first session in a month, first session in a year, at the same date x years ago TODO:
     #  cleanup
     d1, d2 = q.last_two_sessions_dates()
     diff = (datetime.today() - datetime.strptime(d2[0], "%Y-%m-%d")).days
     if d1[0] == datetime.today().date():
-        facts.add((f'The last session before today was {diff} days ago... 🤡', 2))
+        facts.append((f'The last session before today was {diff} days ago... 🤡', 2))
     else:
         if diff <= 7:
-            facts.add((f'The last session was {diff} days ago.', 2))
+            facts.append((f'The last session was {diff} days ago.', 2))
         elif diff <= 14:
-            facts.add((f'Last session was {diff} days ago...', 3))
+            facts.append((f'Last session was {diff} days ago...', 3))
         elif diff <= 21:
-            facts.add((f'Last session is already {diff} days ago 🤡🤡🤡', 4))
+            facts.append((f'Last session is already {diff} days ago 🤡🤡🤡', 4))
 
     # TODO: Do more with unused stats
     return facts
 
 
-def game_count_facts() -> set[Tuple]:
-    facts = set()
+@timer_func
+def game_count_facts() -> List[Tuple]:
+    facts = []
     month, year, total = q.game_amount_this_month(), q.game_amount_this_year(), q.max_id()
     if total % 100 == 0:
-        facts.add((f'You just played the {total}th game in total.', 4))
+        facts.append((f'You just played the {total}th game in total.', 4))
 
     if year % 50 == 0:
-        facts.add((f'You just played the {year}th game this year.', 4))
+        facts.append((f'You just played the {year}th game this year.', 4))
 
     if month % 25 == 0:
-        facts.add((f'You just played the {month}th game this month.', 3))
+        facts.append((f'You just played the {month}th game this month.', 3))
     return facts
 
 
-def last_month_summary() -> set[Tuple]:
-    facts = set()
+@timer_func
+def last_month_summary() -> List[Tuple]:
+    facts = []
     games_this_month = q.game_amount_this_month()
 
     # Only show if less than 3 games have been played this month and its before the fifth of a month
-    if games_this_month <= 5 and datetime.today().day < 5:
+    if 5 >= games_this_month > 0 and datetime.today().day < 5:
         last_month_str = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
         data = q.unique_months_game_count()
 
@@ -83,57 +100,59 @@ def last_month_summary() -> set[Tuple]:
             if tp[0] == last_month_str:
                 count = tp[1]
 
-        facts.add((f'Last month, you played {count} games, which ranks at {c}. among all months.', 5))
+        facts.append((f'Last month, you played {count} games, which ranks at {c}. among all months.', 5))
     return facts
 
 
 # Unusual result
-def result_facts() -> set[Tuple]:
-    facts = set()
+@timer_func
+def result_facts() -> List[Tuple]:
+    facts = []
     data = q.results_table()
     goals, against = q.last_result()
     for entry in data:
         if entry[0] == goals and entry[1] == against:
             total, percent = entry[2], entry[3]
             if percent >= 0.05:
-                facts.add(
+                facts.append(
                     (
                         f'The result of the last match was extremely common. It already happened {total} times. ('
                         f'{round(percent * 100, 1)}%)',
                         1))
             elif percent >= 0.025:
-                facts.add(
+                facts.append(
                     (
                         f'The result of the last match was common. In total, it happened {total} times. ('
                         f'{round(percent * 100, 2)}%)',
                         2))
             elif percent >= 0.0125:
-                facts.add(
+                facts.append(
                     (
                         f'The result of last match was rare, in total it happened {total} times ('
                         f'{round(percent * 100, 4)}%)',
                         3))
             elif percent >= 0.00625:
-                facts.add(
+                facts.append(
                     (
                         f'The result of last match was really rare, in total it happened {total} times ('
                         f'{round(percent * 100, 4)}%)',
                         4))
             else:
-                facts.add(
+                facts.append(
                     (
                         f"The result of last match only happened for the {total}. time! That's only "
                         f"{round(percent * 100, 4)}%",
                         5))
     if not facts:  # set is empty because results has not happened before
-        facts.add(
+        facts.append(
             (f'Last game was the first time that this result happened. {goals}:{against}, a real rarity.', 5))
     return facts
 
 
 # Player reaches milestone in stat y
-def milestone_facts() -> set[Tuple]:
-    facts = set()
+@timer_func
+def milestone_facts() -> List[Tuple]:
+    facts = []
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 
     for stat in possible_stats:
@@ -142,13 +161,14 @@ def milestone_facts() -> set[Tuple]:
             total = q.player_total_of_stat(p, stat)
             overshoot = total % milestone_val
             if overshoot < q.player_stat_of_last_game(p, stat):  # Milestone crossed
-                facts.add((f'{q.player_name(p)} just reached {total - overshoot} {stat}!', 4))
+                facts.append((f'{q.player_name(p)} just reached {total - overshoot} {stat}!', 4))
     return facts
 
 
-# Player average is higher/lower in last x games than total avg
-def average_high_variance_facts() -> set[Tuple]:
-    facts = set()
+# Player average is higher/lower in last x games than total avg TODO: very slow function
+@timer_func
+def average_high_variance_facts() -> List[Tuple]:
+    facts = []
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
     z_values = {'Top 1%': 2.32635, 'Top 5%': 1.64485, 'Top 15%': 1.03643,
                 'Bottom 1%': -2.32635, 'Bottom 5%': -1.64485, 'Bottom 15%': -1.03643}
@@ -160,11 +180,11 @@ def average_high_variance_facts() -> set[Tuple]:
                     percentile_value = q.player_average_all_games(p, stat) + z_values[z] * statistics.stdev(
                         q.average_all(p, stat))
                     if percentile_value < s[1] and z.startswith('Top'):
-                        facts.add(
+                        facts.append(
                             (f'Over the last {s[0]} games, {q.player_name(p)} {stat} are in the {z} on average.', 3))
                         break
                     elif percentile_value > s[1] and z.startswith('Bottom'):
-                        facts.add(
+                        facts.append(
                             (f'Over the last {s[0]} games, {q.player_name(p)} {stat} are only in the {z} on average.',
                              3))
                         break
@@ -173,8 +193,9 @@ def average_high_variance_facts() -> set[Tuple]:
 
 
 # Came close to a record
-def close_to_record() -> set[Tuple]:  # TODO: make it faster
-    facts = set()
+@timer_func
+def close_to_record() -> List[Tuple]:  # TODO: make it faster
+    facts = []
 
     # Record games
     last_id = q.max_id()
@@ -265,7 +286,7 @@ def close_to_record() -> set[Tuple]:  # TODO: make it faster
     for record in record_data:
         for index in range(0, limit):
             if record[0][index][2] == last_id:
-                facts.add((record[1].format(value=record[0][index][1], name=record[0][index][0], rank=index + 1), 4))
+                facts.append((record[1].format(value=record[0][index][1], name=record[0][index][0], rank=index + 1), 4))
 
     # TODO: Session is close to being a record session
     session_count = q.session_count()
@@ -279,12 +300,12 @@ def close_to_record() -> set[Tuple]:  # TODO: make it faster
             next_milestone_rank = rank + 1
             next_milestone_value = session_record_data[rank][1]
         if session_record_data[rank][0] == session_count:
-            facts.add((
+            facts.append((
                 f'You played {session_record_data[rank][1]} games this session. It ranks at spot number {rank + 1} in that regard.',
                 4))
             if next_milestone_value is not None and next_milestone_rank is not None:
                 games_to_reach_milestone = next_milestone_value - session_record_data[rank][1]
-                facts.add((
+                facts.append((
                     f'To reach rank {next_milestone_rank} in games played this session, you need to play {1 if games_to_reach_milestone == 0 else games_to_reach_milestone} more games.',
                     4))
 
@@ -292,18 +313,21 @@ def close_to_record() -> set[Tuple]:  # TODO: make it faster
 
 
 # X has double the amount of Y, also session/season based
-def outclassed() -> set[Tuple]:
-    return set()
+def outclassed() -> List[Tuple]:
+    facts = []
+    return facts
 
 
 # 'At least 1' streak in Goals/Assists/Saves
-def at_least_1_streak() -> set[Tuple]:
-    return set()
+def at_least_1_streak() -> List[Tuple]:
+    facts = []
+    return facts
 
 
 # Streak of stats
-def streak() -> set[Tuple]:
-    return set()
+def streak() -> List[Tuple]:
+    facts = []
+    return facts
 
 
 if __name__ == '__main__':

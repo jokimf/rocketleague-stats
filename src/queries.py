@@ -438,6 +438,26 @@ def average_all(player_id: int, stat: str) -> list[Any]:
     return [x[0] for x in data]
 
 
+def performance_profile_view(p_id: int):
+    def color(value: int) -> str:
+        if value <= 2:
+            return "Orange;font-weight:bolder"
+        elif value <= 10:
+            return "SteelBlue;font-weight:bolder"
+        elif value <= 25:
+            return "ForestGreen"
+        elif value <= 50:
+            return "LightSlateGrey"
+        elif value <= 75:
+            return "Khaki"
+        else:
+            return "IndianRed"
+
+    values = c.execute('SELECT * FROM performance WHERE playerID = ? AND gameID = ?', (p_id, max_id())).fetchone()[2:]
+    top = [44, 2, 90, 11, 9]
+    return list(zip(values, top, [color(x) for x in top]))
+
+
 def performance(player_id: int, stat: str) -> int:
     if stat not in possible_stats:
         raise ValueError(f'{stat} is not in possible stats.')

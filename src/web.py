@@ -40,7 +40,10 @@ def main(request) -> dict:
         "session_data": q.general_game_stats_over_time_period(q.session_start_id(), max_id),
         "fun_facts": q.build_fun_facts(),
         "record_games": record_games[0],
-        "record_games2": record_games[1]
+        "record_games2": record_games[1],
+        "knus_performance": q.performance_profile_view(0),
+        "puad_performance": q.performance_profile_view(1),
+        "sticker_performance": q.performance_profile_view(2)
     }
 
 

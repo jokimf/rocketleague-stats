@@ -240,3 +240,9 @@ button {
 .winrate-desc {
     font-size: smaller;
 }
+
+.top {
+    font-size: x-small;
+    vertical-align: top;
+    color: goldenrod;
+}
