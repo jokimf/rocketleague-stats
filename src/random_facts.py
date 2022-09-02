@@ -165,33 +165,6 @@ def milestone_facts() -> List[Tuple]:
     return facts
 
 
-# Player average is higher/lower in last x games than total avg TODO: very slow function
-@timer_func
-def average_high_variance_facts() -> List[Tuple]:
-    facts = []
-    possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
-    z_values = {'Top 1%': 2.32635, 'Top 5%': 1.64485, 'Top 15%': 1.03643,
-                'Bottom 1%': -2.32635, 'Bottom 5%': -1.64485, 'Bottom 15%': -1.03643}
-
-    for stat in possible_stats:
-        for p in range(0, 3):
-            for s in [(20, q.performance(p, stat)), (100, q.performance100(p, stat)), (250, q.performance250(p, stat))]:
-                for z in z_values.keys():
-                    percentile_value = q.player_average_all_games(p, stat) + z_values[z] * statistics.stdev(
-                        q.average_all(p, stat))
-                    if percentile_value < s[1] and z.startswith('Top'):
-                        facts.append(
-                            (f'Over the last {s[0]} games, {q.player_name(p)} {stat} are in the {z} on average.', 3))
-                        break
-                    elif percentile_value > s[1] and z.startswith('Bottom'):
-                        facts.append(
-                            (f'Over the last {s[0]} games, {q.player_name(p)} {stat} are only in the {z} on average.',
-                             3))
-                        break
-
-    return facts
-
-
 # Came close to a record
 @timer_func
 def close_to_record() -> List[Tuple]:  # TODO: make it faster

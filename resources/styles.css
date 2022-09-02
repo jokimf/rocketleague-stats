@@ -73,8 +73,8 @@ h4 {
     justify-content: center;
 }
 
-.profile-stats {
-
+.profile-stats-left {
+    text-align: right;
 }
 
 .icon {
@@ -97,6 +97,7 @@ figcaption {
     font-size: 22px;
     background-color: #dedede;
     text-align: center;
+    vertical-align: top;
 }
 
 .sub-headline {
@@ -117,6 +118,10 @@ figcaption {
 
 .random-facts {
     text-align: center;
+}
+
+.profile-stats-value {
+    vertical-align: top;
 }
 
 /** Reset some basic elements */
