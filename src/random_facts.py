@@ -21,8 +21,7 @@ def timer_func(func):
 
 
 def generate_random_facts():
-    union = milestone_facts() + date_facts() + last_session_facts() + last_month_summary() + result_facts() + game_count_facts() + close_to_record() + outclassed() + at_least_1_streak()
-    # average_high_variance_facts()
+    union = record_session() + milestone_facts() + date_facts() + last_session_facts() + last_month_summary() + result_facts() + game_count_facts() + close_to_record() + outclassed() + at_least_1_streak()
     return sorted(union, key=lambda i: i[1], reverse=True)
 
 
@@ -261,6 +260,12 @@ def close_to_record() -> List[Tuple]:  # TODO: make it faster
             if record[0][index][2] == last_id:
                 facts.append((record[1].format(value=record[0][index][1], name=record[0][index][0], rank=index + 1), 4))
 
+    return facts
+
+
+@timer_func
+def record_session() -> List[Tuple]:
+    facts = []
     # TODO: Session is close to being a record session
     session_count = q.session_count()
     session_limit = math.ceil(session_count)  # top 2%
@@ -272,7 +277,7 @@ def close_to_record() -> List[Tuple]:  # TODO: make it faster
         if (rank + 1) % 5 == 0 and session_record_data[rank][0] != session_count:
             next_milestone_rank = rank + 1
             next_milestone_value = session_record_data[rank][1]
-        if session_record_data[rank][0] == session_count:
+        if session_record_data[rank][0] == session_count and session_record_data[rank][1] > 10:
             facts.append((
                 f'You played {session_record_data[rank][1]} games this session. It ranks at spot number {rank + 1} in that regard.',
                 4))
@@ -281,7 +286,6 @@ def close_to_record() -> List[Tuple]:  # TODO: make it faster
                 facts.append((
                     f'To reach rank {next_milestone_rank} in games played this session, you need to play {1 if games_to_reach_milestone == 0 else games_to_reach_milestone} more games.',
                     4))
-
     return facts
 
 

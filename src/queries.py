@@ -1,4 +1,5 @@
 import datetime
+import random
 import sqlite3
 from typing import Any, List
 
@@ -449,12 +450,13 @@ def performance_profile_view(p_id: int):
         elif value <= 50:
             return "LightSlateGrey"
         elif value <= 75:
-            return "Khaki"
+            return "Black"
         else:
             return "IndianRed"
 
     values = c.execute('SELECT * FROM performance WHERE playerID = ? AND gameID = ?', (p_id, max_id())).fetchone()[2:]
-    top = [44, 2, 90, 11, 9]
+    top = [random.randrange(1, 100), random.randrange(1, 100), random.randrange(1, 100), random.randrange(1, 100),
+           random.randrange(1, 100)]
     return list(zip(values, top, [color(x) for x in top]))
 
 
