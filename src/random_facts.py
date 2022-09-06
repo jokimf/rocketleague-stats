@@ -55,7 +55,7 @@ def last_session_facts() -> List[Tuple]:
     if d1[0] == datetime.today().date():
         facts.append((f'The last session before today was {diff} days ago... 🤡', 2))
     else:
-        if diff <= 7:
+        if 7 >= diff >= 5:
             facts.append((f'The last session was {diff} days ago.', 2))
         elif diff <= 14:
             facts.append((f'Last session was {diff} days ago...', 3))
