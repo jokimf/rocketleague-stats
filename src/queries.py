@@ -237,6 +237,10 @@ def results_table() -> list[Any]:
     """).fetchall()
 
 
+def session_data_by_date(date: str):
+    return c.execute("SELECT * FROM sessions WHERE date=?", (date,)).fetchone()
+
+
 def last_result() -> tuple:
     return c.execute('SELECT goals, against FROM games ORDER BY gameID DESC LIMIT 1').fetchone()
 
@@ -404,6 +408,7 @@ def build_record_games():
             {k: v for k, v in sorted(data2.items(), key=lambda item: item[1][0][2])})
 
 
+# Frontpage QUERIES
 def tilt():  # TODO
     return 5
 
@@ -485,8 +490,9 @@ def player_name(player_id: int) -> str:
     return c.execute('SELECT name FROM players WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
-def last_session_data() -> list[Any]:
-    return c.execute('SELECT * FROM sessions ORDER BY SessionID desc LIMIT 1').fetchone()
+def latest_session_main_data() -> List[Any]:
+    return c.execute(
+        'SELECT sessionID,date,wins,losses,Goals,Against,quality FROM sessions ORDER BY SessionID desc LIMIT 1').fetchone()
 
 
 def last_two_sessions_dates() -> list[Any]:
@@ -537,7 +543,7 @@ def session_start_id() -> int:
 def winrates() -> List:
     latest_game_id = max_id()
     season_start = season_start_id()
-    last_session = last_session_data()
+    last_session = latest_session_main_data()
     games_last_session = last_session[2] + last_session[3]
     winrates_list = [total_wins() / latest_game_id * 100,
                      wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,

@@ -3,6 +3,7 @@ import math
 import queries as q
 import statistics
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from typing import Tuple, List
 
 import time
@@ -44,26 +45,34 @@ def date_facts() -> List[Tuple]:
 @timer_func
 def last_session_facts() -> List[Tuple]:
     facts = []
-    session_id, session_date, wins, losses, goals, against, knus_score, knus_goals, knus_assists, knus_saves, knus_shots, puad_score, puad_goals, puad_assists, puad_saves, puad_shots, sticker_score, sticker_goals, sticker_assists, sticker_saves, sticker_shots, quality = q.last_session_data()
+    session_id, session_date, wins, losses, goals, against, quality = q.latest_session_main_data()
+
+    # Session ID milestone
     if session_id % 50 == 0:
-        facts.append((f'This session is special, it was the {session_id}th session! 😂', 4))
+        facts.append((f'This session is special, it was the {session_id}th session!', 4))
 
-    # First session in x days, first session in a month, first session in a year, at the same date x years ago TODO:
-    #  cleanup
-    d1, d2 = q.last_two_sessions_dates()
-    diff = (datetime.today() - datetime.strptime(d2[0], "%Y-%m-%d")).days
-    if d1[0] == datetime.today().date():
-        facts.append((f'The last session before today was {diff} days ago... 🤡', 2))
-    else:
-        if 7 >= diff >= 5:
-            facts.append((f'The last session was {diff} days ago.', 2))
-        elif diff <= 14:
-            facts.append((f'Last session was {diff} days ago...', 3))
-        elif diff <= 21:
-            facts.append((f'Last session is already {diff} days ago 🤡🤡🤡', 4))
+    today = datetime.today()
+    # Last session was x days ago
+    last_session_date = q.last_two_sessions_dates()[0][0]
+    diff = (today - datetime.strptime(last_session_date, "%Y-%m-%d")).days
+    if diff >= 21:
+        facts.append((f'Last session is already {diff} days ago 🤡🤡🤡', 4))
+    elif diff >= 12:
+        facts.append((f'The last session was {diff} days ago.', 2))
+    elif diff >= 5:
+        facts.append((f'Last session was {diff} days ago...', 3))
 
-    # TODO: Do more with unused stats
+    # At the same date x years ago
+    for years_ago in range(1, today.year - 2018):
+        same_date = q.session_data_by_date((today - relativedelta(years=years_ago)).strftime("%Y-%m-%d"))
+        if same_date:
+            facts.append((
+                f'On this day, {years_ago} years ago, you played a session with {same_date[2]} wins and {same_date[3]} losses!',
+                3))
     return facts
+
+
+last_session_facts()
 
 
 @timer_func
@@ -305,7 +314,3 @@ def at_least_1_streak() -> List[Tuple]:
 def streak() -> List[Tuple]:
     facts = []
     return facts
-
-
-if __name__ == '__main__':
-    print(generate_random_facts())
