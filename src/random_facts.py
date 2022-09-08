@@ -312,5 +312,7 @@ def at_least_1_streak() -> List[Tuple]:
 
 # Streak of stats
 def streak() -> List[Tuple]:
+    # MVP/LVP streaks
+    # x goals in succession
     facts = []
     return facts
