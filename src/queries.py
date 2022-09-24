@@ -3,7 +3,7 @@ import random
 import sqlite3
 from typing import Any, List
 
-database_path = '../resources/test.db'
+database_path = 'resources/test.db'
 conn = sqlite3.connect(database_path)
 c = conn.cursor()
 
@@ -445,6 +445,15 @@ def average_all(player_id: int, stat: str) -> list[Any]:
 
 
 def performance_profile_view(p_id: int):
+    def performance_rank(stat:str, p_id:int) -> int: # ??? Bugged stat in first query
+        return c.execute(f"""
+            SELECT n 
+            FROM 
+	            (SELECT row_number() OVER (ORDER BY {stat} DESC) AS n, gameID, ? 
+	            FROM performance WHERE playerID = ?) 
+            WHERE gameID = ?
+        """,(stat, p_id, max_id())).fetchone()[0]
+
     def color(value: int) -> str:
         if value <= 2:
             return "Orange;font-weight:bolder"
@@ -460,8 +469,15 @@ def performance_profile_view(p_id: int):
             return "IndianRed"
 
     values = c.execute('SELECT * FROM performance WHERE playerID = ? AND gameID = ?', (p_id, max_id())).fetchone()[2:]
-    top = [random.randrange(1, 100), random.randrange(1, 100), random.randrange(1, 100), random.randrange(1, 100),
-           random.randrange(1, 100)]
+    top = [round(performance_rank('score', p_id) / max_id()*100,1), 
+           round(performance_rank('goals', p_id) / max_id()*100,1), 
+           round(performance_rank('assists', p_id) / max_id()*100,1), 
+           round(performance_rank('saves', p_id) / max_id()*100,1),
+           round(performance_rank('shots', p_id) / max_id()*100,1)]
+
+    print(performance_rank('score',0))
+    print(performance_rank('score',1))
+    print(performance_rank('score',2))
     return list(zip(values, top, [color(x) for x in top]))
 
 

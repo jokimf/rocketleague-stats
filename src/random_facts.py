@@ -72,9 +72,6 @@ def last_session_facts() -> List[Tuple]:
     return facts
 
 
-last_session_facts()
-
-
 @timer_func
 def game_count_facts() -> List[Tuple]:
     facts = []
