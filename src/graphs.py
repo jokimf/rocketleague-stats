@@ -2,7 +2,7 @@ import random
 import sqlite3
 from typing import List, Optional, Tuple
 
-database_path = 'resources/test.db'
+database_path = '../resources/test.db'
 conn = sqlite3.connect(database_path)
 c = conn.cursor()
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']

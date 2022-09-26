@@ -3,7 +3,7 @@ import random
 import sqlite3
 from typing import Any, List
 
-database_path = 'resources/test.db'
+database_path = '../resources/test.db'
 conn = sqlite3.connect(database_path)
 c = conn.cursor()
 
