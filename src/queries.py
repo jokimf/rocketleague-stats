@@ -792,3 +792,23 @@ def average_games_per_day(start_date: str, end_date: str) -> float:
     return c.execute(
         """SELECT CAST(COUNT(gameID) AS FLOAT) / CAST(JULIANDAY(?) - JULIANDAY(?) AS FLOAT) 
            FROM games WHERE date BETWEEN ? AND ? """, (end_date, start_date, start_date, end_date)).fetchone()[0]
+
+
+# Winrate of gameNr in session
+def winrate_game_in_session():
+    return c.execute("""
+    SELECT gnis, CAST(SUM(IIF(goals>against,1,0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS wrm, COUNT(gameID) AS gcount
+    FROM (
+        SELECT row_number() OVER(PARTITION by date) AS gnis, gameID, goals, against
+        FROM games) p
+    GROUP BY gnis
+    """).fetchall()
+
+
+# Average winrate of sessions by number of games
+def average_winrate_of_sessions_by_game_count():
+    return c.execute("""
+    SELECT games, AVG(wr) FROM(
+        SELECT wins + losses AS games, CAST(wins AS float) / CAST(wins + losses AS float) AS wr FROM sessions)p
+    GROUP BY games
+    """).fetchall()
