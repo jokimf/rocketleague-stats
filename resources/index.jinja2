@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Clown Gameplay</title>
@@ -10,583 +11,575 @@
     <script src="https://jok.im/rl/static/loadData.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-<div class="website-center-setup">
-    <h1><span class="cg">CLOWN GAMEPLAY</span> ROCKET LEAGUE STATISTICS</h1>
-    <div class="profile-pics-flexbox">
-        <div class="profile">
-            <div class="profile-stats-left">
-                <span class="top"
-                      style="color:{{ knus_performance[0][2] }}"> Top {{ knus_performance[0][1] }}% </span> <span
-                    class="profile-stats-value">{{ knus_performance[0][0] }}</span>
-                <img class="icon" alt="Score" src="https://jok.im/rl/img/MVP_points_icon.png">
-                <br>
-                <span class="top"
-                      style="color:{{ knus_performance[1][2] }}">Top {{ knus_performance[1][1] }}% </span> <span
-                    class="profile-stats-value">{{ knus_performance[1][0] }}</span>
-                <img class="icon" alt="Goals" src="https://jok.im/rl/img/Goal_points_icon.png">
-                <br>
-                <span class="top"
-                      style="color:{{ knus_performance[2][2] }}">Top {{ knus_performance[2][1] }}% </span> <span
-                    class="profile-stats-value">{{ knus_performance[2][0] }}</span>
-                <img class="icon" alt="Assists" src="https://jok.im/rl/img/Assist_points_icon.png">
+    <div class="website-center-setup">
+        <h1><span class="cg">CLOWN GAMEPLAY</span> ROCKET LEAGUE STATISTICS</h1>
+        <div class="profile-pics-flexbox">
+            <div class="profile">
+                <div class="profile-stats-left">
+                    <span class="top" style="color:{{ knus_performance[0][2] }}"> Top {{ knus_performance[0][1] }}%
+                    </span> <span class="profile-stats-value">{{ knus_performance[0][0] }}</span>
+                    <img class="icon" alt="Score" src="https://jok.im/rl/img/MVP_points_icon.png">
+                    <br>
+                    <span class="top" style="color:{{ knus_performance[1][2] }}">Top {{ knus_performance[1][1] }}%
+                    </span> <span class="profile-stats-value">{{ knus_performance[1][0] }}</span>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Goal_points_icon.png">
+                    <br>
+                    <span class="top" style="color:{{ knus_performance[2][2] }}">Top {{ knus_performance[2][1] }}%
+                    </span> <span class="profile-stats-value">{{ knus_performance[2][0] }}</span>
+                    <img class="icon" alt="Assists" src="https://jok.im/rl/img/Assist_points_icon.png">
+                </div>
+                <figure>
+                    <figcaption><img alt={{ ranks[0] }} class="icon" src="https://jok.im/rl/img/{{ ranks[0] }}.png">
+                        Knus
+                    </figcaption>
+                    <img class="profile-pics"
+                        src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
+                        alt="Knus">
+                </figure>
+                <div class="profile-stats">
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Save_points_icon.png"> <span
+                        class="profile-stats-value">{{ knus_performance[3][0] }}</span>
+                    <span class="top" style="color:{{ knus_performance[3][2] }}">Top {{ knus_performance[3][1] }}%
+                    </span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Shot_on_Goal_points_icon.png"> <span
+                        class="profile-stats-value">{{ knus_performance[4][0] }}</span>
+                    <span class="top" style="color:{{ knus_performance[4][2] }}">Top {{ knus_performance[4][1] }}%
+                    </span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/First_Touch_points_icon.png"> <span
+                        class="profile-stats-value">{{ knus_performance[4][0] }}</span>
+                    <span class="top" style="color:{{ knus_performance[4][2] }}">Top {{ knus_performance[4][1] }}%
+                    </span>
+                </div>
             </div>
-            <figure>
-                <figcaption><img alt={{ ranks[0] }} class="icon" src="https://jok.im/rl/img/{{ ranks[0] }}.png"> Knus
-                </figcaption>
-                <img class="profile-pics"
-                     src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
-                     alt="Knus">
-            </figure>
-            <div class="profile-stats">
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/Save_points_icon.png"> <span
-                    class="profile-stats-value">{{ knus_performance[3][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[3][2] }}">Top {{ knus_performance[3][1] }}% </span>
-                <br>
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/Shot_on_Goal_points_icon.png"> <span
-                    class="profile-stats-value">{{ knus_performance[4][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[4][2] }}">Top {{ knus_performance[4][1] }}% </span>
-                <br>
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/First_Touch_points_icon.png"> <span
-                    class="profile-stats-value">{{ knus_performance[4][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[4][2] }}">Top {{ knus_performance[4][1] }}% </span>
+            <div class="profile">
+                <div class="profile-stats-left">
+                    <span class="top" style="color:{{ puad_performance[0][2] }}">Top {{ puad_performance[0][1] }}%
+                    </span> <span class="profile-stats-value">{{ puad_performance[0][0] }}</span>
+                    <img class="icon" alt="Score" src="https://jok.im/rl/img/MVP_points_icon.png">
+                    <br>
+                    <span class="top" style="color:{{ puad_performance[1][2] }}">Top {{ puad_performance[1][1] }}%
+                    </span> <span class="profile-stats-value">{{ puad_performance[1][0] }}</span>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Goal_points_icon.png">
+                    <br>
+                    <span class="top" style="color:{{ puad_performance[2][2] }}">Top {{ puad_performance[2][1] }}%
+                    </span> <span class="profile-stats-value">{{ puad_performance[2][0] }}</span>
+                    <img class="icon" alt="Assists" src="https://jok.im/rl/img/Assist_points_icon.png">
+                </div>
+                <figure>
+                    <figcaption><img alt={{ ranks[1] }} class="icon" src="https://jok.im/rl/img/{{ ranks[1] }}.png">
+                        Puad
+                    </figcaption>
+                    <img class="profile-pics"
+                        src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg"
+                        alt="Puad">
+                </figure>
+                <div class="profile-stats">
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Save_points_icon.png"> <span
+                        class="profile-stats-value">{{ puad_performance[3][0] }}</span>
+                    <span class="top" style="color:{{ puad_performance[3][2] }}">Top {{ puad_performance[3][1] }}%
+                    </span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Shot_on_Goal_points_icon.png"> <span
+                        class="profile-stats-value">{{ puad_performance[4][0] }}</span>
+                    <span class="top" style="color:{{ puad_performance[4][2] }}">Top {{ puad_performance[4][1] }}%
+                    </span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/First_Touch_points_icon.png"> <span
+                        class="profile-stats-value">{{ puad_performance[4][0] }}</span>
+                    <span class="top" style="color:{{ puad_performance[4][2] }}">Top {{ puad_performance[4][1] }}%
+                    </span>
+                </div>
             </div>
-        </div>
-        <div class="profile">
-            <div class="profile-stats-left">
-                <span class="top"
-                      style="color:{{ puad_performance[0][2] }}">Top {{ puad_performance[0][1] }}% </span> <span
-                    class="profile-stats-value">{{ puad_performance[0][0] }}</span>
-                <img class="icon" alt="Score" src="https://jok.im/rl/img/MVP_points_icon.png">
-                <br>
-                <span class="top"
-                      style="color:{{ puad_performance[1][2] }}">Top {{ puad_performance[1][1] }}% </span> <span
-                    class="profile-stats-value">{{ puad_performance[1][0] }}</span>
-                <img class="icon" alt="Goals" src="https://jok.im/rl/img/Goal_points_icon.png">
-                <br>
-                <span class="top"
-                      style="color:{{ puad_performance[2][2] }}">Top {{ puad_performance[2][1] }}% </span> <span
-                    class="profile-stats-value">{{ puad_performance[2][0] }}</span>
-                <img class="icon" alt="Assists" src="https://jok.im/rl/img/Assist_points_icon.png">
-            </div>
-            <figure>
-                <figcaption><img alt={{ ranks[1] }} class="icon" src="https://jok.im/rl/img/{{ ranks[1] }}.png"> Puad
-                </figcaption>
-                <img class="profile-pics"
-                     src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg"
-                     alt="Puad">
-            </figure>
-            <div class="profile-stats">
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/Save_points_icon.png"> <span
-                    class="profile-stats-value">{{ puad_performance[3][0] }}</span>
-                <span class="top"
-                      style="color:{{ puad_performance[3][2] }}">Top {{ puad_performance[3][1] }}% </span>
-                <br>
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/Shot_on_Goal_points_icon.png"> <span
-                    class="profile-stats-value">{{ puad_performance[4][0] }}</span>
-                <span class="top"
-                      style="color:{{ puad_performance[4][2] }}">Top {{ puad_performance[4][1] }}% </span>
-                <br>
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/First_Touch_points_icon.png"> <span
-                    class="profile-stats-value">{{ puad_performance[4][0] }}</span>
-                <span class="top"
-                      style="color:{{ puad_performance[4][2] }}">Top {{ puad_performance[4][1] }}% </span>
-            </div>
-        </div>
-        <div class="profile">
-            <div class="profile-stats-left">
-                <span class="top"
-                      style="color:{{ sticker_performance[0][2] }}">Top {{ sticker_performance[0][1] }}% </span> <span
-                    class="profile-stats-value">{{ sticker_performance[0][0] }}</span>
-                <img class="icon" alt="Score" src="https://jok.im/rl/img/MVP_points_icon.png">
-                <br>
-                <span class="top"
-                      style="color:{{ sticker_performance[1][2] }}">Top {{ sticker_performance[1][1] }}% </span> <span
-                    class="profile-stats-value">{{ sticker_performance[1][0] }}</span>
-                <img class="icon" alt="Goals" src="https://jok.im/rl/img/Goal_points_icon.png">
-                <br>
-                <span class="top"
-                      style="color:{{ sticker_performance[2][2] }}">Top {{ sticker_performance[2][1] }}% </span> <span
-                    class="profile-stats-value">{{ sticker_performance[2][0] }}</span>
-                <img class="icon" alt="Assists" src="https://jok.im/rl/img/Assist_points_icon.png">
-            </div>
-            <figure>
-                <figcaption><img alt={{ ranks[2] }} class="icon" src="https://jok.im/rl/img/{{ ranks[2] }}.png"> Sticker
-                </figcaption>
-                <img class="profile-pics"
-                     src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
-                     alt="Sticker">
-            </figure>
-            <div class="profile-stats">
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/Save_points_icon.png"> <span
-                    class="profile-stats-value">{{ sticker_performance[3][0] }}</span>
-                <span class="top"
-                      style="color:{{ sticker_performance[3][2] }}">Top {{ sticker_performance[3][1] }}% </span>
-                <br>
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/Shot_on_Goal_points_icon.png"> <span
-                    class="profile-stats-value">{{ sticker_performance[4][0] }}</span>
-                <span class="top"
-                      style="color:{{ sticker_performance[4][2] }}">Top {{ sticker_performance[4][1] }}% </span>
-                <br>
-                <img class="icon" alt="Goals"
-                     src="https://jok.im/rl/img/First_Touch_points_icon.png"> <span
-                    class="profile-stats-value">{{ sticker_performance[4][0] }}</span>
-                <span class="top"
-                      style="color:{{ sticker_performance[4][2] }}">Top {{ sticker_performance[4][1] }}% </span>
+            <div class="profile">
+                <div class="profile-stats-left">
+                    <span class="top" style="color:{{ sticker_performance[0][2] }}">Top {{ sticker_performance[0][1] }}%
+                    </span> <span class="profile-stats-value">{{ sticker_performance[0][0] }}</span>
+                    <img class="icon" alt="Score" src="https://jok.im/rl/img/MVP_points_icon.png">
+                    <br>
+                    <span class="top" style="color:{{ sticker_performance[1][2] }}">Top {{ sticker_performance[1][1] }}%
+                    </span> <span class="profile-stats-value">{{ sticker_performance[1][0] }}</span>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Goal_points_icon.png">
+                    <br>
+                    <span class="top" style="color:{{ sticker_performance[2][2] }}">Top {{ sticker_performance[2][1] }}%
+                    </span> <span class="profile-stats-value">{{ sticker_performance[2][0] }}</span>
+                    <img class="icon" alt="Assists" src="https://jok.im/rl/img/Assist_points_icon.png">
+                </div>
+                <figure>
+                    <figcaption><img alt={{ ranks[2] }} class="icon" src="https://jok.im/rl/img/{{ ranks[2] }}.png">
+                        Sticker
+                    </figcaption>
+                    <img class="profile-pics"
+                        src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
+                        alt="Sticker">
+                </figure>
+                <div class="profile-stats">
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Save_points_icon.png"> <span
+                        class="profile-stats-value">{{ sticker_performance[3][0] }}</span>
+                    <span class="top" style="color:{{ sticker_performance[3][2] }}">Top {{ sticker_performance[3][1] }}%
+                    </span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/Shot_on_Goal_points_icon.png"> <span
+                        class="profile-stats-value">{{ sticker_performance[4][0] }}</span>
+                    <span class="top" style="color:{{ sticker_performance[4][2] }}">Top {{ sticker_performance[4][1] }}%
+                    </span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/rl/img/First_Touch_points_icon.png"> <span
+                        class="profile-stats-value">{{ sticker_performance[4][0] }}</span>
+                    <span class="top" style="color:{{ sticker_performance[4][2] }}">Top {{ sticker_performance[4][1] }}%
+                    </span>
+                </div>
             </div>
         </div>
-    </div>
-    <hr>
-    <div class="winrates">
-        <div class="winrate-desc-flexbox">
-            <div class="winrate-desc">Total</div>
-            <div class="winrate-desc">Season</div>
-            <div class="winrate-desc">L100</div>
-            <div class="winrate-desc">L20</div>
-            <div class="winrate-desc">Session</div>
+        <hr>
+        <div class="winrates">
+            <div class="winrate-desc-flexbox">
+                <div class="winrate-desc">Total</div>
+                <div class="winrate-desc">Season</div>
+                <div class="winrate-desc">L100</div>
+                <div class="winrate-desc">L20</div>
+                <div class="winrate-desc">Session</div>
+            </div>
+            <div class="winrate-flexbox">
+                <div class="winrate">{{ winrates[0]|round(1) }}%</div>
+                <div class="winrate">{{ winrates[1]|round(1) }}%</div>
+                <div class="winrate">{{ winrates[2]|round(1) }}%</div>
+                <div class="winrate">{{ winrates[3]|round(1) }}%</div>
+                <div class="winrate">{{ winrates[4]|round(1) }}%</div>
+            </div>
         </div>
-        <div class="winrate-flexbox">
-            <div class="winrate">{{ winrates[0]|round(1) }}%</div>
-            <div class="winrate">{{ winrates[1]|round(1) }}%</div>
-            <div class="winrate">{{ winrates[2]|round(1) }}%</div>
-            <div class="winrate">{{ winrates[3]|round(1) }}%</div>
-            <div class="winrate">{{ winrates[4]|round(1) }}%</div>
+        <hr>
+        <div class="random-facts">
+            <h2>RANDOM FACTS</h2>
+            <ul>{% for fact in random_facts %}
+                <li>{{ fact[0] }}</li>{% endfor %}
+            </ul>
         </div>
-    </div>
-    <hr>
-    <div class="random-facts">
-        <h2>RANDOM FACTS</h2>
-        <ul>{% for fact in random_facts %}
-            <li>{{ fact[0] }}</li>{% endfor %}
-        </ul>
-    </div>
-    <hr>
-    <div class="session">
-        <h2>WIE LÄUFT DIE SESSION, P?</h2>
-        This section is under construction
-    </div>
-    <hr>
-    <div class="total-season-session">
-        <div class="infobox">
-            <table>
-                <caption>GRAND TOTAL</caption>
-                <tr>
-                    <th rowspan="2"></th>
-                    <th colspan="2">Knus</th>
-                    <th colspan="2">Puad</th>
-                    <th colspan="2">Sticker</th>
-                </tr>
-                <tr>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                </tr>
-                <tr>
-                    <td>Score</td>
-                    {% for goal in grand_total["Score"] %}
+        <hr>
+        <div class="session">
+            <h2>WIE LÄUFT DIE SESSION, P?</h2>
+            This section is under construction
+        </div>
+        <hr>
+        <div class="total-season-session">
+            <div class="infobox">
+                <table>
+                    <caption>GRAND TOTAL</caption>
+                    <tr>
+                        <th rowspan="2"></th>
+                        <th colspan="2">Knus</th>
+                        <th colspan="2">Puad</th>
+                        <th colspan="2">Sticker</th>
+                    </tr>
+                    <tr>
+                        <td>Σ</td>
+                        <td>ø</td>
+                        <td>Σ</td>
+                        <td>ø</td>
+                        <td>Σ</td>
+                        <td>ø</td>
+                    </tr>
+                    <tr>
+                        <td>Score</td>
+                        {% for goal in grand_total["Score"] %}
                         <td>{{ goal|round(2) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Goals</td>
-                    {% for goal in grand_total["Goals"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Goals</td>
+                        {% for goal in grand_total["Goals"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Assists</td>
-                    {% for goal in grand_total["Assists"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Assists</td>
+                        {% for goal in grand_total["Assists"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Saves</td>
-                    {% for goal in grand_total["Saves"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Saves</td>
+                        {% for goal in grand_total["Saves"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Shots</td>
-                    {% for goal in grand_total["Shots"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Shots</td>
+                        {% for goal in grand_total["Shots"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>MVPs</td>
-                    {% for goal in grand_total["MVPs"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>MVPs</td>
+                        {% for goal in grand_total["MVPs"] %}
                         <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
-                    {% endfor %}
-                </tr>
-            </table>
-        </div>
-        <div class="infobox">
-            <table>
-                <caption>THIS SEASON</caption>
-                <tr>
-                    <th rowspan="2"></th>
-                    <th colspan="2">Knus</th>
-                    <th colspan="2">Puad</th>
-                    <th colspan="2">Sticker</th>
-                </tr>
-                <tr>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                </tr>
-                <tr>
-                    <td>Score</td>
-                    {% for goal in season_data["Score"] %}
+                        {% endfor %}
+                    </tr>
+                </table>
+            </div>
+            <div class="infobox">
+                <table>
+                    <caption>THIS SEASON</caption>
+                    <tr>
+                        <th rowspan="2"></th>
+                        <th colspan="2">Knus</th>
+                        <th colspan="2">Puad</th>
+                        <th colspan="2">Sticker</th>
+                    </tr>
+                    <tr>
+                        <td>Σ</td>
+                        <td>ø</td>
+                        <td>Σ</td>
+                        <td>ø</td>
+                        <td>Σ</td>
+                        <td>ø</td>
+                    </tr>
+                    <tr>
+                        <td>Score</td>
+                        {% for goal in season_data["Score"] %}
                         <td>{{ goal|round(2) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Goals</td>
-                    {% for goal in season_data["Goals"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Goals</td>
+                        {% for goal in season_data["Goals"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Assists</td>
-                    {% for goal in season_data["Assists"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Assists</td>
+                        {% for goal in season_data["Assists"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Saves</td>
-                    {% for goal in season_data["Saves"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Saves</td>
+                        {% for goal in season_data["Saves"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Shots</td>
-                    {% for goal in season_data["Shots"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Shots</td>
+                        {% for goal in season_data["Shots"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>MVPs</td>
-                    {% for goal in season_data["MVPs"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>MVPs</td>
+                        {% for goal in season_data["MVPs"] %}
                         <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
-                    {% endfor %}
-                </tr>
-            </table>
-        </div>
-        <div class="infobox">
-            <table>
-                <caption>THIS SESSION</caption>
-                <tr>
-                    <th rowspan="2"></th>
-                    <th colspan="2">Knus</th>
-                    <th colspan="2">Puad</th>
-                    <th colspan="2">Sticker</th>
-                </tr>
-                <tr>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                </tr>
-                <tr>
-                    <td>Score</td>
-                    {% for goal in session_data["Score"] %}
+                        {% endfor %}
+                    </tr>
+                </table>
+            </div>
+            <div class="infobox">
+                <table>
+                    <caption>THIS SESSION</caption>
+                    <tr>
+                        <th rowspan="2"></th>
+                        <th colspan="2">Knus</th>
+                        <th colspan="2">Puad</th>
+                        <th colspan="2">Sticker</th>
+                    </tr>
+                    <tr>
+                        <td>Σ</td>
+                        <td>ø</td>
+                        <td>Σ</td>
+                        <td>ø</td>
+                        <td>Σ</td>
+                        <td>ø</td>
+                    </tr>
+                    <tr>
+                        <td>Score</td>
+                        {% for goal in session_data["Score"] %}
                         <td>{{ goal|round(2) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Goals</td>
-                    {% for goal in session_data["Goals"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Goals</td>
+                        {% for goal in session_data["Goals"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Assists</td>
-                    {% for goal in session_data["Assists"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Assists</td>
+                        {% for goal in session_data["Assists"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Saves</td>
-                    {% for goal in session_data["Saves"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Saves</td>
+                        {% for goal in session_data["Saves"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Shots</td>
-                    {% for goal in session_data["Shots"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>Shots</td>
+                        {% for goal in session_data["Shots"] %}
                         <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>MVPs</td>
-                    {% for goal in session_data["MVPs"] %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>MVPs</td>
+                        {% for goal in session_data["MVPs"] %}
                         <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
-                    {% endfor %}
-                </tr>
-            </table>
+                        {% endfor %}
+                    </tr>
+                </table>
+            </div>
         </div>
-    </div>
-    <hr>
-    <h3>Graphs</h3>
-    <div class="graphs">
-        <div class="graph-shell-small">
-            <canvas id="grief"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="wins_last_20"></canvas>
-        </div>
-        <!--div class="graph-shell-small">
+        <hr>
+        <h3>Graphs</h3>
+        <button type="button" onclick="adjustGraphs(100)">Last 100</button>
+        <div class="graphs">
+            <div class="graph-shell-small">
+                <canvas id="grief"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="wins_last_20"></canvas>
+            </div>
+            <!--div class="graph-shell-small">
             <canvas id="solo_goals"></canvas>
         </div>-->
-        <div class="graph-shell-small">
-            <canvas id="performance_score"></canvas>
+            <div class="graph-shell-small">
+                <canvas id="performance_score"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_goals"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_assists"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_saves"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_shots"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_share_score"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_share_goals"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_share_assists"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_share_saves"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="performance_share_shots"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="datesChart"></canvas>
+                <!--<button onmousedown="changeX()">Min 📈</button>-->
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="monthChart"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="yearsChart"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="weekdChart"></canvas>
+            </div>
         </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_goals"></canvas>
+        <hr>
+        <div class="general-info">
+            <div class="general-info-container">
+                <table>
+                    <tr>
+                        <td>Days since inception</td>
+                        <td>{{ days_since_inception | int }}</td>
+                    </tr>
+                    <tr>
+                        <td>Games</td>
+                        <td>{{ total_games }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tilt</td>
+                        <td>{{ tilt }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Average Session Length</td>
+                        <td>{{ average_session_length | round(2) }}</td>
+                    </tr>
+                </table>
+            </div>
         </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_score"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_goals"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="datesChart"></canvas>
-            <!--<button onmousedown="changeX()">Min 📈</button>-->
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="monthChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="yearsChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="weekdChart"></canvas>
-        </div>
-    </div>
-    <hr>
-    <div class="general-info">
-        <div class="general-info-container">
-            <table>
-                <tr>
-                    <td>Days since inception</td>
-                    <td>{{ days_since_inception | int }}</td>
-                </tr>
-                <tr>
-                    <td>Games</td>
-                    <td>{{ total_games }}</td>
-                </tr>
-                <tr>
-                    <td>Tilt</td>
-                    <td>{{ tilt }}%</td>
-                </tr>
-                <tr>
-                    <td>Average Session Length</td>
-                    <td>{{ average_session_length | round(2) }}</td>
-                </tr>
-            </table>
-        </div>
-    </div>
-    <hr>
-    <h3>LAST 5</h3>
-    <div class="last5">
-        <table class="container">
-            <thead>
-            <tr>
-                <th colspan="4">General</th>
-                <th colspan="6">Knus</th>
-                <th colspan="6">Puad</th>
-                <th colspan="6">Sticker</th>
-            </tr>
-            <tr>
-                <td>#</td>
-                <td>Date</td>
-                <td>Goals</td>
-                <td>Against</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            </thead>
-            {% for row in last_games %}
+        <hr>
+        <h3>LAST 5</h3>
+        <div class="last5">
+            <table class="container">
+                <thead>
+                    <tr>
+                        <th colspan="4">General</th>
+                        <th colspan="6">Knus</th>
+                        <th colspan="6">Puad</th>
+                        <th colspan="6">Sticker</th>
+                    </tr>
+                    <tr>
+                        <td>#</td>
+                        <td>Date</td>
+                        <td>Goals</td>
+                        <td>Against</td>
+                        <td>R</td>
+                        <td>S</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>S</td>
+                        <td>S</td>
+                        <td>R</td>
+                        <td>S</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>S</td>
+                        <td>S</td>
+                        <td>R</td>
+                        <td>S</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>S</td>
+                        <td>S</td>
+                    </tr>
+                </thead>
+                {% for row in last_games %}
                 <tr>{% for data in row %}
-                    <td>{{ data }}</td>{% endfor %}</tr>
-            {% endfor %}
-        </table>
-    </div>
-    <hr>
-    <h3>"FUN" FACTS</h3>
-    <div class="fun-facts">
-        <div class="fact-container">
-            <table>
-                <tr>
-                    <th style="width: 300px">Fact</th>
-                    <th>Occurrence</th>
-                    <th>Winrate</th>
-                    <th>Change</th>
+                    <td>{{ data }}</td>{% endfor %}
                 </tr>
-                <tbody>
-                {% for fact in fun_facts[0] %}
-                    <tr>
-                        <td>{{ fact[0] }}</td>
-                        <td>{{ (fact[1]*100) | round(1) }}%</td>
-                        <td>{{ (fact[2]*100) | round(1) }}%</td>
-                        <td>O</td>
-                    </tr>
                 {% endfor %}
-                </tbody>
             </table>
         </div>
-        <div class="fact-container">
-            <table>
-                <tr>
-                    <th style="width: 300px">Fact</th>
-                    <th>Occurrence</th>
-                    <th>Winrate</th>
-                    <th>Change</th>
-                </tr>
-                <tbody>
-                {% for fact in fun_facts[1] %}
+        <hr>
+        <h3>"FUN" FACTS</h3>
+        <div class="fun-facts">
+            <div class="fact-container">
+                <table>
                     <tr>
-                        <td>{{ fact[0] }}</td>
-                        <td>{{ (fact[1]*100) | round(1) }}%</td>
-                        <td>{{ (fact[2]*100) | round(1) }}%</td>
-                        <td>O</td>
+                        <th style="width: 300px">Fact</th>
+                        <th>Occurrence</th>
+                        <th>Winrate</th>
+                        <th>Change</th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    <tbody>
+                        {% for fact in fun_facts[0] %}
+                        <tr>
+                            <td>{{ fact[0] }}</td>
+                            <td>{{ (fact[1]*100) | round(1) }}%</td>
+                            <td>{{ (fact[2]*100) | round(1) }}%</td>
+                            <td>O</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="fact-container">
+                <table>
+                    <tr>
+                        <th style="width: 300px">Fact</th>
+                        <th>Occurrence</th>
+                        <th>Winrate</th>
+                        <th>Change</th>
+                    </tr>
+                    <tbody>
+                        {% for fact in fun_facts[1] %}
+                        <tr>
+                            <td>{{ fact[0] }}</td>
+                            <td>{{ (fact[1]*100) | round(1) }}%</td>
+                            <td>{{ (fact[2]*100) | round(1) }}%</td>
+                            <td>O</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-    <hr>
-    <h3>RECORDS</h3>
-    <div class="records">
-        <div class="records-part">
-            <table>
-                <tr>
-                    <th>Record</th>
-                    <th>Player</th>
-                    <th>Value</th>
-                    <th>Game ID</th>
-                    <th>Date</th>
-                </tr>
-                {% for record in record_games %}
+        <hr>
+        <h3>RECORDS</h3>
+        <div class="records">
+            <div class="records-part">
+                <table>
+                    <tr>
+                        <th>Record</th>
+                        <th>Player</th>
+                        <th>Value</th>
+                        <th>Game ID</th>
+                        <th>Date</th>
+                    </tr>
+                    {% for record in record_games %}
                     <tr>
                         <td rowspan="4">
                             {{ record }}
                         </td>
                     </tr>
                     {% for instances in record_games[record] %}
-                        <tr>
-                            {% for stat in instances %}
-                                <td>{{ stat }}</td>
-                            {% endfor %}
-                        </tr>
+                    <tr>
+                        {% for stat in instances %}
+                        <td>{{ stat }}</td>
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
 
-                {% endfor %}
-            </table>
-        </div>
-        <div class="records-part">
-            <table>
-                <tr>
-                    <th>Record</th>
-                    <th>Player</th>
-                    <th>Value</th>
-                    <th>Game ID</th>
-                    <th>Date</th>
-                </tr>
-                {% for record in record_games2 %}
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="records-part">
+                <table>
+                    <tr>
+                        <th>Record</th>
+                        <th>Player</th>
+                        <th>Value</th>
+                        <th>Game ID</th>
+                        <th>Date</th>
+                    </tr>
+                    {% for record in record_games2 %}
                     <tr>
                         <td rowspan="4">
                             {{ record }}
                         </td>
                     </tr>
                     {% for instances in record_games2[record] %}
-                        <tr>
-                            {% for stat in instances %}
-                                <td>{{ stat }}</td>
-                            {% endfor %}
-                        </tr>
+                    <tr>
+                        {% for stat in instances %}
+                        <td>{{ stat }}</td>
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
 
-                {% endfor %}
-            </table>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <hr>
+        <h3>GRAPHS</h3>
+        <div class="graphs">
+            <div class="graph-shell-small">
+                <canvas id="winrate"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="cumulative_stats_score"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="cumulative_stats_goals"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="cumulative_stats_assists"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="cumulative_stats_saves"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="cumulative_stats_shots"></canvas>
+            </div>
+            <div class="graph-shell-small">
+                <canvas id="mvp_lvp_score"></canvas>
+            </div>
         </div>
     </div>
-    <hr>
-    <h3>GRAPHS</h3>
-    <div class="graphs">
-        <div class="graph-shell-small">
-            <canvas id="winrate"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_score"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_goals"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="mvp_lvp_score"></canvas>
-        </div>
-    </div>
-</div>
 </body>
+
 </html>

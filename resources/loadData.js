@@ -9,6 +9,11 @@ for (let i = 0; i < allCharts.length; i++) {
     });
 }
 
+function adjustGraphs(last) {
+    console.log("hit");
+    document.getElementById("winrate").chart.scales.x.max = 100
+}
+
 async function fetchData(graphName) {
     return await fetch('https://jok.im/rl/data/' + graphName).then(json => json.json());
 }

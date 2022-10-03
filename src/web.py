@@ -1,10 +1,10 @@
+import itertools
 from wsgiref.simple_server import make_server
 
 import pyramid.response
 from pyramid.config import Configurator
 from pyramid.view import view_config
 
-import itertools
 import graphs as g
 import queries as q
 import random_facts as r
