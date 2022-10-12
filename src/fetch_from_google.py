@@ -21,7 +21,8 @@ def refresh_data():
     # Insert if data does not match
     if game_data:
         for game in game_data:
-            queries.insert_game_data(game)
+            if all(game):
+                queries.insert_game_data(game)
 
 
 refresh_data()
