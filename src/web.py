@@ -5,6 +5,7 @@ import pyramid.response
 from pyramid.config import Configurator
 from pyramid.view import view_config
 
+import fetch_from_google
 import graphs as g
 import queries as q
 import random_facts as r
@@ -24,6 +25,7 @@ def data(request) -> dict:
     renderer='../resources/index.jinja2'
 )
 def main(request) -> dict:
+    fetch_from_google.refresh_data()
     max_id = q.max_id()
     record_games = q.build_record_games()
     return {
@@ -48,17 +50,6 @@ def main(request) -> dict:
 
 
 @view_config(
-    route_name='insert'
-)
-def insert_get(request):
-    request_data = request.params
-    if not request_data or q.insert_game_data(request_data):
-        return pyramid.response.FileResponse('../resources/insert.html')
-    else:
-        return pyramid.response.FileResponse('../resources/insert_error.html')
-
-
-@view_config(
     route_name='img'
 )
 def img(request):
@@ -78,7 +69,6 @@ if __name__ == '__main__':
     with Configurator() as config:
         config.include('pyramid_jinja2')
         config.add_route('main', '/')
-        config.add_route('insert', 'insert')
         config.add_route('data', 'data/{type}')
         config.add_route('img', 'img/{img}')
         config.add_route('static', 'static/{file}')

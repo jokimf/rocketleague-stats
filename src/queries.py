@@ -14,16 +14,15 @@ def max_id() -> int:
     return c.execute("SELECT MAX(gameID) FROM games").fetchone()[0]
 
 
-def insert_game_data(d) -> bool:
-    new_id: int = max_id() + 1
+def insert_game_data(d: List) -> bool:
     try:
-        c.execute('INSERT INTO games VALUES (?,?,?,?)', (new_id, d['date'], d['goals'], d['against']))
+        c.execute('INSERT INTO games VALUES (?,?,?,?)', (d[0], d[1], d[3], d[4]))
         c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-                  (new_id, 0, d['kRank'], d['kScore'], d['kGoals'], d['kAssists'], d['kSaves'], d['kShots']))
+                  (d[0], 0, d[5], d[6], d[7], d[8], d[9], d[10]))
         c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-                  (new_id, 1, d['pRank'], d['pScore'], d['pGoals'], d['pAssists'], d['pSaves'], d['pShots']))
+                  (d[0], 1, d[11], d[12], d[13], d[14], d[15], d[16]))
         c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-                  (new_id, 2, d['sRank'], d['sScore'], d['sGoals'], d['sAssists'], d['sSaves'], d['sShots']))
+                  (d[0], 2, d[17], d[18], d[19], d[20], d[21], d[22]))
         conn.commit()
         return True
     except sqlite3.Error as e:
@@ -445,14 +444,14 @@ def average_all(player_id: int, stat: str) -> list[Any]:
 
 
 def performance_profile_view(p_id: int):
-    def performance_rank(stat:str, p_id:int) -> int: # ??? Bugged stat in first query
+    def performance_rank(stat: str, p_id: int) -> int:  # ??? Bugged stat in first query
         return c.execute(f"""
             SELECT n 
             FROM 
 	            (SELECT row_number() OVER (ORDER BY {stat} DESC) AS n, gameID, ? 
 	            FROM performance WHERE playerID = ?) 
             WHERE gameID = ?
-        """,(stat, p_id, max_id())).fetchone()[0]
+        """, (stat, p_id, max_id())).fetchone()[0]
 
     def color(value: int) -> str:
         if value <= 2:
@@ -469,15 +468,15 @@ def performance_profile_view(p_id: int):
             return "IndianRed"
 
     values = c.execute('SELECT * FROM performance WHERE playerID = ? AND gameID = ?', (p_id, max_id())).fetchone()[2:]
-    top = [round(performance_rank('score', p_id) / max_id()*100,1), 
-           round(performance_rank('goals', p_id) / max_id()*100,1), 
-           round(performance_rank('assists', p_id) / max_id()*100,1), 
-           round(performance_rank('saves', p_id) / max_id()*100,1),
-           round(performance_rank('shots', p_id) / max_id()*100,1)]
+    top = [round(performance_rank('score', p_id) / max_id() * 100, 1),
+           round(performance_rank('goals', p_id) / max_id() * 100, 1),
+           round(performance_rank('assists', p_id) / max_id() * 100, 1),
+           round(performance_rank('saves', p_id) / max_id() * 100, 1),
+           round(performance_rank('shots', p_id) / max_id() * 100, 1)]
 
-    print(performance_rank('score',0))
-    print(performance_rank('score',1))
-    print(performance_rank('score',2))
+    print(performance_rank('score', 0))
+    print(performance_rank('score', 1))
+    print(performance_rank('score', 2))
     return list(zip(values, top, [color(x) for x in top]))
 
 
