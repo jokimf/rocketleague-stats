@@ -24,7 +24,7 @@ def data(request) -> dict:
     renderer='../resources/index.jinja2'
 )
 def main(request) -> dict:
-    fetch_from_google.refresh_data()
+    fetch_from_google.fetch_from_sheets()
     max_id = q.max_id()
     record_games = q.build_record_games()
     return {

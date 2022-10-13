@@ -219,7 +219,7 @@ def ff_team_concedes_x_times(x: int) -> tuple:
     return c.execute("""
     SELECT CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) / COUNT(g.gameID) AS oc,
         CAST(SUM(IIF(g.against = ? AND w.gameID IS NOT NULL,1,0)) AS FLOAT) / 
-		CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) AS wr
+        CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) AS wr
         FROM games g LEFT JOIN wins w ON g.gameID = w.gameID
     """, (x, x, x)).fetchone()
 
@@ -428,14 +428,14 @@ def player_stat_of_last_game(player_id: int, stat: str) -> int:
 
 
 def performance_profile_view(p_id: int):
-    def performance_rank(stat: str, p_id: int) -> int:  # ??? Bugged stat in first query
+    def performance_rank(stat: str, player_id: int) -> int:  # ??? Bugged stat in first query
         return c.execute(f"""
             SELECT n 
             FROM 
-	            (SELECT row_number() OVER (ORDER BY {stat} DESC) AS n, gameID, ? 
-	            FROM performance WHERE playerID = ?) 
-            WHERE gameID = ?
-        """, (stat, p_id, max_id())).fetchone()[0]
+                (SELECT row_number() OVER (ORDER BY {stat} DESC) AS n, gameID, ? 
+                FROM performance WHERE playerID = ?) 
+                WHERE gameID = ?
+        """, (stat, player_id, max_id())).fetchone()[0]
 
     def color(value: float) -> str:
         if value <= 2:
@@ -466,7 +466,8 @@ def player_name(player_id: int) -> str:
 
 def latest_session_main_data() -> list[Any]:
     return c.execute(
-        'SELECT sessionID,date,wins,losses,Goals,Against,quality FROM sessions ORDER BY SessionID desc LIMIT 1').fetchone()
+        '''SELECT sessionID, date, wins, losses, Goals, Against, quality
+           FROM sessions ORDER BY SessionID desc LIMIT 1''').fetchone()
 
 
 def last_two_sessions_dates() -> list[Any]:
@@ -573,9 +574,12 @@ def seasons_dashboard():
         SUM(IIF(g.goals > g.against,1,0)) 'wins', 
         SUM(IIF(g.goals < g.against,1,0)) 'losses', 
         CAST(SUM(IIF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT) 'wr', 
-        AVG(k.score) 'k_score', AVG(k.goals) 'k_goals', AVG(k.assists) 'k_assists', AVG(k.saves) 'k_saves', AVG(k.shots) 'k_shots',
-        AVG(p.score) 'p_score', AVG(p.goals) 'p_goals', AVG(p.assists) 'p_assists', AVG(p.saves) 'p_saves', AVG(p.shots) 'p_shots',
-        AVG(s.score) 's_score', AVG(s.goals) 's_goals', AVG(s.assists) 's_assists', AVG(s.saves) 's_saves', AVG(s.shots) 's_shots'
+        AVG(k.score) 'k_score', AVG(k.goals) 'k_goals', AVG(k.assists) 'k_assists', 
+        AVG(k.saves) 'k_saves', AVG(k.shots) 'k_shots',
+        AVG(p.score) 'p_score', AVG(p.goals) 'p_goals', AVG(p.assists) 'p_assists', 
+        AVG(p.saves) 'p_saves', AVG(p.shots) 'p_shots',
+        AVG(s.score) 's_score', AVG(s.goals) 's_goals', AVG(s.assists) 's_assists', 
+        AVG(s.saves) 's_saves', AVG(s.shots) 's_shots'
         FROM games g 
         LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date 
         LEFT JOIN knus k ON g.gameID = k.gameID
@@ -756,7 +760,8 @@ def average_games_per_day(start_date: str, end_date: str) -> float:
 # Winrate of gameNr in session
 def winrate_game_in_session():
     return c.execute("""
-    SELECT gnis, CAST(SUM(IIF(goals>against,1,0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS wrm, COUNT(gameID) AS gcount
+    SELECT gnis, CAST(SUM(IIF(goals>against,1,0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS wrm, 
+        COUNT(gameID) AS gcount
     FROM (
         SELECT row_number() OVER(PARTITION by date) AS gnis, gameID, goals, against
         FROM games) p

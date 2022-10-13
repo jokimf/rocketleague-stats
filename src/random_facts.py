@@ -19,7 +19,8 @@ def timer_func(func):
 
 
 def generate_random_facts():
-    union = record_session() + milestone_facts() + date_facts() + last_session_facts() + last_month_summary() + result_facts() + game_count_facts() + close_to_record() + outclassed() + at_least_1_streak()
+    union = record_session() + milestone_facts() + date_facts() + last_session_facts() + last_month_summary() + \
+            result_facts() + game_count_facts() + close_to_record() + outclassed() + at_least_1_streak()
     return sorted(union, key=lambda i: i[1], reverse=True)
 
 
@@ -64,7 +65,8 @@ def last_session_facts() -> list[tuple]:
         same_date = q.session_data_by_date((today - relativedelta(years=years_ago)).strftime("%Y-%m-%d"))
         if same_date:
             facts.append((
-                f'On this day, {years_ago} years ago, you played a session with {same_date[2]} wins and {same_date[3]} losses!',
+                f'''On this day, {years_ago} years ago, you played a session 
+                with {same_date[2]} wins and {same_date[3]} losses!''',
                 3))
     return facts
 
@@ -273,21 +275,22 @@ def record_session() -> list[tuple]:
     session_count = q.session_count()
     session_limit = math.ceil(session_count)  # top 2%
 
-    session_record_data = q.record_games_per_session(session_limit)
+    data = q.record_games_per_session(session_limit)
     next_milestone_rank = None
     next_milestone_value = None
     for rank in range(0, session_limit):
-        if (rank + 1) % 5 == 0 and session_record_data[rank][0] != session_count:
+        if (rank + 1) % 5 == 0 and data[rank][0] != session_count:
             next_milestone_rank = rank + 1
-            next_milestone_value = session_record_data[rank][1]
-        if session_record_data[rank][0] == session_count and session_record_data[rank][1] > 10:
+            next_milestone_value = data[rank][1]
+        if data[rank][0] == session_count and data[rank][1] > 10:
             facts.append((
-                f'You played {session_record_data[rank][1]} games this session. It ranks at spot number {rank + 1} in that regard.',
+                f'You played {data[rank][1]} games this session. It ranks at spot number {rank + 1} in that regard.',
                 4))
             if next_milestone_value is not None and next_milestone_rank is not None:
-                games_to_reach_milestone = next_milestone_value - session_record_data[rank][1]
+                games_to_reach_milestone = next_milestone_value - data[rank][1]
                 facts.append((
-                    f'To reach rank {next_milestone_rank} in games played this session, you need to play {1 if games_to_reach_milestone == 0 else games_to_reach_milestone} more games.',
+                    f'''To reach rank {next_milestone_rank} in games played this session, you need to 
+                    play {1 if games_to_reach_milestone == 0 else games_to_reach_milestone} more games.''',
                     4))
     return facts
 

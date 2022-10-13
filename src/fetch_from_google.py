@@ -7,7 +7,7 @@ scope = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 rl_doc = '1zjW4_TEsyd4yDSsVuZsrUritfwHgHZQ3e0t9GnWXrKA'
 
 
-def refresh_data():
+def fetch_from_sheets():
     # Latest game on website
     latest_id = queries.max_id()
 
