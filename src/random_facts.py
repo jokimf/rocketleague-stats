@@ -118,19 +118,19 @@ def result_facts() -> list[tuple]:
     for entry in data:
         if entry[0] == goals and entry[1] == against:
             total, percent = entry[2], entry[3]
-            if percent >= 0.0125:
+            if 0.0125 <= percent <= 0.25:
                 facts.append(
                     (
                         f'The result of last match was rare, in total it happened {total} times ('
                         f'{round(percent * 100, 4)}%)',
                         3))
-            elif percent >= 0.00625:
+            elif 0.00625 <= percent <= 0.25:
                 facts.append(
                     (
                         f'The result of last match was really rare, in total it happened {total} times ('
                         f'{round(percent * 100, 4)}%)',
                         4))
-            else:
+            elif percent <= 0.25:
                 facts.append(
                     (
                         f"The result of last match only happened for the {total}. time! That's only "

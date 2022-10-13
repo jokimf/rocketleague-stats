@@ -6,3 +6,4 @@ __pycache__
 steamkey.txt
 credentials.json
 token.json
+.db
