@@ -1,7 +1,6 @@
 import datetime
-import random
 import sqlite3
-from typing import Any, List
+from typing import Any
 
 database_path = '../resources/test.db'
 conn = sqlite3.connect(database_path)
@@ -14,15 +13,13 @@ def max_id() -> int:
     return c.execute("SELECT MAX(gameID) FROM games").fetchone()[0]
 
 
-def insert_game_data(d: List) -> bool:
+# Inserts game data fetched from Google Sheets API
+def insert_game_data(d: list) -> bool:
     try:
         c.execute('INSERT INTO games VALUES (?,?,?,?)', (d[0], d[1], d[3], d[4]))
-        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-                  (d[0], 0, d[5], d[6], d[7], d[8], d[9], d[10]))
-        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-                  (d[0], 1, d[11], d[12], d[13], d[14], d[15], d[16]))
-        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)',
-                  (d[0], 2, d[17], d[18], d[19], d[20], d[21], d[22]))
+        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)', (d[0], 0, d[5], d[6], d[7], d[8], d[9], d[10]))
+        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)', (d[0], 1, d[11], d[12], d[13], d[14], d[15], d[16]))
+        c.execute('INSERT INTO scores VALUES (?,?,?,?,?,?,?,?)', (d[0], 2, d[17], d[18], d[19], d[20], d[21], d[22]))
         conn.commit()
         return True
     except sqlite3.Error as e:
@@ -49,14 +46,6 @@ def last_x_games_stats(limit: int = 5) -> list[Any]:
     """, (limit,)).fetchall()
 
 
-def team_goals_in_range(start, end) -> int:
-    return c.execute("SELECT SUM(goals) FROM games WHERE gameID >= ? AND gameID <= ?", (start, end)).fetchone()[0]
-
-
-def team_against_in_range(start, end) -> int:
-    return c.execute("SELECT SUM(against) FROM games WHERE gameID >= ? AND gameID <= ?", (start, end)).fetchone()[0]
-
-
 def wins_in_range(start, end) -> int:
     return c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= ? AND gameID <= ?",
                      (start, end)).fetchone()[0]
@@ -69,6 +58,12 @@ def losses_in_range(start, end) -> int:
 
 # Used for general stat tables
 def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
+    def team_goals_in_range() -> int:
+        return c.execute("SELECT SUM(goals) FROM games WHERE gameID >= ? AND gameID <= ?", (start, end)).fetchone()[0]
+
+    def team_against_in_range() -> int:
+        return c.execute("SELECT SUM(against) FROM games WHERE gameID >= ? AND gameID <= ?", (start, end)).fetchone()[0]
+
     # Input validation
     if end is None:
         end = max_id()
@@ -79,8 +74,8 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
     wins = wins_in_range(start, end)
     losses = losses_in_range(start, end)
     games = end - start + 1
-    goals = team_goals_in_range(start, end)
-    against = team_against_in_range(start, end)
+    goals = team_goals_in_range()
+    against = team_against_in_range()
 
     def formatted_over_time_box_query(stat: str) -> tuple:
         if stat not in possible_stats:
@@ -113,7 +108,7 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
 
 # "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
 # p1 > p2+p3
-def ff_solo_carry(player_id: int) -> tuple:
+def ff_solo_carry(player_id: int) -> tuple:  # TODO: unused
     if player_id < 0 or player_id > 2:
         raise ValueError('No player_id higher than 2 or less than 0 permitted.')
     return c.execute("""
@@ -209,6 +204,7 @@ def ff_irrelevant(player_id: int) -> tuple:
     """, (player_id,)).fetchone()
 
 
+# TODO: rework next to queries into own table
 def ff_team_scores_x_times(x: int) -> tuple:
     return c.execute("""
     SELECT CAST(SUM(IIF(gGoals = ?,1,0)) AS FLOAT) / COUNT(gID) AS oc,
@@ -246,7 +242,6 @@ def last_result() -> tuple:
 
 # - RECORD GAME QUERIES - #
 def record_games_per_session(limit: int = 1) -> list[Any]:
-    # "SELECT date, COUNT(date) AS counter FROM games GROUP BY date ORDER BY counter DESC, date ASC LIMIT ?"
     return c.execute('SELECT sessionID, wins+losses FROM sessions ORDER BY wins+losses DESC LIMIT ?',
                      (limit,)).fetchall()
 
@@ -408,7 +403,9 @@ def build_record_games():
 
 
 # Frontpage QUERIES
-def tilt():  # TODO
+def tilt():  # TODO: Write tilt-o-meter
+    # Enemy goals last 14 days
+    # Winrate
     return 5
 
 
@@ -430,19 +427,6 @@ def player_stat_of_last_game(player_id: int, stat: str) -> int:
                      (player_id,)).fetchone()[0]
 
 
-def player_average_all_games(player_id: int, stat: str) -> int:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute(f'SELECT AVG({stat}) FROM scores WHERE playerID = ?', (player_id,)).fetchone()[0]
-
-
-def average_all(player_id: int, stat: str) -> list[Any]:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute(f'SELECT {stat} FROM performance WHERE playerID = ?', (player_id,)).fetchall()
-    return [x[0] for x in data]
-
-
 def performance_profile_view(p_id: int):
     def performance_rank(stat: str, p_id: int) -> int:  # ??? Bugged stat in first query
         return c.execute(f"""
@@ -453,7 +437,7 @@ def performance_profile_view(p_id: int):
             WHERE gameID = ?
         """, (stat, p_id, max_id())).fetchone()[0]
 
-    def color(value: int) -> str:
+    def color(value: float) -> str:
         if value <= 2:
             return "Orange;font-weight:bolder"
         elif value <= 10:
@@ -473,39 +457,14 @@ def performance_profile_view(p_id: int):
            round(performance_rank('assists', p_id) / max_id() * 100, 1),
            round(performance_rank('saves', p_id) / max_id() * 100, 1),
            round(performance_rank('shots', p_id) / max_id() * 100, 1)]
-
-    print(performance_rank('score', 0))
-    print(performance_rank('score', 1))
-    print(performance_rank('score', 2))
     return list(zip(values, top, [color(x) for x in top]))
-
-
-def performance(player_id: int, stat: str) -> int:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute(f'SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
-                     (player_id,)).fetchone()[0]
-
-
-def performance100(player_id: int, stat: str) -> int:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute(f'SELECT {stat} FROM performance100 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
-                     (player_id,)).fetchone()[0]
-
-
-def performance250(player_id: int, stat: str) -> int:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    return c.execute(f'SELECT {stat} FROM performance250 WHERE playerID = ? ORDER BY gameID DESC LIMIT 1',
-                     (player_id,)).fetchone()[0]
 
 
 def player_name(player_id: int) -> str:
     return c.execute('SELECT name FROM players WHERE playerID = ?', (player_id,)).fetchone()[0]
 
 
-def latest_session_main_data() -> List[Any]:
+def latest_session_main_data() -> list[Any]:
     return c.execute(
         'SELECT sessionID,date,wins,losses,Goals,Against,quality FROM sessions ORDER BY SessionID desc LIMIT 1').fetchone()
 
@@ -533,7 +492,7 @@ def session_count() -> int:
     return c.execute("SELECT COUNT(1) FROM sessions").fetchone()[0]
 
 
-def ranks() -> List:
+def ranks() -> list[str]:
     ranks_list = []
     for i in range(0, 3):
         ranks_list.append(c.execute(
@@ -555,7 +514,7 @@ def session_start_id() -> int:
     return c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1").fetchone()[0]
 
 
-def winrates() -> List:
+def winrates() -> list:
     latest_game_id = max_id()
     season_start = season_start_id()
     last_session = latest_session_main_data()
@@ -570,45 +529,45 @@ def winrates() -> List:
     return winrates_list
 
 
-def build_fun_facts() -> List:
-    def format_ff(title: str, function):
+def build_fun_facts() -> list:
+    def format_fun_facts(title: str, function):
         return [title] + list(function)
 
-    return [[format_ff("CG shot six or more times", ff_six_or_more_shots()),
-             format_ff("Everyone scored", ff_everyone_scored()),
-             format_ff("No solo goals were scored", ff_no_solo_goals()),
-             format_ff("CG concedes zero goals", ff_team_concedes_x_times(0)),
-             format_ff("CG concedes one goals", ff_team_concedes_x_times(1)),
-             format_ff("CG concedes two goals", ff_team_concedes_x_times(2)),
-             format_ff("CG concedes three goals", ff_team_concedes_x_times(3)),
-             format_ff("CG concedes four goals", ff_team_concedes_x_times(4)),
-             format_ff("CG concedes five goals", ff_team_concedes_x_times(5)),
-             format_ff("CG scored zero goals", ff_team_scores_x_times(0)),
-             format_ff("CG scored one goal", ff_team_scores_x_times(1)),
-             format_ff("CG scored two goals", ff_team_scores_x_times(2)),
-             format_ff("CG scored three goals", ff_team_scores_x_times(3)),
-             format_ff("CG scored four goals", ff_team_scores_x_times(4)),
-             format_ff("CG scored five goals", ff_team_scores_x_times(5))],
-            [format_ff("Knus is irrelevant", ff_irrelevant(0)),
-             format_ff("Puad is irrelevant", ff_irrelevant(1)),
-             format_ff("Sticker is irrelevant", ff_irrelevant(2)),
-             format_ff("Knus has at least one assist", ff_at_least_one_assist(0)),
-             format_ff("Puad has at least one assist", ff_at_least_one_assist(1)),
-             format_ff("Sticker has at least one assist", ff_at_least_one_assist(2)),
-             format_ff("Knus did not score", ff_did_not_score(0)),
-             format_ff("Puad did not score", ff_did_not_score(1)),
-             format_ff("Sticker did not score", ff_did_not_score(2)),
-             format_ff("Knus scored more than 500 points", ff_more_than_500(0)),
-             format_ff("Puad scored more than 500 points", ff_more_than_500(1)),
-             format_ff("Sticker scored more than 500 points", ff_more_than_500(2)),
-             format_ff("Knus has two or more saves", ff_two_or_more_saves(0)),
-             format_ff("Puad has two or more saves", ff_two_or_more_saves(1)),
-             format_ff("Sticker has two or more saves", ff_two_or_more_saves(2)),
+    return [[format_fun_facts("CG shot six or more times", ff_six_or_more_shots()),
+             format_fun_facts("Everyone scored", ff_everyone_scored()),
+             format_fun_facts("No solo goals were scored", ff_no_solo_goals()),
+             format_fun_facts("CG concedes zero goals", ff_team_concedes_x_times(0)),
+             format_fun_facts("CG concedes one goals", ff_team_concedes_x_times(1)),
+             format_fun_facts("CG concedes two goals", ff_team_concedes_x_times(2)),
+             format_fun_facts("CG concedes three goals", ff_team_concedes_x_times(3)),
+             format_fun_facts("CG concedes four goals", ff_team_concedes_x_times(4)),
+             format_fun_facts("CG concedes five goals", ff_team_concedes_x_times(5)),
+             format_fun_facts("CG scored zero goals", ff_team_scores_x_times(0)),
+             format_fun_facts("CG scored one goal", ff_team_scores_x_times(1)),
+             format_fun_facts("CG scored two goals", ff_team_scores_x_times(2)),
+             format_fun_facts("CG scored three goals", ff_team_scores_x_times(3)),
+             format_fun_facts("CG scored four goals", ff_team_scores_x_times(4)),
+             format_fun_facts("CG scored five goals", ff_team_scores_x_times(5))],
+            [format_fun_facts("Knus is irrelevant", ff_irrelevant(0)),
+             format_fun_facts("Puad is irrelevant", ff_irrelevant(1)),
+             format_fun_facts("Sticker is irrelevant", ff_irrelevant(2)),
+             format_fun_facts("Knus has at least one assist", ff_at_least_one_assist(0)),
+             format_fun_facts("Puad has at least one assist", ff_at_least_one_assist(1)),
+             format_fun_facts("Sticker has at least one assist", ff_at_least_one_assist(2)),
+             format_fun_facts("Knus did not score", ff_did_not_score(0)),
+             format_fun_facts("Puad did not score", ff_did_not_score(1)),
+             format_fun_facts("Sticker did not score", ff_did_not_score(2)),
+             format_fun_facts("Knus scored more than 500 points", ff_more_than_500(0)),
+             format_fun_facts("Puad scored more than 500 points", ff_more_than_500(1)),
+             format_fun_facts("Sticker scored more than 500 points", ff_more_than_500(2)),
+             format_fun_facts("Knus has two or more saves", ff_two_or_more_saves(0)),
+             format_fun_facts("Puad has two or more saves", ff_two_or_more_saves(1)),
+             format_fun_facts("Sticker has two or more saves", ff_two_or_more_saves(2)),
              ]]
 
 
 # Season queries
-
+# TODO: unused
 def seasons_dashboard():
     return c.execute("""SELECT se.season_name, 
         SUM(IIF(g.goals > g.against,1,0)) 'wins', 
@@ -626,6 +585,7 @@ def seasons_dashboard():
 
 
 # UNUSED #
+# TODO: use all these queries
 def mvp_wins(player_id, start=1, end=None):
     if end is None:
         end = max_id()

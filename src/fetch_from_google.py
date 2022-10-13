@@ -14,8 +14,7 @@ def refresh_data():
     # Google API
     credentials = Credentials.from_authorized_user_file('../resources/token.json', scope)
     service = build('sheets', 'v4', credentials=credentials)
-    sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=rl_doc, range=f'Games!A{latest_id + 1}:W').execute()
+    result = service.spreadsheets().values().get(spreadsheetId=rl_doc, range=f'Games!A{latest_id + 1}:W').execute()
     game_data = result.get('values', [])
 
     # Insert if data does not match
@@ -23,6 +22,3 @@ def refresh_data():
         for game in game_data:
             if all(game):
                 queries.insert_game_data(game)
-
-
-refresh_data()

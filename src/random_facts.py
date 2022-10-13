@@ -1,13 +1,10 @@
 import math
+import time
+from datetime import datetime, timedelta
+
+from dateutil.relativedelta import relativedelta
 
 import queries as q
-import statistics
-from datetime import date, datetime, timedelta
-from dateutil.relativedelta import relativedelta
-from typing import Tuple, List
-
-import time
-import timeit
 
 
 def timer_func(func):
@@ -28,7 +25,7 @@ def generate_random_facts():
 
 # Things related to date
 @timer_func
-def date_facts() -> List[Tuple]:
+def date_facts() -> list[tuple]:
     facts = []
     # TODO: Do more special date facts
     # date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
@@ -43,7 +40,7 @@ def date_facts() -> List[Tuple]:
 
 # Last session was xy
 @timer_func
-def last_session_facts() -> List[Tuple]:
+def last_session_facts() -> list[tuple]:
     facts = []
     session_id, session_date, wins, losses, goals, against, quality = q.latest_session_main_data()
 
@@ -73,22 +70,22 @@ def last_session_facts() -> List[Tuple]:
 
 
 @timer_func
-def game_count_facts() -> List[Tuple]:
+def game_count_facts() -> list[tuple]:
     facts = []
     month, year, total = q.game_amount_this_month(), q.game_amount_this_year(), q.max_id()
-    if total % 100 == 0:
+    if total % 100 == 0 and total > 0:
         facts.append((f'You just played the {total}th game in total.', 4))
 
-    if year % 50 == 0:
+    if year % 50 == 0 and year > 0:
         facts.append((f'You just played the {year}th game this year.', 4))
 
-    if month % 25 == 0:
+    if month % 25 == 0 and month > 0:
         facts.append((f'You just played the {month}th game this month.', 3))
     return facts
 
 
 @timer_func
-def last_month_summary() -> List[Tuple]:
+def last_month_summary() -> list[tuple]:
     facts = []
     games_this_month = q.game_amount_this_month()
 
@@ -111,7 +108,7 @@ def last_month_summary() -> List[Tuple]:
 
 # Unusual result
 @timer_func
-def result_facts() -> List[Tuple]:
+def result_facts() -> list[tuple]:
     facts = []
     data = q.results_table()
     goals, against = q.last_result()
@@ -156,7 +153,7 @@ def result_facts() -> List[Tuple]:
 
 # Player reaches milestone in stat y
 @timer_func
-def milestone_facts() -> List[Tuple]:
+def milestone_facts() -> list[tuple]:
     facts = []
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 
@@ -172,7 +169,7 @@ def milestone_facts() -> List[Tuple]:
 
 # Came close to a record
 @timer_func
-def close_to_record() -> List[Tuple]:  # TODO: make it faster
+def close_to_record() -> list[tuple]:  # TODO: make it faster
     facts = []
 
     # Record games
@@ -270,7 +267,7 @@ def close_to_record() -> List[Tuple]:  # TODO: make it faster
 
 
 @timer_func
-def record_session() -> List[Tuple]:
+def record_session() -> list[tuple]:
     facts = []
     # TODO: Session is close to being a record session
     session_count = q.session_count()
@@ -296,19 +293,19 @@ def record_session() -> List[Tuple]:
 
 
 # X has double the amount of Y, also session/season based
-def outclassed() -> List[Tuple]:
+def outclassed() -> list[tuple]:
     facts = []
     return facts
 
 
 # 'At least 1' streak in Goals/Assists/Saves
-def at_least_1_streak() -> List[Tuple]:
+def at_least_1_streak() -> list[tuple]:
     facts = []
     return facts
 
 
 # Streak of stats
-def streak() -> List[Tuple]:
+def streak() -> list[tuple]:
     # MVP/LVP streaks
     # x goals in succession
     facts = []

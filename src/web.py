@@ -1,4 +1,3 @@
-import itertools
 from wsgiref.simple_server import make_server
 
 import pyramid.response
@@ -45,7 +44,7 @@ def main(request) -> dict:
         "record_games2": record_games[1],
         "knus_performance": q.performance_profile_view(0),
         "puad_performance": q.performance_profile_view(1),
-        "sticker_performance": q.performance_profile_view(2)
+        "st_performance": q.performance_profile_view(2)
     }
 
 
