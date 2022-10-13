@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link rel="stylesheet" href="https://jok.im/rl/static/styles.css">
-    <script src="https://jok.im/rl/static/loadData.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -140,8 +140,24 @@
     </div>
     <hr>
     <div class="session">
-        <h2>WIE LÄUFT DIE SESSION, P?</h2>
-        This section is under construction
+        <h2>SESSION DETAILS</h2>
+        {% for result in w_and_l %}
+            {% if result=="W" %}
+                <div style="color:green; display:inline; font-size: x-large; font-weight: bold">{{ result }} </div>
+            {% else %}
+                <div style="color:red; display:inline; font-size: x-large; font-weight: bold">{{ result }} </div>
+            {% endif %}
+        {% endfor %}
+        <br>
+        {% if session_game_count < 5 %}
+            {% if latest_session_date == website_date %}
+                You need to play {{ 5 - session_game_count }} more games to make this a valid session.
+            {% else %}
+                Last session did not make it to five games and can no longer do so.
+            {% endif %}
+        {% else %}
+            TODO
+        {% endif %}
     </div>
     <hr>
     <div class="total-season-session">
@@ -312,7 +328,7 @@
         </div>
     </div>
     <hr>
-    <h3>Graphs</h3>
+    <h2>GRAPHS</h2>
     <button type="button" onclick="adjustGraphs(100)">Last 100</button>
     <div class="graphs">
         <div class="graph-shell-small">
@@ -561,5 +577,88 @@
     </div>
 </div>
 </body>
+<script>
+    let allCharts = ["datesChart", "monthChart", "yearsChart", "weekdChart", "grief", "wins_last_20", "winrate", "solo_goals",
+        "performance_score", "performance_goals", "performance_assists", "performance_saves", "performance_shots", "performance_share_score", "performance_share_goals",
+        "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists",
+        "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
 
+    let charts = []
+
+    for (let i = 0; i < allCharts.length; i++) {
+        fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {
+            let chart = new Chart(document.getElementById(allCharts[i]).getContext('2d'), config);
+            charts.push(chart);
+        });
+    }
+
+    function adjustGraphs(last) {
+        for (let i = 0; i < charts.length; i++) {
+            charts[i].scales.x.min = 2500 //does not work?!
+            console.log(charts[i]);
+            charts[i].update();
+            console.log("set");
+        }
+    }
+
+    async function fetchData(graphName) {
+        return await fetch('https://jok.im/rl/data/' + graphName).then(json => json.json());
+    }
+
+    function generateConfig(inputJson) {
+        let datasets = [];
+        for (let i = 0; i < inputJson.data.datasets.length; i++) {
+            datasets.push({
+                label: inputJson.data.datasets[i].label,
+                data: inputJson.data.datasets[i].data,
+                borderColor: inputJson.data.datasets[i].borderColor,
+                borderWidth: 4,
+                pointRadius: 0
+            })
+        }
+        return {
+            type: inputJson.type,
+            data: {
+                labels: inputJson.data.labels,
+                datasets: datasets
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: inputJson.data.title
+                    },
+                    legend: {
+                        display: inputJson.options.show_legend
+                    }
+                },
+                scales: {
+                    x: {
+                        min: inputJson.options.x_min,
+                        max: inputJson.options.x_max
+                    },
+                    y: {
+                        min: inputJson.options.y_min,
+                        max: inputJson.options.y_max
+                    }
+                }
+            },
+            plugins: {}
+        }
+    }
+
+    function changeX() {
+        p(myChart);
+    }
+
+    function p(chart) {
+        //chart.options.plugins.title.text = 'new title';
+        let xmin = chart.scales.x.min
+        let xmax = chart.scales.x.max
+        chart.options.scales.x.min = xmin + 100;
+        chart.update();
+    }
+</script>
 </html>

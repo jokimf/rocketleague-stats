@@ -18,9 +18,10 @@ def timer_func(func):
     return function_timer
 
 
-def generate_random_facts():
+# Invoked every time data is added
+def generate_random_facts() -> list:
     union = record_session() + milestone_facts() + date_facts() + last_session_facts() + last_month_summary() + \
-            result_facts() + game_count_facts() + close_to_record() + outclassed() + at_least_1_streak()
+            result_facts() + game_count_facts() + close_to_record() + outclassed() + at_least_1_streak() + streak()
     return sorted(union, key=lambda i: i[1], reverse=True)
 
 
@@ -54,7 +55,7 @@ def last_session_facts() -> list[tuple]:
     last_session_date = q.last_two_sessions_dates()[0][0]
     diff = (today - datetime.strptime(last_session_date, "%Y-%m-%d")).days
     if diff >= 21:
-        facts.append((f'Last session is already {diff} days ago 🤡🤡🤡', 4))
+        facts.append((f'Last session is already {diff} days ago', 4))
     elif diff >= 12:
         facts.append((f'The last session was {diff} days ago.', 2))
     elif diff >= 5:
@@ -117,19 +118,7 @@ def result_facts() -> list[tuple]:
     for entry in data:
         if entry[0] == goals and entry[1] == against:
             total, percent = entry[2], entry[3]
-            if percent >= 0.05:
-                facts.append(
-                    (
-                        f'The result of the last match was extremely common. It already happened {total} times. ('
-                        f'{round(percent * 100, 1)}%)',
-                        1))
-            elif percent >= 0.025:
-                facts.append(
-                    (
-                        f'The result of the last match was common. In total, it happened {total} times. ('
-                        f'{round(percent * 100, 2)}%)',
-                        2))
-            elif percent >= 0.0125:
+            if percent >= 0.0125:
                 facts.append(
                     (
                         f'The result of last match was rare, in total it happened {total} times ('
@@ -171,7 +160,7 @@ def milestone_facts() -> list[tuple]:
 
 # Came close to a record
 @timer_func
-def close_to_record() -> list[tuple]:  # TODO: make it faster
+def close_to_record() -> list[tuple]:
     facts = []
 
     # Record games
@@ -313,3 +302,7 @@ def streak() -> list[tuple]:
     # x goals in succession
     facts = []
     return facts
+
+
+# First time it is loaded, generate random facts
+random_facts = generate_random_facts()

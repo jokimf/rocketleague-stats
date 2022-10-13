@@ -3,15 +3,20 @@ let allCharts = ["datesChart", "monthChart", "yearsChart", "weekdChart", "grief"
     "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists",
     "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
 
+let charts = []
+
 for (let i = 0; i < allCharts.length; i++) {
     fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {
-        new Chart(document.getElementById(allCharts[i]).getContext('2d'), config);
+        let chart = new Chart(document.getElementById(allCharts[i]).getContext('2d'), config);
+        charts.push(chart);
     });
 }
 
 function adjustGraphs(last) {
     console.log("hit");
-    document.getElementById("winrate").chart.scales.x.max = 100
+    console.log(charts);
+    console.log("a");
+    document.getElementById("winrate").chart.scales.x.max = 100;
 }
 
 async function fetchData(graphName) {

@@ -106,124 +106,6 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
     return data
 
 
-# "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
-# p1 > p2+p3
-def ff_solo_carry(player_id: int) -> tuple:  # TODO: unused
-    if player_id < 0 or player_id > 2:
-        raise ValueError('No player_id higher than 2 or less than 0 permitted.')
-    return c.execute("""
-        SELECT CAST(SUM(IIF(playerID = ? AND sc = 1, 1, 0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
-        CAST(SUM(IIF(playerID = ? AND sc = 1 AND w IS NOT NULL,1,0)) AS FLOAT) /
-        CAST(SUM(IIF(playerID = ? AND sc = 1 ,1,0)) AS FLOAT) AS wr
-        FROM (SELECT s.gameID, s.playerID, MAX(s.score) > (SUM(s.score) - MAX(s.score)) AS sc, wins.gameID AS w
-        FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID GROUP BY s.gameID)
-    """, (player_id, player_id, player_id)).fetchone()
-
-
-# player got more than 500 points in one game
-def ff_more_than_500(player_id: int) -> tuple:
-    return c.execute("""
-        SELECT CAST(SUM(IIF(playerID = ? AND sc = 1,1,0)) AS FLOAT) / 
-        CAST(COUNT(gameID)/3 AS FLOAT) AS oc, 
-        CAST(SUM(IIF(playerID = ? AND sc = 1 AND w IS NOT NULL, 1, 0)) AS FLOAT) / 
-        CAST(SUM(IIF(playerID = ? AND sc = 1,1,0)) AS FLOAT) AS wr
-        FROM (SELECT s.gameID, s.playerID, IIF(score >= 500,1,0) AS sc, wins.gameID AS w
-        FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID)
-    """, (player_id, player_id, player_id)).fetchone()
-
-
-def ff_everyone_scored() -> tuple:
-    return c.execute("""
-        SELECT CAST(SUM(IIF(sc = 1,1,0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
-        CAST(SUM(IIF(sc = 1 AND wi IS NOT NULL,1,0)) AS FLOAT) / CAST(SUM(IIF(sc = 1,1,0)) AS FLOAT) AS wr
-        FROM (SELECT s.gameID, IIF(MIN(s.goals) > 0,1,0) AS sc, w.gameID AS wi FROM scores s 
-        LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY s.gameID)
-    """).fetchone()
-
-
-def ff_did_not_score(player_id: int) -> tuple:
-    return c.execute("""
-        SELECT CAST(SUM(IIF(sG = 0,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
-        CAST(SUM(IIF(sG = 0 AND wID IS NOT NULL,1,0)) AS FLOAT) / 
-        CAST(SUM(IIF(sG = 0,1,0)) AS FLOAT) AS wr
-        FROM (SELECT s.gameID AS sID, playerID, s.goals AS sG, w.gameID AS wID FROM scores s
-        LEFT JOIN wins w ON s.gameID = w.gameID WHERE playerID = ?)
-    """, (player_id,)).fetchone()
-
-
-def ff_no_solo_goals() -> tuple:
-    return c.execute("""
-        SELECT CAST(SUM(IIF(sG = sA AND sG > 0,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
-        CAST(SUM(IIF(sG = sA AND sG > 0 AND wID IS NOT NULL,1,0)) AS FLOAT) / 
-        CAST(SUM(IIF(sG = sA AND sG > 0,1,0)) AS FLOAT) AS wr
-        FROM(SELECT s.gameID AS sID, SUM(s.goals) AS sG, SUM(s.assists) AS sA, w.gameID AS wID FROM scores s 
-        LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY s.gameID)
-    """).fetchone()
-
-
-def ff_six_or_more_shots() -> tuple:
-    return c.execute("""
-        SELECT CAST(SUM(IIF(sS >= 6,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
-        CAST(SUM(IIF(sS >= 6 AND wID IS NOT NULL,1,0)) AS FLOAT) / 
-        CAST(SUM(IIF(sS >= 6,1,0)) AS FLOAT) AS wr
-        FROM(SELECT s.gameID AS sID, SUM(s.shots) AS sS, w.gameID AS wID FROM scores s
-        LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY sID)
-    """).fetchone()
-
-
-def ff_at_least_one_assist(player_id: int) -> tuple:
-    return c.execute("""
-        SELECT CAST(SUM(IIF(sA > 0,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
-        CAST(SUM(IIF(sA > 0 AND wID IS NOT NULL,1,0)) AS FLOAT) / CAST(SUM(IIF(sA > 0,1,0)) AS FLOAT) AS wr
-        FROM(SELECT s.gameID AS sID, s.assists AS sA, w.gameID AS wID FROM scores s
-        LEFT JOIN wins w ON s.gameID = w.gameID WHERE playerID = ? GROUP BY sID)
-    """, (player_id,)).fetchone()
-
-
-def ff_two_or_more_saves(player_id: int) -> tuple:
-    return c.execute("""
-        SELECT CAST(SUM(IIF(sS >= 2,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
-        CAST(SUM(IIF(sS >= 2 AND wID IS NOT NULL,1,0)) AS FLOAT) / CAST(SUM(IIF(sS >= 2,1,0)) AS FLOAT) AS wr
-        FROM(SELECT s.gameID AS sID, s.saves AS sS, w.gameID AS wID FROM scores s
-        LEFT JOIN wins w ON s.gameID = w.gameID WHERE playerID = ? GROUP BY sID)
-    """, (player_id,)).fetchone()
-
-
-# Irrelevant: Sum of all averages / 7.5
-def ff_irrelevant(player_id: int) -> tuple:
-    return c.execute("""
-        WITH st AS (
-        SELECT s.gameID AS sID, s.playerID, s.score AS stSc, w.gameID AS wID
-        FROM scores s LEFT JOIN wins w ON s.gameID = w.gameID
-        WHERE playerID = ?),
-        at AS (SELECT AVG(score) * 3 / 7.5 AS avgS FROM scores)
-        SELECT CAST(SUM(IIF(st.stSc <= at.avgS,1,0)) AS FLOAT) / 
-        CAST(COUNT(st.sID) AS FLOAT) AS oc,
-        CAST(SUM(IIF(st.stSc <= at.avgS AND wID IS NOT NULL,1,0)) AS FLOAT) / 
-        CAST(SUM(IIF(st.stSc <= at.avgS,1,0)) AS FLOAT) AS wr FROM st, at
-    """, (player_id,)).fetchone()
-
-
-# TODO: rework next to queries into own table
-def ff_team_scores_x_times(x: int) -> tuple:
-    return c.execute("""
-    SELECT CAST(SUM(IIF(gGoals = ?,1,0)) AS FLOAT) / COUNT(gID) AS oc,
-        CAST(SUM(IIF(gGoals = ? AND wID IS NOT NULL,1,0)) AS FLOAT) / 
-        CAST(SUM(IIF(gGoals = ?,1,0)) AS FLOAT) AS wr
-        FROM (SELECT g.gameID AS gID, g.goals AS gGoals, w.gameID AS wID FROM games g 
-        LEFT JOIN wins w ON g.gameID = w.gameID)
-    """, (x, x, x)).fetchone()
-
-
-def ff_team_concedes_x_times(x: int) -> tuple:
-    return c.execute("""
-    SELECT CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) / COUNT(g.gameID) AS oc,
-        CAST(SUM(IIF(g.against = ? AND w.gameID IS NOT NULL,1,0)) AS FLOAT) / 
-        CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) AS wr
-        FROM games g LEFT JOIN wins w ON g.gameID = w.gameID
-    """, (x, x, x)).fetchone()
-
-
 # - Random facts queries - #
 def results_table() -> list[Any]:
     return c.execute("""
@@ -470,6 +352,12 @@ def latest_session_main_data() -> list[Any]:
            FROM sessions ORDER BY SessionID desc LIMIT 1''').fetchone()
 
 
+def games_from_session_date(session_date: str = None) -> list[Any]:
+    if session_date is None:
+        session_date = latest_session_main_data()[1]
+    return c.execute('SELECT * FROM games WHERE date >= ?', (session_date,)).fetchall()
+
+
 def last_two_sessions_dates() -> list[Any]:
     return c.execute('SELECT date FROM sessions ORDER BY SessionID DESC LIMIT 2').fetchall()
 
@@ -531,6 +419,113 @@ def winrates() -> list:
 
 
 def build_fun_facts() -> list:
+    # "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
+    # p1 > p2+p3
+    def ff_solo_carry(player_id: int) -> tuple:  # TODO: unused
+        if player_id < 0 or player_id > 2:
+            raise ValueError('No player_id higher than 2 or less than 0 permitted.')
+        return c.execute("""
+            SELECT CAST(SUM(IIF(playerID = ? AND sc = 1, 1, 0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
+            CAST(SUM(IIF(playerID = ? AND sc = 1 AND w IS NOT NULL,1,0)) AS FLOAT) /
+            CAST(SUM(IIF(playerID = ? AND sc = 1 ,1,0)) AS FLOAT) AS wr
+            FROM (SELECT s.gameID, s.playerID, MAX(s.score) > (SUM(s.score) - MAX(s.score)) AS sc, wins.gameID AS w
+            FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID GROUP BY s.gameID)
+        """, (player_id, player_id, player_id)).fetchone()
+
+    # player got more than 500 points in one game
+    def ff_more_than_500(player_id: int) -> tuple:
+        return c.execute("""
+            SELECT CAST(SUM(IIF(playerID = ? AND sc = 1,1,0)) AS FLOAT) / 
+            CAST(COUNT(gameID)/3 AS FLOAT) AS oc, 
+            CAST(SUM(IIF(playerID = ? AND sc = 1 AND w IS NOT NULL, 1, 0)) AS FLOAT) / 
+            CAST(SUM(IIF(playerID = ? AND sc = 1,1,0)) AS FLOAT) AS wr
+            FROM (SELECT s.gameID, s.playerID, IIF(score >= 500,1,0) AS sc, wins.gameID AS w
+            FROM scores s LEFT JOIN wins ON s.gameID = wins.gameID)
+        """, (player_id, player_id, player_id)).fetchone()
+
+    def ff_everyone_scored() -> tuple:
+        return c.execute("""
+            SELECT CAST(SUM(IIF(sc = 1,1,0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc, 
+            CAST(SUM(IIF(sc = 1 AND wi IS NOT NULL,1,0)) AS FLOAT) / CAST(SUM(IIF(sc = 1,1,0)) AS FLOAT) AS wr
+            FROM (SELECT s.gameID, IIF(MIN(s.goals) > 0,1,0) AS sc, w.gameID AS wi FROM scores s 
+            LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY s.gameID)
+        """).fetchone()
+
+    def ff_did_not_score(player_id: int) -> tuple:
+        return c.execute("""
+            SELECT CAST(SUM(IIF(sG = 0,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+            CAST(SUM(IIF(sG = 0 AND wID IS NOT NULL,1,0)) AS FLOAT) / 
+            CAST(SUM(IIF(sG = 0,1,0)) AS FLOAT) AS wr
+            FROM (SELECT s.gameID AS sID, playerID, s.goals AS sG, w.gameID AS wID FROM scores s
+            LEFT JOIN wins w ON s.gameID = w.gameID WHERE playerID = ?)
+        """, (player_id,)).fetchone()
+
+    def ff_no_solo_goals() -> tuple:
+        return c.execute("""
+            SELECT CAST(SUM(IIF(sG = sA AND sG > 0,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+            CAST(SUM(IIF(sG = sA AND sG > 0 AND wID IS NOT NULL,1,0)) AS FLOAT) / 
+            CAST(SUM(IIF(sG = sA AND sG > 0,1,0)) AS FLOAT) AS wr
+            FROM(SELECT s.gameID AS sID, SUM(s.goals) AS sG, SUM(s.assists) AS sA, w.gameID AS wID FROM scores s 
+            LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY s.gameID)
+        """).fetchone()
+
+    def ff_six_or_more_shots() -> tuple:
+        return c.execute("""
+            SELECT CAST(SUM(IIF(sS >= 6,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+            CAST(SUM(IIF(sS >= 6 AND wID IS NOT NULL,1,0)) AS FLOAT) / 
+            CAST(SUM(IIF(sS >= 6,1,0)) AS FLOAT) AS wr
+            FROM(SELECT s.gameID AS sID, SUM(s.shots) AS sS, w.gameID AS wID FROM scores s
+            LEFT JOIN wins w ON s.gameID = w.gameID GROUP BY sID)
+        """).fetchone()
+
+    def ff_at_least_one_assist(player_id: int) -> tuple:
+        return c.execute("""
+            SELECT CAST(SUM(IIF(sA > 0,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+            CAST(SUM(IIF(sA > 0 AND wID IS NOT NULL,1,0)) AS FLOAT) / CAST(SUM(IIF(sA > 0,1,0)) AS FLOAT) AS wr
+            FROM(SELECT s.gameID AS sID, s.assists AS sA, w.gameID AS wID FROM scores s
+            LEFT JOIN wins w ON s.gameID = w.gameID WHERE playerID = ? GROUP BY sID)
+        """, (player_id,)).fetchone()
+
+    def ff_two_or_more_saves(player_id: int) -> tuple:
+        return c.execute("""
+            SELECT CAST(SUM(IIF(sS >= 2,1,0)) AS FLOAT) / CAST(COUNT(sID) AS FLOAT) AS oc,
+            CAST(SUM(IIF(sS >= 2 AND wID IS NOT NULL,1,0)) AS FLOAT) / CAST(SUM(IIF(sS >= 2,1,0)) AS FLOAT) AS wr
+            FROM(SELECT s.gameID AS sID, s.saves AS sS, w.gameID AS wID FROM scores s
+            LEFT JOIN wins w ON s.gameID = w.gameID WHERE playerID = ? GROUP BY sID)
+        """, (player_id,)).fetchone()
+
+    # Irrelevant: Sum of all averages / 7.5
+    def ff_irrelevant(player_id: int) -> tuple:
+        return c.execute("""
+            WITH st AS (
+            SELECT s.gameID AS sID, s.playerID, s.score AS stSc, w.gameID AS wID
+            FROM scores s LEFT JOIN wins w ON s.gameID = w.gameID
+            WHERE playerID = ?),
+            at AS (SELECT AVG(score) * 3 / 7.5 AS avgS FROM scores)
+            SELECT CAST(SUM(IIF(st.stSc <= at.avgS,1,0)) AS FLOAT) / 
+            CAST(COUNT(st.sID) AS FLOAT) AS oc,
+            CAST(SUM(IIF(st.stSc <= at.avgS AND wID IS NOT NULL,1,0)) AS FLOAT) / 
+            CAST(SUM(IIF(st.stSc <= at.avgS,1,0)) AS FLOAT) AS wr FROM st, at
+        """, (player_id,)).fetchone()
+
+    # TODO: rework next to queries into own table
+    def ff_team_scores_x_times(x: int) -> tuple:
+        return c.execute("""
+        SELECT CAST(SUM(IIF(gGoals = ?,1,0)) AS FLOAT) / COUNT(gID) AS oc,
+            CAST(SUM(IIF(gGoals = ? AND wID IS NOT NULL,1,0)) AS FLOAT) / 
+            CAST(SUM(IIF(gGoals = ?,1,0)) AS FLOAT) AS wr
+            FROM (SELECT g.gameID AS gID, g.goals AS gGoals, w.gameID AS wID FROM games g 
+            LEFT JOIN wins w ON g.gameID = w.gameID)
+        """, (x, x, x)).fetchone()
+
+    def ff_team_concedes_x_times(x: int) -> tuple:
+        return c.execute("""
+        SELECT CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) / COUNT(g.gameID) AS oc,
+            CAST(SUM(IIF(g.against = ? AND w.gameID IS NOT NULL,1,0)) AS FLOAT) / 
+            CAST(SUM(IIF(g.against = ?,1,0)) AS FLOAT) AS wr
+            FROM games g LEFT JOIN wins w ON g.gameID = w.gameID
+        """, (x, x, x)).fetchone()
+
     def format_fun_facts(title: str, function):
         return [title] + list(function)
 
@@ -619,6 +614,22 @@ def one_diff_wins() -> int:
 
 def one_diff_loss() -> int:
     return c.execute("SELECT COUNT(gameID) FROM games WHERE against - goals = 1").fetchone()[0]
+
+
+# Session Details W/L
+def session_details():
+    details = dict()
+    s_id, s_date, s_wins, s_losses, s_goals, s_against, s_quality = latest_session_main_data()
+    s_games = s_wins + s_losses
+    details['session_game_count'] = s_games
+    details['latest_session_date'] = s_date
+    details['w_and_l'] = ["W" if game[2] > game[3] else "L" for game in games_from_session_date(s_date)]
+    return details
+
+
+# 6 hours behind real time to account for after midnight gaming
+def website_date() -> str:
+    return (datetime.datetime.now() - datetime.timedelta(hours=6)).strftime('%Y-%m-%d')
 
 
 def results_table_ordered():

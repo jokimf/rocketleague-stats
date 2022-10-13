@@ -27,10 +27,11 @@ def main(request) -> dict:
     fetch_from_google.fetch_from_sheets()
     max_id = q.max_id()
     record_games = q.build_record_games()
+    session_details = q.session_details()
     return {
         "ranks": q.ranks(),
         "winrates": q.winrates(),
-        "random_facts": r.generate_random_facts(),
+        "random_facts": r.random_facts,
         "days_since_inception": q.days_since_inception(),
         "total_games": max_id,
         "tilt": q.tilt(),
@@ -44,7 +45,11 @@ def main(request) -> dict:
         "record_games2": record_games[1],
         "knus_performance": q.performance_profile_view(0),
         "puad_performance": q.performance_profile_view(1),
-        "st_performance": q.performance_profile_view(2)
+        "st_performance": q.performance_profile_view(2),
+        "website_date": q.website_date(),
+        "latest_session_date": session_details['latest_session_date'],
+        "w_and_l": session_details['w_and_l'],
+        "session_game_count": session_details['session_game_count']
     }
 
 
