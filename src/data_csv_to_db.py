@@ -6,7 +6,7 @@ or overwrites 'test.db' in the resources folder.
 """
 
 name = "newest.csv"
-conn = sqlite3.connect('resources/test.db')
+conn = sqlite3.connect('../resources/test.db')
 c = conn.cursor()
 
 # Drop tables
@@ -45,7 +45,7 @@ except sqlite3.Error as e:
     print(e)
 
 # Add data from .csv
-with open(f'resources/{name}') as stats:
+with open(f'../resources/{name}') as stats:
     for line in stats:
         data = line.split(',')
         games_data = [data[0], data.pop(1), data.pop(1), data.pop(1)]
