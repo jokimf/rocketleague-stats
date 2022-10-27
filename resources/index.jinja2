@@ -6,13 +6,24 @@
     <link rel="icon" href="https://jok.im/rl/img/logo_grey.png">
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-    <link rel="stylesheet" href="https://jok.im/rl/static/styles.css">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+<header>
+    <div class="header_container">
+        <a href="/"><img src="https://jok.im/rl/img/logo_grey.png" alt="CG" width="50" height="50"></a>
+        <a id="headline" href="/">CLOWN GAMEPLAY</a>
+        <nav>
+            <ul>
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/records">Records</a></li>
+                <li><a href="/graphs">Graphs</a></li>
+                <li><a href="#">Games</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
 <div class="website-center-setup">
-    <h1><span class="cg">CLOWN GAMEPLAY</span> ROCKET LEAGUE STATISTICS</h1>
     <div class="profile-pics-flexbox">
         <div class="profile">
             <div class="profile-stats-left">
@@ -134,7 +145,7 @@
     <hr>
     <div class="random-facts">
         <h2>RANDOM FACTS</h2>
-        <ul>{% for fact in random_facts %}
+        <ul class="randomfacts">{% for fact in random_facts %}
             <li>{{ fact[0] }}</li>{% endfor %}
         </ul>
     </div>
@@ -149,6 +160,45 @@
             {% endif %}
         {% endfor %}
         <br>
+        <table class="container">
+            <thead>
+            <tr>
+                <th colspan="4" class="table-general">General</th>
+                <th colspan="6" class="knus">Knus</th>
+                <th colspan="6" class="puad">Puad</th>
+                <th colspan="6" class="sticker">Sticker</th>
+            </tr>
+            <tr>
+                <td>#</td>
+                <td>Date</td>
+                <td>Goals</td>
+                <td>Against</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+                <td>R</td>
+                <td>S</td>
+                <td>G</td>
+                <td>A</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            </thead>
+            {% for row in last_games %}
+                <tr>{% for data in row %}
+                    <td>{{ data }}</td>{% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
         {% if session_game_count < 5 %}
             {% if latest_session_date == website_date %}
                 You need to play {{ 5 - session_game_count }} more games to make this a valid session.
@@ -165,10 +215,10 @@
             <table>
                 <caption>GRAND TOTAL</caption>
                 <tr>
-                    <th rowspan="2"></th>
-                    <th colspan="2">Knus</th>
-                    <th colspan="2">Puad</th>
-                    <th colspan="2">Sticker</th>
+                    <th rowspan="2" class="table-general"></th>
+                    <th colspan="2" class="knus">Knus</th>
+                    <th colspan="2" class="puad">Puad</th>
+                    <th colspan="2" class="sticker">Sticker</th>
                 </tr>
                 <tr>
                     <td>Σ</td>
@@ -220,10 +270,10 @@
             <table>
                 <caption>THIS SEASON</caption>
                 <tr>
-                    <th rowspan="2"></th>
-                    <th colspan="2">Knus</th>
-                    <th colspan="2">Puad</th>
-                    <th colspan="2">Sticker</th>
+                    <th rowspan="2" class="table-general"></th>
+                    <th colspan="2" class="knus">Knus</th>
+                    <th colspan="2" class="puad">Puad</th>
+                    <th colspan="2" class="sticker">Sticker</th>
                 </tr>
                 <tr>
                     <td>Σ</td>
@@ -275,10 +325,10 @@
             <table>
                 <caption>THIS SESSION</caption>
                 <tr>
-                    <th rowspan="2"></th>
-                    <th colspan="2">Knus</th>
-                    <th colspan="2">Puad</th>
-                    <th colspan="2">Sticker</th>
+                    <th rowspan="2" class="table-general"></th>
+                    <th colspan="2" class="knus">Knus</th>
+                    <th colspan="2" class="puad">Puad</th>
+                    <th colspan="2" class="sticker">Sticker</th>
                 </tr>
                 <tr>
                     <td>Σ</td>
@@ -328,63 +378,6 @@
         </div>
     </div>
     <hr>
-    <h2>GRAPHS</h2>
-    <button type="button" onclick="adjustGraphs(100)">Last 100</button>
-    <div class="graphs">
-        <div class="graph-shell-small">
-            <canvas id="grief"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="wins_last_20"></canvas>
-        </div>
-        <!--div class="graph-shell-small">
-        <canvas id="solo_goals"></canvas>
-    </div>-->
-        <div class="graph-shell-small">
-            <canvas id="performance_score"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_goals"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_score"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_goals"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="performance_share_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="datesChart"></canvas>
-            <!--<button onmousedown="changeX()">Min 📈</button>-->
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="monthChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="yearsChart"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="weekdChart"></canvas>
-        </div>
-    </div>
-    <hr>
     <div class="general-info">
         <div class="general-info-container">
             <table>
@@ -406,49 +399,6 @@
                 </tr>
             </table>
         </div>
-    </div>
-    <hr>
-    <h3>LAST 5</h3>
-    <div class="last5">
-        <table class="container">
-            <thead>
-            <tr>
-                <th colspan="4">General</th>
-                <th colspan="6">Knus</th>
-                <th colspan="6">Puad</th>
-                <th colspan="6">Sticker</th>
-            </tr>
-            <tr>
-                <td>#</td>
-                <td>Date</td>
-                <td>Goals</td>
-                <td>Against</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-                <td>R</td>
-                <td>S</td>
-                <td>G</td>
-                <td>A</td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            </thead>
-            {% for row in last_games %}
-                <tr>{% for data in row %}
-                    <td>{{ data }}</td>{% endfor %}
-                </tr>
-            {% endfor %}
-        </table>
     </div>
     <hr>
     <h3>"FUN" FACTS</h3>
@@ -495,183 +445,93 @@
         </div>
     </div>
     <hr>
-    <h3>RECORDS</h3>
-    <div class="records">
-        <div class="records-part">
-            <table>
-                <tr>
-                    <th>Record</th>
-                    <th>Player</th>
-                    <th>Value</th>
-                    <th>Game ID</th>
-                    <th>Date</th>
-                </tr>
-                {% for record in record_games %}
-                    <tr>
-                        <td rowspan="4">
-                            {{ record }}
-                        </td>
-                    </tr>
-                    {% for instances in record_games[record] %}
-                        <tr>
-                            {% for stat in instances %}
-                                <td>{{ stat }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-
-                {% endfor %}
-            </table>
-        </div>
-        <div class="records-part">
-            <table>
-                <tr>
-                    <th>Record</th>
-                    <th>Player</th>
-                    <th>Value</th>
-                    <th>Game ID</th>
-                    <th>Date</th>
-                </tr>
-                {% for record in record_games2 %}
-                    <tr>
-                        <td rowspan="4">
-                            {{ record }}
-                        </td>
-                    </tr>
-                    {% for instances in record_games2[record] %}
-                        <tr>
-                            {% for stat in instances %}
-                                <td>{{ stat }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-
-                {% endfor %}
-            </table>
-        </div>
-    </div>
-    <hr>
-    <h3>GRAPHS</h3>
-    <div class="graphs">
-        <div class="graph-shell-small">
-            <canvas id="winrate"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_score"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_goals"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_assists"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_saves"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="cumulative_stats_shots"></canvas>
-        </div>
-        <div class="graph-shell-small">
-            <canvas id="mvp_lvp_score"></canvas>
-        </div>
-    </div>
 </div>
 </body>
-<script>
-    let allCharts = ["datesChart", "monthChart", "yearsChart", "weekdChart", "grief", "wins_last_20", "winrate", "solo_goals",
-        "performance_score", "performance_goals", "performance_assists", "performance_saves", "performance_shots", "performance_share_score", "performance_share_goals",
-        "performance_share_assists", "performance_share_saves", "performance_share_shots", "cumulative_stats_score", "cumulative_stats_goals", "cumulative_stats_assists",
-        "cumulative_stats_saves", "cumulative_stats_shots", "mvp_lvp_score"];
-
-    let charts = []
-
-    for (let i = 0; i < allCharts.length; i++) {
-        fetchData(allCharts[i]).then(data => generateConfig(data)).then(config => {
-            let chart = new Chart(document.getElementById(allCharts[i]).getContext('2d'), config);
-            charts.push(chart);
-        });
-    }
-
-    function adjustGraphs(last) {
-        for (let i = 0; i < charts.length; i++) {
-            charts[i].scales.x.min = 2500 //does not work?!
-            console.log(charts[i]);
-            charts[i].update();
-            console.log("set");
-        }
-    }
-
-    async function fetchData(graphName) {
-        return await fetch('https://jok.im/rl/data/' + graphName).then(json => json.json());
-    }
-
-    function generateConfig(inputJson) {
-        let datasets = [];
-        for (let i = 0; i < inputJson.data.datasets.length; i++) {
-            datasets.push({
-                label: inputJson.data.datasets[i].label,
-                data: inputJson.data.datasets[i].data,
-                borderColor: inputJson.data.datasets[i].borderColor,
-                borderWidth: 4,
-                pointRadius: 0
-            })
-        }
-        return {
-            type: inputJson.type,
-            data: {
-                labels: inputJson.data.labels,
-                datasets: datasets
-            },
-            options: {
-                maintainAspectRatio: false,
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: inputJson.data.title
-                    },
-                    legend: {
-                        display: inputJson.options.show_legend
-                    }
-                },
-                scales: {
-                    x: {
-                        min: inputJson.options.x_min,
-                        max: inputJson.options.x_max
-                    },
-                    y: {
-                        min: inputJson.options.y_min,
-                        max: inputJson.options.y_max
-                    }
-                }
-            },
-            plugins: {}
-        }
-    }
-
-    function changeX() {
-        p(myChart);
-    }
-
-    function p(chart) {
-        //chart.options.plugins.title.text = 'new title';
-        let xmin = chart.scales.x.min
-        let xmax = chart.scales.x.max
-        chart.options.scales.x.min = xmin + 100;
-        chart.update();
-    }
-</script>
 <style>
     h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure {
         margin-bottom: 15px;
     }
 
     body {
+        margin: 0;
         font-size: 1em !important;
         color: #000000;
         background-color: #ffffff;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         line-height: 1.42em;
+    }
+
+    #headline {
+        color: #cac8c8;
+        font-size: 2em;
+        display: inline;
+        font-weight: bold;
+        position: absolute;
+        margin-top: 16px;
+        margin-left: 10px;
+        text-decoration: none;
+    }
+
+    header {
+        background: #434343;
+        position: sticky;
+        top: 0
+    }
+
+    header::after {
+        content: '';
+        display: table;
+        clear: both;
+    }
+
+    .header_container {
+        width: 80%;
+        margin: 0 auto
+    }
+
+    nav {
+        float: right;
+    }
+
+    nav ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    nav li {
+        display: inline-block;
+        margin-left: 35px;
+        padding-top: 25px;
+        position: relative;
+    }
+
+    nav a {
+        color: #ffffff;
+        text-decoration: none;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+
+    nav a:hover {
+        color: #000;
+    }
+
+    nav a::before {
+        content: '';
+        display: block;
+        height: 5px;
+        background-color: #444;
+
+        position: absolute;
+        top: 0;
+        width: 0;
+
+        transition: all ease-in-out 250ms;
+    }
+
+    nav a:hover::before {
+        width: 100%;
     }
 
     .website-center-setup {
@@ -686,14 +546,6 @@
         line-height: 1em;
         text-align: center;
         color: #599cbb;
-    }
-
-    h1 .cg { /* clown gameplay part of headline */
-        font-size: 1.1em;
-        font-weight: 300;
-        line-height: 1em;
-        text-align: center;
-        color: #1d7aa4;
     }
 
     h2 {
@@ -722,7 +574,8 @@
     .profile-pics-flexbox {
         display: flex;
         justify-content: center;
-        gap: 150px
+        gap: 150px;
+        padding-top: 15px;
     }
 
     .profile-pics {
@@ -764,13 +617,6 @@
         vertical-align: top;
     }
 
-    .sub-headline {
-        font-size: 1em;
-        font-weight: 300;
-        line-height: 1em;
-        color: #1d7aa4;
-    }
-
     .infobox {
         margin: 5px;
     }
@@ -788,7 +634,6 @@
         vertical-align: top;
     }
 
-    /** Reset some basic elements */
     blockquote, pre, hr, dl, dd, ol, ul, figure {
         margin: 0;
         padding: 0;
@@ -826,7 +671,8 @@
     }
 
     table th {
-        background-color: #f0f0f0;
+        background-color: #434343;
+        color: white;
         border: 1px solid #dedede;
         border-bottom-color: #c9c9c9;
     }
@@ -843,17 +689,8 @@
         line-height: 1.5;
     }
 
-    ul {
+    .randomfacts {
         padding-left: 32px;
-    }
-
-    .graph-shell-small {
-        height: 200px;
-        background-color: #eeeeee;
-    }
-
-    .graph-shell-big {
-        height: 700px;
     }
 
     hr {
@@ -914,5 +751,23 @@
         font-size: x-small;
         vertical-align: top;
     }
+
+    .table-general {
+        background-color: #434343;
+        color: white;
+    }
+
+    .knus {
+        background-color: #263326;
+    }
+
+    .puad {
+        background-color: #332626;
+    }
+
+    .sticker {
+        background-color: #262633;
+    }
 </style>
+
 </html>

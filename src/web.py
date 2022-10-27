@@ -26,7 +26,6 @@ def data(request) -> dict:
 def main(request) -> dict:
     fetch_from_google.fetch_from_sheets()
     max_id = q.max_id()
-    record_games = q.build_record_games()
     session_details = q.session_details()
     return {
         "ranks": q.ranks(),
@@ -36,13 +35,11 @@ def main(request) -> dict:
         "total_games": max_id,
         "tilt": q.tilt(),
         "average_session_length": q.average_session_length(),
-        "last_games": q.last_x_games_stats(5),
+        "last_games": q.last_x_games_stats(len(q.games_from_session_date())),
         "grand_total": q.general_game_stats_over_time_period(1, max_id),
         "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),
         "session_data": q.general_game_stats_over_time_period(q.session_start_id(), max_id),
         "fun_facts": q.build_fun_facts(),
-        "record_games": record_games[0],
-        "record_games2": record_games[1],
         "knus_performance": q.performance_profile_view(0),
         "puad_performance": q.performance_profile_view(1),
         "st_performance": q.performance_profile_view(2),
@@ -50,6 +47,28 @@ def main(request) -> dict:
         "latest_session_date": session_details['latest_session_date'],
         "w_and_l": session_details['w_and_l'],
         "session_game_count": session_details['session_game_count']
+    }
+
+
+@view_config(
+    route_name='graphs',
+    renderer='../resources/graphs.jinja2'
+)
+def graphs(request):
+    return {
+
+    }
+
+
+@view_config(
+    route_name='records',
+    renderer='../resources/records.jinja2'
+)
+def records(request):
+    record_games = q.build_record_games()
+    return {
+        "record_games": record_games[0],
+        "record_games2": record_games[1]
     }
 
 
@@ -73,7 +92,9 @@ if __name__ == '__main__':
     with Configurator() as config:
         config.include('pyramid_jinja2')
         config.add_route('main', '/')
-        config.add_route('data', 'data/{type}')
+        config.add_route('graphs', 'graphs')
+        config.add_route('records', 'records')
+        config.add_route('data', 'data/{type}')  # TODO: Add graph data with jinja
         config.add_route('img', 'img/{img}')
         config.add_route('static', 'static/{file}')
         config.scan()
