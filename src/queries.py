@@ -3,7 +3,7 @@ import sqlite3
 from typing import Any
 
 database_path = '../resources/test.db'
-conn = sqlite3.connect(database_path)
+conn = sqlite3.connect(database_path, check_same_thread=False)
 c = conn.cursor()
 
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
@@ -27,16 +27,29 @@ def insert_game_data(d: list) -> bool:
         return False
 
 
+def conditional_formatting(color: str, value: float, minimum: int, maximum: int) -> str:
+    minimum = int(minimum)
+    maximum = int(maximum)
+    if color is None:
+        return ''
+    if maximum - minimum == 0:
+        return f'{color[:-1]},0)'
+    opacity = (value - minimum) / (maximum - minimum)
+    return f'{color[:-1]},{opacity})'
+
+
 # Returns number of days since first game played
 def days_since_inception() -> int:
     return c.execute('SELECT julianday(DATE()) - julianday(MIN(date)) FROM games').fetchone()[0]
 
 
 # Used for info table at top of the page
+
+
 def last_x_games_stats(limit: int = 5) -> list[Any]:
     return c.execute("""
             SELECT 
-                games.gameID AS ID, games.date, games.goals As CG, against AS Enemy,
+                games.gameID AS ID, games.goals As CG, against AS Enemy,
                 knus.rank, knus.score, knus.goals, knus.assists, knus.saves, knus.shots,
                 puad.rank, puad.score, puad.goals, puad.assists, puad.saves, puad.shots,
                 sticker.rank, sticker.score, sticker.goals, sticker.assists, sticker.saves, sticker.shots
@@ -288,7 +301,7 @@ def build_record_games():
 def tilt():  # TODO: Write tilt-o-meter
     # Enemy goals last 14 days
     # Winrate
-    return 5
+    return 5 + 9
 
 
 def average_session_length() -> int:
@@ -329,7 +342,7 @@ def performance_profile_view(p_id: int):
         elif value <= 50:
             return "LightSlateGrey"
         elif value <= 75:
-            return "Black"
+            return "#B6B6B4"
         else:
             return "IndianRed"
 

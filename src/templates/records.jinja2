@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" style="display:  inline-block">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Clown Gameplay</title>
+    <link rel="icon" href="https://jok.im/rl/img/logo_grey.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://jok.im/static/standard.css">
+</head>
+<body>
+<header>
+    <div class="header_container">
+        <a href="/rl"><img src="https://jok.im/rl/img/logo_grey.png" alt="CG" width="50" height="50"></a>
+        <a id="headline" href="/rl">CLOWN GAMEPLAY</a>
+        <nav>
+            <ul>
+                <li><a href="/rl">Dashboard</a></li>
+                <li><a class="here" href="/rl/records">Records</a></li>
+                <li><a href="/rl/graphs">Graphs</a></li>
+                <li><a href="#">Games</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+<div class="website-center-setup">
+    <div class="records">
+        <div class="records-part" style="padding-top: 15px">
+            <table>
+                <tr>
+                    <th style="width:300px">Record</th>
+                    <th>Player</th>
+                    <th>Value</th>
+                    <th>Game ID</th>
+                    <th>Date</th>
+                </tr>
+                {% for record in record_games %}
+                    <tr>
+                        <td rowspan="4">
+                            {{ record }}
+                        </td>
+                    </tr>
+                    {% for instances in record_games[record] %}
+                        <tr>
+                            {% for stat in instances %}
+                                <td>{{ stat }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+
+                {% endfor %}
+            </table>
+        </div>
+        <div class="records-part" style="padding-top: 15px">
+            <table>
+                <tr>
+                    <th style="width:300px">Record</th>
+                    <th>Player</th>
+                    <th>Value</th>
+                    <th>Game ID</th>
+                    <th>Date</th>
+                </tr>
+                {% for record in record_games2 %}
+                    <tr>
+                        <td rowspan="4">
+                            {{ record }}
+                        </td>
+                    </tr>
+                    {% for instances in record_games2[record] %}
+                        <tr>
+                            {% for stat in instances %}
+                                <td>{{ stat }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+<style>
+    table {
+        border-collapse: collapse;
+        font-style: normal;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    th {
+        color: #000000;
+        font-weight: bold;
+    }
+
+    td, th {
+        border: 1px solid #999;
+        padding: 0.5rem;
+        text-align: center;
+    }
+
+    table tr:nth-child(even) {
+        background-color: #2b2b2b;
+    }
+
+    table th {
+        background-color: #434343;
+        color: white;
+        border: 1px solid #dedede;
+        border-bottom-color: #c9c9c9;
+    }
+
+    table td {
+        border: 1px solid #cccccc;
+    }
+
+    .records {
+        display: flex;
+        justify-content: center;
+        gap: 25px;
+    }
+</style>
+</html>

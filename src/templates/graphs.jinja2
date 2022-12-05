@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://jok.im/static/standard.css">
 </head>
 <body>
 <header>
@@ -17,7 +18,7 @@
             <ul>
                 <li><a href="/rl">Dashboard</a></li>
                 <li><a href="/rl/records">Records</a></li>
-                <li><a href="/rl/graphs">Graphs</a></li>
+                <li><a class="here" href="/rl/graphs">Graphs</a></li>
                 <li><a href="#">Games</a></li>
             </ul>
         </nav>
@@ -177,119 +178,9 @@
         */
 </script>
 <style>
-    h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure {
-        margin-bottom: 15px;
-    }
-
-    body {
-        margin: 0;
-        font-size: 1em !important;
-        color: #000000;
-        background-color: #ffffff;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        line-height: 1.42em;
-    }
-
-    #headline {
-        color: #cac8c8;
-        font-size: 2em;
-        display: inline;
-        font-weight: bold;
-        position: absolute;
-        margin-top: 16px;
-        margin-left: 10px;
-        text-decoration: none;
-    }
-
-    header {
-        background: #434343;
-        position: sticky;
-        top: 0
-    }
-
-    header::after {
-        content: '';
-        display: table;
-        clear: both;
-    }
-
-    .header_container {
-        width: 80%;
-        margin: 0 auto
-    }
-
-    nav {
-        float: right;
-    }
-
-    nav ul {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-
-    nav li {
-        display: inline-block;
-        margin-left: 35px;
-        padding-top: 25px;
-        position: relative;
-    }
-
-    nav a {
-        color: #ffffff;
-        text-decoration: none;
-        text-transform: uppercase;
-        font-size: 14px;
-    }
-
-    nav a:hover {
-        color: #000;
-    }
-
-    nav a::before {
-        content: '';
-        display: block;
-        height: 5px;
-        background-color: #444;
-
-        position: absolute;
-        top: 0;
-        width: 0;
-
-        transition: all ease-in-out 250ms;
-    }
-
-    nav a:hover::before {
-        width: 100%;
-    }
-
-    .website-center-setup {
-
-        width: 80%;
-        margin: auto;
-        background: #fafafa;
-    }
-
     .graph-shell-small {
         height: 200px;
         background-color: #eeeeee;
-    }
-
-    button {
-        transition: background .25s, border-color .25s;
-        background: rgba(40, 44, 52, .05);
-        border: 1px solid transparent;
-        border-radius: 6px;
-        color: #000000;
-        text-decoration: none !important;
-        display: inline-block;
-        font-size: .8rem;
-        padding: 8px 16px;
-        margin: 0 8px 8px 0;
-        cursor: pointer;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        user-select: none;
     }
 </style>
 </html>

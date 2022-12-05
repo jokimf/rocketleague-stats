@@ -3,7 +3,7 @@ import sqlite3
 from typing import List, Optional, Tuple
 
 database_path = '../resources/test.db'
-conn = sqlite3.connect(database_path)
+conn = sqlite3.connect(database_path, check_same_thread=False)
 c = conn.cursor()
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 
@@ -188,7 +188,6 @@ def graph_performance_stat_share(stat: str) -> Graph:
         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS S
         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
     """).fetchall()
-    print(data)
     return Graph(f"{stat.capitalize()} performance share", "line", data, [x[0] for x in c.description], None, None,
                  None, None,
                  False)

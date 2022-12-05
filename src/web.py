@@ -1,33 +1,28 @@
-from wsgiref.simple_server import make_server
-
-import pyramid.response
-from pyramid.config import Configurator
-from pyramid.view import view_config
+from flask import Flask
+from flask import render_template, jsonify
 
 import fetch_from_google
 import graphs as g
 import queries as q
 import random_facts as r
 
+app = Flask(__name__)
 
-@view_config(
-    route_name='data',
-    renderer='json'
-)
-def data(request) -> dict:
-    graph: str = request.path.split('/')[2]  # determine graph from request
+
+@app.route('/data/<graph>')
+def data(graph) -> dict:
     return {} if graph not in g.graphs else g.graphs[graph].to_dict()
 
 
-@view_config(
-    route_name='main',
-    renderer='../resources/index.jinja2'
-)
-def main(request) -> dict:
+@app.route('/')
+def main():
     fetch_from_google.fetch_from_sheets()
     max_id = q.max_id()
     session_details = q.session_details()
-    return {
+    last_games = q.last_x_games_stats(len(q.games_from_session_date()))
+    k, p, s = 'rgba(12,145,30)', 'rgba(151,3,14)', 'rgba(12,52,145)'
+    context = {
+        "hhh": "cyan",
         "ranks": q.ranks(),
         "winrates": q.winrates(),
         "random_facts": r.random_facts,
@@ -35,7 +30,11 @@ def main(request) -> dict:
         "total_games": max_id,
         "tilt": q.tilt(),
         "average_session_length": q.average_session_length(),
-        "last_games": q.last_x_games_stats(len(q.games_from_session_date())),
+        "last_games": last_games,
+        "last_games_highlighting": [None, None, None, None, None,
+                                    (k, 100, 700), (k, 0, 5), (k, 0, 5), (k, 0, 5),
+                                    (k, 0, 10), None, (p, 100, 700), (p, 0, 5), (p, 0, 5), (p, 0, 5), (p, 0, 10),
+                                    None, (s, 100, 700), (s, 0, 5), (s, 0, 5), (s, 0, 5), (s, 0, 10)],
         "grand_total": q.general_game_stats_over_time_period(1, max_id),
         "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),
         "session_data": q.general_game_stats_over_time_period(q.session_start_id(), max_id),
@@ -48,56 +47,24 @@ def main(request) -> dict:
         "w_and_l": session_details['w_and_l'],
         "session_game_count": session_details['session_game_count']
     }
+    return render_template('index.jinja2', **context)
 
 
-@view_config(
-    route_name='graphs',
-    renderer='../resources/graphs.jinja2'
-)
-def graphs(request):
-    return {
-
-    }
+@app.route('/graphs')
+def graphs():
+    return render_template('graphs.jinja2')
 
 
-@view_config(
-    route_name='records',
-    renderer='../resources/records.jinja2'
-)
-def records(request):
+@app.route('/records')
+def records():
     record_games = q.build_record_games()
-    return {
-        "record_games": record_games[0],
-        "record_games2": record_games[1]
+    context = {
+        'record_games': record_games[0],
+        'record_games2': record_games[1]
     }
-
-
-@view_config(
-    route_name='img'
-)
-def img(request):
-    image = request.path.split('/')[2]
-    return pyramid.response.FileResponse(f'../resources/img/{image}')
-
-
-@view_config(
-    route_name='static'
-)
-def static(request):
-    file = request.path.split('/')[2]
-    return pyramid.response.FileResponse(f'../resources/{file}')
+    return render_template('records.jinja2', **context)
 
 
 if __name__ == '__main__':
-    with Configurator() as config:
-        config.include('pyramid_jinja2')
-        config.add_route('main', '/')
-        config.add_route('graphs', 'graphs')
-        config.add_route('records', 'records')
-        config.add_route('data', 'data/{type}')  # TODO: Add graph data with jinja
-        config.add_route('img', 'img/{img}')
-        config.add_route('static', 'static/{file}')
-        config.scan()
-        app = config.make_wsgi_app()
-    server = make_server('127.0.0.1', 6543, app)
-    server.serve_forever()
+    app.jinja_env.globals.update(conditional_formatting=q.conditional_formatting)
+    app.run()

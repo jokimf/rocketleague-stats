@@ -1,2 +1,0 @@
-import queries as q
-
