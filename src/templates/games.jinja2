@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" style="display:  inline-block">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Clown Gameplay</title>
+    <link rel="icon" href="https://jok.im/rl/img/logo_grey.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <link rel="stylesheet" href="https://jok.im/static/standard.css">
+</head>
+<body>
+<header>
+    <div class="header_container">
+        <a href="/rl"><img src="https://jok.im/rl/img/logo_grey.png" alt="CG" width="50" height="50"></a>
+        <a id="headline" href="/rl">CLOWN GAMEPLAY</a>
+        <nav>
+            <ul>
+                <li><a href="/rl">Dashboard</a></li>
+                <li><a href="/rl/records">Records</a></li>
+                <li><a href="/rl/graphs">Graphs</a></li>
+                <li><a class="here" href="/rl/games">Games</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+<div class="website-center-setup">
+    <div id="my_dataviz"></div>
+</div>
+</body>
+<style>
+    table {
+        border-collapse: collapse;
+        font-style: normal;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    th {
+        color: #000000;
+        font-weight: bold;
+    }
+
+    td, th {
+        border: 1px solid #999;
+        padding: 0.5rem;
+        text-align: center;
+    }
+
+    table tr:nth-child(even) {
+        background-color: #2b2b2b;
+    }
+
+    table th {
+        background-color: #434343;
+        color: white;
+        border: 1px solid #dedede;
+        border-bottom-color: #c9c9c9;
+    }
+
+    table td {
+        border: 1px solid #cccccc;
+    }
+</style>
+<script src="{{ url_for('static',filename='heatmap.js') }}"></script>
+</html>

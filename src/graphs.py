@@ -1,5 +1,6 @@
 import random
 import sqlite3
+import queries as q
 from typing import List, Optional, Tuple
 
 database_path = '../resources/test.db'
@@ -82,6 +83,11 @@ class Graph:
         self.y_min = new_min
         self.y_max = new_max
         return self
+
+
+### D3.js
+def goal_heatmap():
+    return q.results_table()
 
 
 def graph_performance(stat: str) -> Graph:

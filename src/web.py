@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import render_template, jsonify
+from flask import render_template
 
 import fetch_from_google
 import graphs as g
@@ -11,7 +11,11 @@ app = Flask(__name__)
 
 @app.route('/data/<graph>')
 def data(graph) -> dict:
-    return {} if graph not in g.graphs else g.graphs[graph].to_dict()
+    new_graphs = {'goals_heatmap': g.goal_heatmap()}
+    if graph in new_graphs:
+        return new_graphs[graph]
+    else:
+        return {} if graph not in g.graphs else g.graphs[graph].to_dict()
 
 
 @app.route('/')
@@ -65,6 +69,15 @@ def records():
     return render_template('records.jinja2', **context)
 
 
+@app.route('/games')
+def games():
+    return render_template('games.jinja2')
+
+
 if __name__ == '__main__':
     app.jinja_env.globals.update(conditional_formatting=q.conditional_formatting)
     app.run(host='127.0.0.1', port=6543)
+
+'''
+
+'''
