@@ -1,11 +1,11 @@
 .idea
 venv/
 __pycache__
-.db-journal
-.vscode
+*.db-journal
+*.vscode
 steamkey.txt
 credentials.json
 token.json
-.db
-.csv
+*.db
+*.csv
 resources

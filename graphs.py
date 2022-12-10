@@ -3,7 +3,7 @@ import sqlite3
 import queries as q
 from typing import List, Optional, Tuple
 
-database_path = '../resources/test.db'
+database_path = 'resources/test.db'
 conn = sqlite3.connect(database_path, check_same_thread=False)
 c = conn.cursor()
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']

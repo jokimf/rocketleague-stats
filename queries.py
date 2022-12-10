@@ -2,7 +2,7 @@ import datetime
 import sqlite3
 from typing import Any
 
-database_path = '../resources/test.db'
+database_path = 'resources/test.db'
 conn = sqlite3.connect(database_path, check_same_thread=False)
 c = conn.cursor()
 
@@ -50,11 +50,11 @@ def last_x_games_stats(limit: int = 5) -> list[Any]:
     return c.execute("""
             SELECT 
                 games.gameID AS ID, games.goals As CG, against AS Enemy,
-                knus.rank, knus.score, knus.goals, knus.assists, knus.saves, knus.shots,
-                puad.rank, puad.score, puad.goals, puad.assists, puad.saves, puad.shots,
-                sticker.rank, sticker.score, sticker.goals, sticker.assists, sticker.saves, sticker.shots
-            FROM games JOIN scores ON games.gameID = scores.gameID JOIN knus ON games.gameID = knus.gameID 
-                JOIN puad ON games.gameID = puad.gameID JOIN sticker ON games.gameID = sticker.gameID
+                k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
+                p.rank, p.score, p.goals, p.assists, p.saves, p.shots,
+                s.rank, s.score, s.goals, s.assists, s.saves, s.shots
+            FROM games JOIN scores ON games.gameID = scores.gameID JOIN k ON games.gameID = k.gameID 
+                JOIN p ON games.gameID = p.gameID JOIN s ON games.gameID = s.gameID
             GROUP BY ID ORDER BY ID DESC LIMIT ?
     """, (limit,)).fetchall()
 
@@ -95,10 +95,10 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
             raise ValueError(f'{stat} is not in possible stats.')
 
         return c.execute(f"""
-            SELECT SUM(knus.{stat}), AVG(knus.{stat}), SUM(puad.{stat}), 
-            AVG(puad.{stat}), SUM(sticker.{stat}), AVG(sticker.{stat})
-            FROM knus JOIN puad ON knus.gameID = puad.gameID JOIN sticker ON sticker.gameID = knus.gameID
-            WHERE knus.gameID >= ? AND knus.gameID <= ?
+            SELECT SUM(k.{stat}), AVG(k.{stat}), SUM(p.{stat}), 
+            AVG(p.{stat}), SUM(s.{stat}), AVG(s.{stat})
+            FROM k JOIN p ON k.gameID = p.gameID JOIN s ON s.gameID = k.gameID
+            WHERE k.gameID >= ? AND k.gameID <= ?
         """, (start, end)).fetchone()
 
     def mvp_helper_query() -> list[Any]:

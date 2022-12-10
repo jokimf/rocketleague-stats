@@ -16,18 +16,18 @@ def fetch_from_sheets():
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('../resources/token.json'):
-        creds = Credentials.from_authorized_user_file('../resources/token.json', scope)
+    if os.path.exists('resources/token.json'):
+        creds = Credentials.from_authorized_user_file('resources/token.json', scope)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             print('invalid')
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('../resources/credentials.json', scope)
+            flow = InstalledAppFlow.from_client_secrets_file('resources/credentials.json', scope)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('../resources/token.json', 'w') as token:
+        with open('resources/token.json', 'w') as token:
             token.write(creds.to_json())
 
     # Latest game on website
