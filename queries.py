@@ -122,8 +122,8 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
 # - Random facts queries - #
 def results_table() -> list[Any]:
     return c.execute("""
-        SELECT goals, against, COUNT(g.gameID) AS c, CAST(COUNT(g.gameID) AS FLOAT) / MAX(g.gameID) AS ch  FROM games g
-        GROUP BY goals, against ORDER BY c DESC
+        SELECT goals, against, COUNT(g.gameID) AS c FROM games g
+        GROUP BY goals, against ORDER BY 1, 2
     """).fetchall()
 
 
