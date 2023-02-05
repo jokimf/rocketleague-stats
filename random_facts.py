@@ -117,7 +117,7 @@ def result_facts() -> list[tuple]:
     goals, against = q.last_result()
     for entry in data:
         if entry[0] == goals and entry[1] == against:
-            total, percent = entry[2], entry[3]
+            total, percent = entry[2], entry[2] / q.max_id()
             if 0.0125 <= percent <= 0.25:
                 facts.append(
                     (
