@@ -21,7 +21,6 @@ def fetch_from_sheets():
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            print('invalid')
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file('resources/credentials.json', scope)

@@ -53,8 +53,8 @@ def last_x_games_stats(limit: int = 5) -> list[Any]:
                 k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
                 p.rank, p.score, p.goals, p.assists, p.saves, p.shots,
                 s.rank, s.score, s.goals, s.assists, s.saves, s.shots
-            FROM games JOIN scores ON games.gameID = scores.gameID JOIN k ON games.gameID = k.gameID 
-                JOIN p ON games.gameID = p.gameID JOIN s ON games.gameID = s.gameID
+            FROM games JOIN scores ON games.gameID = scores.gameID JOIN knus k ON games.gameID = k.gameID 
+                JOIN puad p ON games.gameID = p.gameID JOIN sticker s ON games.gameID = s.gameID
             GROUP BY ID ORDER BY ID DESC LIMIT ?
     """, (limit,)).fetchall()
 
@@ -97,7 +97,7 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
         return c.execute(f"""
             SELECT SUM(k.{stat}), AVG(k.{stat}), SUM(p.{stat}), 
             AVG(p.{stat}), SUM(s.{stat}), AVG(s.{stat})
-            FROM k JOIN p ON k.gameID = p.gameID JOIN s ON s.gameID = k.gameID
+            FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON s.gameID = k.gameID
             WHERE k.gameID >= ? AND k.gameID <= ?
         """, (start, end)).fetchone()
 
