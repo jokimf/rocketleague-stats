@@ -12,17 +12,16 @@ const svg = d3.select("#my_dataviz")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 //Read the data
-
 d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/heatmap_data.csv").then(function (data) {
 
     // Labels of row and columns -> unique identifier of the column called 'group' and 'variable'
-    const myGroups = Array.from(new Set(data.map(d => d.group)))
-    const myVars = Array.from(new Set(data.map(d => d.variable)))
+    const xLabels = Array.from(new Set(data.map(d => d.group)))
+    const yLabels = Array.from(new Set(data.map(d => d.variable)))
 
     // Build X scales and axis:
     const x = d3.scaleBand()
         .range([0, width])
-        .domain(myGroups)
+        .domain(xLabels)
         .padding(0.05);
     svg.append("g")
         .style("font-size", 15)
@@ -33,7 +32,7 @@ d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/he
     // Build Y scales and axis:
     const y = d3.scaleBand()
         .range([height, 0])
-        .domain(myVars)
+        .domain(yLabels)
         .padding(0.05);
     svg.append("g")
         .style("font-size", 15)
@@ -103,4 +102,4 @@ d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/he
         .on("mouseover", mouseover)
         .on("mousemove", mousemove)
         .on("mouseleave", mouseleave)
-})
+});

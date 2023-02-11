@@ -127,6 +127,9 @@ def results_table() -> list[Any]:
     """).fetchall()
 
 
+print(results_table())
+
+
 def session_data_by_date(date: str):
     return c.execute("SELECT * FROM sessions WHERE date=?", (date,)).fetchone()
 
