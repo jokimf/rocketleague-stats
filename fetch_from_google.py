@@ -22,7 +22,7 @@ def fetch_from_sheets():
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-        else:
+        else: # Create token.json in first time setup
             flow = InstalledAppFlow.from_client_secrets_file('resources/credentials.json', scope)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
