@@ -803,3 +803,21 @@ def average_winrate_of_sessions_by_game_count():
         SELECT wins + losses AS games, CAST(wins AS float) / CAST(wins + losses AS float) AS wr FROM sessions)p
     GROUP BY games
     """).fetchall()
+
+# "Just out" values -> [player0_just_out, player0_new_value, player1_just_out, etc.]
+def just_out():
+    return c.execute("""
+    WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
+    SELECT scores.gameID, scores.playerID, scores.score FROM scores, maxId
+    WHERE gameID = maxId.mId - 20 OR gameID = maxId.mId
+    ORDER BY playerID
+    """).fetchall()
+
+# "To beat next" values -> [player0_value, player1_value, player2_value]
+def to_beat_next():
+    return c.execute("""
+    WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
+    SELECT scores.gameID, scores.playerID, scores.score FROM scores, maxId
+    WHERE gameID = maxId.mId - 19
+    ORDER BY playerID
+    """).fetchall()
