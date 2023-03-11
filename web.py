@@ -1,9 +1,7 @@
 from flask import Flask
 from flask import render_template
-from flask import jsonify
 
 import fetch_from_google
-import graphs as g
 import queries as q
 import random_facts as r
 

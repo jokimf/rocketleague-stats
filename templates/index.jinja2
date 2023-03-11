@@ -35,28 +35,36 @@
                      src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
                      alt="Knus">
             </figure>
-            <div class="profile-stats">
-                <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
-                <span class="profile-stats-value">{{ knus_performance[0][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[0][2] }}"> Top {{ knus_performance[0][1] }}%</span>
-                <br>
-                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
-                <span class="profile-stats-value">{{ knus_performance[1][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[1][2] }}">Top {{ knus_performance[1][1] }}%</span>
-                <br>
-                <img class="icon" alt="Assists" src="https://jok.im/static/rl/Assist_points_icon.png">
-                <span class="profile-stats-value">{{ knus_performance[2][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[2][2] }}">Top {{ knus_performance[2][1] }}%</span>
-                <br>
-                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Save_points_icon.png">
-                <span class="profile-stats-value">{{ knus_performance[3][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[3][2] }}">Top {{ knus_performance[3][1] }}%</span>
-                <br>
-                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Shot_on_Goal_points_icon.png">
-                <span class="profile-stats-value">{{ knus_performance[4][0] }}</span>
-                <span class="top" style="color:{{ knus_performance[4][2] }}">Top {{ knus_performance[4][1] }}%</span>
-                <br>
+            <div class="profile-stats" style="display:flex;align-content: center;justify-content: center">
+                <div class="profile-stats">
+                    <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
+                    <span class="profile-stats-value">{{ knus_performance[0][0] }}</span>
+                    <span class="top"
+                          style="color:{{ knus_performance[0][2] }}"> Top {{ knus_performance[0][1] }}%</span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
+                    <span class="profile-stats-value">{{ knus_performance[1][0] }}</span>
+                    <span class="top"
+                          style="color:{{ knus_performance[1][2] }}">Top {{ knus_performance[1][1] }}%</span>
+                    <br>
+                    <img class="icon" alt="Assists" src="https://jok.im/static/rl/Assist_points_icon.png">
+                    <span class="profile-stats-value">{{ knus_performance[2][0] }}</span>
+                    <span class="top"
+                          style="color:{{ knus_performance[2][2] }}">Top {{ knus_performance[2][1] }}%</span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/static/rl/Save_points_icon.png">
+                    <span class="profile-stats-value">{{ knus_performance[3][0] }}</span>
+                    <span class="top"
+                          style="color:{{ knus_performance[3][2] }}">Top {{ knus_performance[3][1] }}%</span>
+                    <br>
+                    <img class="icon" alt="Goals" src="https://jok.im/static/rl/Shot_on_Goal_points_icon.png">
+                    <span class="profile-stats-value">{{ knus_performance[4][0] }}</span>
+                    <span class="top"
+                          style="color:{{ knus_performance[4][2] }}">Top {{ knus_performance[4][1] }}%</span>
+                    <br>
+                </div>
             </div>
+            <div>Performance level: a<br>Just Out: b<br>To beat: c</div>
         </div>
         <div class="profile">
             <div class="profile-stats-left">
@@ -382,12 +390,16 @@
                     </table>
                     {% if session_game_count < 5 %}
                         {% if latest_session_date == website_date %}
-                            You need to play {{ 5 - session_game_count }} more games to make this a valid session.
+                            {% if 5 - session_game_count == 1 %}
+                                You need to play one more game to make this a valid session.
+                            {% else %}
+                                You need to play {{ 5 - session_game_count }} more games to make this a valid session.
+                            {% endif %}
                         {% else %}
                             Last session did not make it to five games and can no longer do so.
                         {% endif %}
                     {% else %}
-                        {# TODO #}
+
                     {% endif %}
                 </div>
             </div>
@@ -511,10 +523,11 @@
 
     .profile {
         display: flex;
-        justify-content: center;
+        justify-content: space-evenly;
         border-radius: 1em;
         background-color: #1f1f1f;
-        padding: 5px
+        padding: 5px;
+        gap: 1em;
     }
 
     .profile-stats-left {

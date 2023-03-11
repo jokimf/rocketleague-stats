@@ -127,9 +127,6 @@ def results_table() -> list[Any]:
     """).fetchall()
 
 
-print(results_table())
-
-
 def session_data_by_date(date: str):
     return c.execute("SELECT * FROM sessions WHERE date=?", (date,)).fetchone()
 
@@ -597,6 +594,9 @@ def seasons_dashboard():
         LEFT JOIN puad p ON g.gameID = p.gameID
         LEFT JOIN sticker s ON g.gameID = s.gameID
         GROUP BY seasonID""").fetchall()
+
+
+print(seasons_dashboard())
 
 
 # UNUSED #
