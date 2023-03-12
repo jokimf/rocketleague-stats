@@ -804,6 +804,7 @@ def average_winrate_of_sessions_by_game_count():
     GROUP BY games
     """).fetchall()
 
+
 # "Just out" values -> [player0_just_out, player0_new_value, player1_just_out, etc.]
 def just_out():
     return c.execute("""
@@ -813,6 +814,7 @@ def just_out():
     ORDER BY playerID
     """).fetchall()
 
+
 # "To beat next" values -> [player0_value, player1_value, player2_value]
 def to_beat_next():
     return c.execute("""
@@ -821,3 +823,20 @@ def to_beat_next():
     WHERE gameID = maxId.mId - 19
     ORDER BY playerID
     """).fetchall()
+
+
+def performance(stat, player_id):
+    if stat not in ['score', 'goals', 'assists', 'saves', 'shots']:
+        raise ValueError(f'{stat} not valid.')
+    if player_id >= 3 or player_id < 0:
+        raise ValueError(f'{player_id} not valid.')
+    return c.execute(f'SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1;',
+                     (player_id,)).fetchone()[0]
+
+
+def performance_score():
+    player_average = sum(players := [performance('score', x) for x in range(0, 3)]) / 3
+    return [round(p - player_average,2) for p in players]
+
+
+print(performance_score())

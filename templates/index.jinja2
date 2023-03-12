@@ -64,7 +64,7 @@
                     <br>
                 </div>
             </div>
-            <div>Performance level: a<br>Just Out: b<br>To beat: c</div>
+            <div>Performance level: {{ performance_score[0] }}<br>Just Out: {{ just_out[0][2] }} → {{ just_out[1][2] }}<br>To beat: c</div>
         </div>
         <div class="profile">
             <div class="profile-stats-left">
@@ -509,8 +509,7 @@
 
     .profile-pics-flexbox {
         display: flex;
-        justify-content: center;
-        gap: 150px;
+        justify-content: space-evenly;
         padding-top: 15px;
     }
 

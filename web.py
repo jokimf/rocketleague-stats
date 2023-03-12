@@ -54,7 +54,9 @@ def fetch_data():
         "website_date": q.website_date(),
         "latest_session_date": session_details['latest_session_date'],
         "w_and_l": session_details['w_and_l'],
-        "session_game_count": session_details['session_game_count']
+        "session_game_count": session_details['session_game_count'],
+        "just_out": q.just_out(),
+        "performance_score": q.performance_score()
     }
     return context
 
