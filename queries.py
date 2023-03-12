@@ -43,9 +43,6 @@ def days_since_inception() -> int:
     return c.execute('SELECT julianday(DATE()) - julianday(MIN(date)) FROM games').fetchone()[0]
 
 
-# Used for info table at top of the page
-
-
 def last_x_games_stats(limit: int = 5) -> list[Any]:
     return c.execute("""
             SELECT 
@@ -825,18 +822,14 @@ def to_beat_next():
     """).fetchall()
 
 
-def performance(stat, player_id):
-    if stat not in ['score', 'goals', 'assists', 'saves', 'shots']:
-        raise ValueError(f'{stat} not valid.')
-    if player_id >= 3 or player_id < 0:
-        raise ValueError(f'{player_id} not valid.')
-    return c.execute(f'SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1;',
-                     (player_id,)).fetchone()[0]
-
-
 def performance_score():
+    def performance(stat, player_id):
+        if stat not in ['score', 'goals', 'assists', 'saves', 'shots']:
+            raise ValueError(f'{stat} not valid.')
+        if player_id >= 3 or player_id < 0:
+            raise ValueError(f'{player_id} not valid.')
+        return c.execute(f'SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1;',
+                         (player_id,)).fetchone()[0]
+
     player_average = sum(players := [performance('score', x) for x in range(0, 3)]) / 3
-    return [round(p - player_average,2) for p in players]
-
-
-print(performance_score())
+    return [round(p - player_average, 2) for p in players]

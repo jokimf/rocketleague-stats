@@ -48,15 +48,16 @@ def fetch_data():
         "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),
         "session_data": q.general_game_stats_over_time_period(q.session_start_id(), max_id),
         "fun_facts": q.build_fun_facts(),
-        "knus_performance": q.performance_profile_view(0),
-        "puad_performance": q.performance_profile_view(1),
-        "st_performance": q.performance_profile_view(2),
+        "k_perf": q.performance_profile_view(0),
+        "p_perf": q.performance_profile_view(1),
+        "s_perf": q.performance_profile_view(2),
         "website_date": q.website_date(),
         "latest_session_date": session_details['latest_session_date'],
         "w_and_l": session_details['w_and_l'],
         "session_game_count": session_details['session_game_count'],
         "just_out": q.just_out(),
-        "performance_score": q.performance_score()
+        "performance_score": q.performance_score(),
+        "to_beat_next": q.to_beat_next()
     }
     return context
 
