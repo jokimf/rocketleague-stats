@@ -7,6 +7,9 @@ import random_facts as r
 
 app = Flask(__name__)
 
+# TODO: Highligh MVP player in SESSION DETAILS
+# TODO: Session stats
+
 
 @app.route('/data/<graph>')
 def data(graph):

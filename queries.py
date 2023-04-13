@@ -413,21 +413,6 @@ def session_start_id() -> int:
     return c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1").fetchone()[0]
 
 
-def winrates() -> list:
-    latest_game_id = max_id()
-    season_start = season_start_id()
-    last_session = latest_session_main_data()
-    games_last_session = last_session[2] + last_session[3]
-    winrates_list = [total_wins() / latest_game_id * 100,
-                     wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
-                     float(wins_in_range(latest_game_id - 99, latest_game_id)),
-                     wins_in_range(latest_game_id - 19, latest_game_id) / 20 * 100,
-                     last_session[2] / games_last_session * 100
-                     ]
-
-    return winrates_list
-
-
 def build_fun_facts() -> list:
     # "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
     # p1 > p2+p3
@@ -619,6 +604,21 @@ def total_wins() -> int:
 
 def total_losses() -> int:
     return c.execute("SELECT COUNT(gameID) FROM games WHERE goals < against").fetchone()[0]
+
+
+def winrates() -> list:
+    latest_game_id = max_id()
+    season_start = season_start_id()
+    last_session = latest_session_main_data()
+    games_last_session = last_session[2] + last_session[3]
+    winrates_list = [total_wins() / latest_game_id * 100,
+                     wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
+                     float(wins_in_range(latest_game_id - 99, latest_game_id)),
+                     wins_in_range(latest_game_id - 19, latest_game_id) / 20 * 100,
+                     last_session[2] / games_last_session * 100
+                     ]
+
+    return winrates_list
 
 
 def one_diff_wins() -> int:

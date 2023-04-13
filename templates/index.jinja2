@@ -451,7 +451,14 @@
                             <tr>{% for data in row %}
                                 <td {% if data|int != 0 and last_games_highlighting[loop.index] != None %}
                                     style="background-color:{{ conditional_formatting(last_games_highlighting[loop.index][0],data, last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
-                                {% endif %}>{{ data }}</td>{% endfor %}
+                                {% endif %}
+                                        {% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10] > row[16] and loop.index == 11 or row[16] > row[10] and row[4] < row[16] and loop.index == 17 %}
+                                    class="mvp_highlighting_table_cell"
+                                        {% endif %}
+                                >
+                                    {{ data }}
+                                </td>
+                            {% endfor %}
                             </tr>
                         {% endfor %}
                     </table>
@@ -653,6 +660,10 @@
         border-bottom-color: #c9c9c9;
     }
 
+    .mvp_highlighting_table_cell {
+        border: 2px double darkgoldenrod !important;
+    }
+
     table td {
         border: 1px solid #cccccc;
     }
@@ -735,13 +746,6 @@
     .winrate-value {
         font-weight: bolder;
         font-size: 2em;
-    }
-
-    .caption {
-        display: flex;
-        justify-content: space-evenly;
-        font-weight: bolder;
-        font-size: 22px;
     }
 </style>
 </html>
