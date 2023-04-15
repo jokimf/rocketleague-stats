@@ -43,10 +43,10 @@ def fetch_data():
         "tilt": q.tilt(),
         "average_session_length": q.average_session_length(),
         "last_games": last_games,
-        "last_games_highlighting": [None, None, None, None, None,
+        "last_games_highlighting": [None, None, None, None, (k, 100, 700),
                                     (k, 100, 700), (k, 0, 5), (k, 0, 5), (k, 0, 5),
-                                    (k, 0, 10), None, (p, 100, 700), (p, 0, 5), (p, 0, 5), (p, 0, 5), (p, 0, 10),
-                                    None, (s, 100, 700), (s, 0, 5), (s, 0, 5), (s, 0, 5), (s, 0, 10)],
+                                    (k, 0, 10), (p, 100, 700), (p, 100, 700), (p, 0, 5), (p, 0, 5), (p, 0, 5), (p, 0, 10),
+                                    (s, 100, 700), (s, 100, 700), (s, 0, 5), (s, 0, 5), (s, 0, 5), (s, 0, 10)],
         "grand_total": q.general_game_stats_over_time_period(1, max_id),
         "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),
         "session_data": q.general_game_stats_over_time_period(q.session_start_id(), max_id),
@@ -91,5 +91,5 @@ def games():
 
 
 if __name__ == '__main__':
-    app.jinja_env.globals.update(conditional_formatting=q.conditional_formatting)
+    app.jinja_env.globals.update(cf=q.conditional_formatting)
     app.run(host='127.0.0.1', port=6543)
