@@ -44,10 +44,10 @@ def days_since_inception() -> int:
     return c.execute('SELECT julianday(DATE()) - julianday(MIN(date)) FROM games').fetchone()[0]
 
 
-def last_x_games_stats(limit: int = 5) -> list[Any]:
-    return c.execute("""
+def last_x_games_stats(limit, with_date: bool) -> list[Any]:
+    return c.execute(f"""
             SELECT 
-                games.gameID AS ID, games.goals As CG, against AS Enemy,
+                games.gameID AS ID, {'games.date,' if with_date else ''} games.goals As CG, against AS Enemy,
                 k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
                 p.rank, p.score, p.goals, p.assists, p.saves, p.shots,
                 s.rank, s.score, s.goals, s.assists, s.saves, s.shots
@@ -560,6 +560,7 @@ def build_fun_facts() -> list:
 
 # Season queries
 # TODO: unused
+# TODO: player details page
 def seasons_dashboard():
     return c.execute("""SELECT se.season_name, 
         SUM(IIF(g.goals > g.against,1,0)) 'wins', 
@@ -579,7 +580,14 @@ def seasons_dashboard():
         GROUP BY seasonID""").fetchall()
 
 
-print(seasons_dashboard())
+def seasons_dashboard_short():
+    return c.execute("""SELECT se.season_name,
+        SUM(IIF(g.goals > g.against,1,0)) 'wins',
+        SUM(IIF(g.goals < g.against,1,0)) 'losses',
+        ROUND(CAST(SUM(IIF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT)*100,2) 'wr'
+        FROM games g
+        LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date
+        GROUP BY seasonID""").fetchall()
 
 
 # UNUSED #

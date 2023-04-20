@@ -39,7 +39,8 @@
                 <div class="profile-stat">
                     <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
                     <span class="profile-stats-value">{{ k_perf[0][0] }}</span>
-                    <span class="profile-stats-middle-top" style="color:{{ k_perf[0][2] }}"> Top {{ k_perf[0][1] }}%</span>
+                    <span class="profile-stats-middle-top"
+                          style="color:{{ k_perf[0][2] }}"> Top {{ k_perf[0][1] }}%</span>
                 </div>
                 <div class="profile-stat">
                     <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
@@ -95,7 +96,8 @@
                 <div class="profile-stat">
                     <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
                     <span class="profile-stats-value">{{ p_perf[0][0] }}</span>
-                    <span class="profile-stats-middle-top" style="color:{{ p_perf[0][2] }}"> Top {{ p_perf[0][1] }}%</span>
+                    <span class="profile-stats-middle-top"
+                          style="color:{{ p_perf[0][2] }}"> Top {{ p_perf[0][1] }}%</span>
                 </div>
                 <div class="profile-stat">
                     <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
@@ -151,7 +153,8 @@
                 <div class="profile-stat">
                     <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
                     <span class="profile-stats-value">{{ s_perf[0][0] }}</span>
-                    <span class="profile-stats-middle-top" style="color:{{ s_perf[0][2] }}"> Top {{ s_perf[0][1] }}%</span>
+                    <span class="profile-stats-middle-top"
+                          style="color:{{ s_perf[0][2] }}"> Top {{ s_perf[0][1] }}%</span>
                 </div>
                 <div class="profile-stat">
                     <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
@@ -405,18 +408,7 @@
             <div class="data-box">
                 <div class="session">
                     <h1>SESSION DETAILS</h1>
-                    <div style="display:flex;justify-content: space-evenly">
-                        {% for result in w_and_l %}
-                            {% if result=="W" %}
-                                <div style="color:green; display:inline; font-size: x-large; font-weight: bold">{{ result }}</div>
-                            {% else %}
-                                <div style="color:red; display:inline; font-size: x-large; font-weight: bold">{{ result }}</div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    <br>
-                    <table class="container">
-                        <thead>
+                    <table>
                         <tr>
                             <th colspan="3" class="table-general">General</th>
                             <th colspan="6" class="knus">Knus</th>
@@ -424,29 +416,28 @@
                             <th colspan="6" class="sticker">Sticker</th>
                         </tr>
                         <tr>
-                            <td>#</td>
-                            <td>G</td>
-                            <td>A</td>
-                            <td>R</td>
-                            <td>S</td>
-                            <td>G</td>
-                            <td>A</td>
-                            <td>S</td>
-                            <td>S</td>
-                            <td>R</td>
-                            <td>S</td>
-                            <td>G</td>
-                            <td>A</td>
-                            <td>S</td>
-                            <td>S</td>
-                            <td>R</td>
-                            <td>S</td>
-                            <td>G</td>
-                            <td>A</td>
-                            <td>S</td>
-                            <td>S</td>
+                            <th>#</th>
+                            <th>G</th>
+                            <th>A</th>
+                            <th>R</th>
+                            <th>S</th>
+                            <th>G</th>
+                            <th>A</th>
+                            <th>S</th>
+                            <th>S</th>
+                            <th>R</th>
+                            <th>S</th>
+                            <th>G</th>
+                            <th>A</th>
+                            <th>S</th>
+                            <th>S</th>
+                            <th>R</th>
+                            <th>S</th>
+                            <th>G</th>
+                            <th>A</th>
+                            <th>S</th>
+                            <th>S</th>
                         </tr>
-                        </thead>
                         {% for row in last_games %}
                             <tr>
                                 {% for data in row %}
@@ -454,6 +445,14 @@
                                         style="background-color:{{ cf(last_games_highlighting[loop.index][0],data, last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
                                     {% elif loop.index in [4,10,16] %}
                                         style="background-color:{{ cf(last_games_highlighting[loop.index][0],row[loop.index], last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
+                                    {% elif loop.index == 2 or loop.index == 3 %}
+                                        {% if row[1] > row[2] and loop.index == 2 %}
+                                        style="background-color: rgba(30,133,30,0.4)"
+                                        class="result_highlighting_table_cell"
+                                        {% elif row[2] > row[1] and loop.index == 3 %}
+                                        style="background-color: rgba(133,30,30,0.4)"
+                                        class="result_highlighting_table_cell"
+                                        {% endif %}
                                     {% endif %}
                                             {% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10] > row[16] and loop.index == 11 or row[16] > row[10] and row[4] < row[16] and loop.index == 17 %}
                                         class="mvp_highlighting_table_cell"
@@ -485,6 +484,19 @@
                     {% endif %}
                 </div>
             </div>
+            <div class="data-box">
+                <h1>SEASONS</h1>
+                <table>
+                    {% for season in seasons %}
+                        <tr>
+                            {% for data in season %}
+                                <td>{{ data }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
             <div class="data-box">
                 <div class="general-info">
                     <div class="general-info-container">
@@ -575,6 +587,7 @@
         border-radius: 1em;
         margin: 1em;
         padding: 1em;
+        overflow: hidden;
     }
 
     .in-box-highlighting {
@@ -643,12 +656,12 @@
     }
 
     th {
-        color: #000000;
+        color: white;
         font-weight: bold;
+        border-color: inherit;
     }
 
     td, th {
-        border: 1px solid #999;
         padding: 0.5rem;
         text-align: center;
     }
@@ -659,13 +672,6 @@
 
     table tr:nth-child(even) {
         background-color: #2b2b2b;
-    }
-
-    table th {
-        background-color: #434343;
-        color: white;
-        border: 1px solid #dedede;
-        border-bottom-color: #c9c9c9;
     }
 
     .mvp_highlighting_table_cell {

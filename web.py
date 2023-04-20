@@ -7,9 +7,6 @@ import random_facts as r
 
 app = Flask(__name__)
 
-# TODO: Highligh MVP player in SESSION DETAILS
-# TODO: Session stats
-
 
 @app.route('/data/<graph>')
 def data(graph):
@@ -32,7 +29,7 @@ def fetch_data():
     fetch_from_google.fetch_from_sheets()
     max_id = q.max_id()
     session_details = q.session_details()
-    last_games = q.last_x_games_stats(len(q.games_from_session_date()))
+    last_games = q.last_x_games_stats(len(q.games_from_session_date()), False)
 
     context = {
         "ranks": q.ranks(),
@@ -45,7 +42,8 @@ def fetch_data():
         "last_games": last_games,
         "last_games_highlighting": [None, None, None, None, (k, 100, 700),
                                     (k, 100, 700), (k, 0, 5), (k, 0, 5), (k, 0, 5),
-                                    (k, 0, 10), (p, 100, 700), (p, 100, 700), (p, 0, 5), (p, 0, 5), (p, 0, 5), (p, 0, 10),
+                                    (k, 0, 10), (p, 100, 700), (p, 100, 700), (p, 0, 5), (p, 0, 5), (p, 0, 5),
+                                    (p, 0, 10),
                                     (s, 100, 700), (s, 100, 700), (s, 0, 5), (s, 0, 5), (s, 0, 5), (s, 0, 10)],
         "grand_total": q.general_game_stats_over_time_period(1, max_id),
         "season_data": q.general_game_stats_over_time_period(q.season_start_id(), max_id),
@@ -60,7 +58,8 @@ def fetch_data():
         "session_game_count": session_details['session_game_count'],
         "just_out": q.just_out(),
         "performance_score": q.performance_score(),
-        "to_beat_next": q.to_beat_next()
+        "to_beat_next": q.to_beat_next(),
+        "seasons": q.seasons_dashboard_short()
     }
     return context
 
@@ -87,7 +86,19 @@ def records():
 
 @app.route('/games')
 def games():
-    return render_template('games.jinja2')
+    k, p, s = 'rgba(12,145,30)', 'rgba(151,3,14)', 'rgba(12,52,145)'
+    ctx = {'games': q.last_x_games_stats(100, True),
+           "last_games_highlighting": [None, None, None, None, None, (k, 100, 700),
+                                       (k, 100, 700), (k, 0, 5), (k, 0, 5),
+                                       (k, 0, 5),
+                                       (k, 0, 10), (p, 100, 700),
+                                       (p, 100, 700), (p, 0, 5), (p, 0, 5),
+                                       (p, 0, 5),
+                                       (p, 0, 10),
+                                       (s, 100, 700), (s, 100, 700),
+                                       (s, 0, 5), (s, 0, 5), (s, 0, 5),
+                                       (s, 0, 10)], }
+    return render_template('games.jinja2', **ctx)
 
 
 if __name__ == '__main__':
