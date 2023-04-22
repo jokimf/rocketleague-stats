@@ -75,11 +75,18 @@ def graphs():
 
 
 @app.route('/records')
-def records():
+def records():  # TODO: Highlight records that happened not long ago
     record_games = q.build_record_games()
     context = {
-        'record_games': record_games[0],
-        'record_games2': record_games[1]
+        'record_games': record_games,
+        'record_headlines': ['Most stat by player in one game', 'Highest performance by player',
+                             'Lowest performance by player',
+                             'Most stat by team', 'Goal stats by team', 'Points stats', 'Miscellaneous'],
+        'rank_highlighting': ['rgb(201, 176, 55, 0.3)', 'rgb(215, 215, 215, 0.3)', 'rgb(173, 138, 86, 0.3)'],
+        'k': 'rgba(12,145,30,0.2)',
+        'p': 'rgba(151,3,14,0.2)',
+        's': 'rgba(12,52,145,0.2)',
+        'cg': 'rgba(255, 225, 0, 0.2)'
     }
     return render_template('records.jinja2', **context)
 
