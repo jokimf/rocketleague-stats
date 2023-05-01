@@ -92,20 +92,15 @@ def last_month_summary() -> list[tuple]:
     facts = []
     games_this_month = q.game_amount_this_month()
 
-    # Only show if less than 3 games have been played this month and its before the fifth of a month
-    if 5 >= games_this_month > 0 and datetime.today().day < 5:
-        last_month_str = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
-        data = q.unique_months_game_count()
+    # Only show if less than 3 games have been played this month and it's before the fifth of a month
+    if True or 5 >= games_this_month > 0 and datetime.today().day < 5:
+        last_month_str = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%m-%Y")
+        month_gc = q.unique_months_game_count()
 
-        # Cursed, fix it sometime
-        c = 0
-        count = None
-        for tp in data:
-            c = c + 1
-            if tp[0] == last_month_str:
-                count = tp[1]
-
-        facts.append((f'Last month, you played {count} games, which ranks at {c}. among all months.', 5))
+        # Works because month are sorted by game count
+        rank = [months[0] for months in month_gc].index(last_month_str)
+        game_amount = [t for t in month_gc if t[0] == last_month_str][0][1]
+        facts.append((f'Last month, you played {game_amount} games, which ranks at {rank} out of {}.', 5))
     return facts
 
 
@@ -118,27 +113,25 @@ def result_facts() -> list[tuple]:
     for entry in data:
         if entry[0] == goals and entry[1] == against:
             total, percent = entry[2], entry[2] / q.max_id()
-            if 0.0125 <= percent <= 0.25:
-                facts.append(
-                    (
-                        f'The result of last match was rare, in total it happened {total} times ('
-                        f'{round(percent * 100, 4)}%)',
-                        3))
-            elif 0.00625 <= percent <= 0.25:
-                facts.append(
-                    (
-                        f'The result of last match was really rare, in total it happened {total} times ('
-                        f'{round(percent * 100, 4)}%)',
-                        4))
-            elif percent <= 0.25:
+            if percent <= 0.0025:
                 facts.append(
                     (
                         f"The result of last match only happened for the {total}. time! That's only "
                         f"{round(percent * 100, 4)}%",
                         5))
-    if not facts:  # set is empty because results has not happened before
-        facts.append(
-            (f'Last game was the first time that this result happened. {goals}:{against}, a real rarity.', 5))
+            elif percent <= 0.01:
+                facts.append(
+                    (
+                        f'The result of last match was really rare, in total it happened {total} times ('
+                        f'{round(percent * 100, 4)}%)',
+                        4))
+            elif percent <= 0.04:
+                facts.append((
+                             f'The result of last match was rare, in total it happened {total} times ({round(percent * 100, 4)}%)',
+                             3))
+            elif percent < 0.0025:
+                facts.append(
+                    (f'Last game was the first time that this result happened. {goals}:{against}, a real rarity.', 5))
     return facts
 
 
@@ -206,9 +199,9 @@ def close_to_record() -> list[tuple]:
                    (q.highest_team('assists', limit),
                     'Last game you got a total of {value} assists. The game ranks at number {rank} in that regard.'),
                    (q.highest_team('saves', limit),
-                    'Last game you scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
+                    'Last game you scored a total of {value} saves. The game ranks at number {rank} in that regard.'),
                    (q.highest_team('shots', limit),
-                    'Last game you scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
+                    'Last game you scored a total of {value} shots. The game ranks at number {rank} in that regard.'),
                    (q.diff_mvp_lvp('DESC', limit),
                     'Last game the difference between the MVP and LVP was {value} points. That is the {rank}. highest '
                     'difference.'),
