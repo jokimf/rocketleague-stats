@@ -9,7 +9,16 @@ c = conn.cursor()
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 
 
-def max_id() -> int:
+def last_reload():
+    return c.execute('SELECT last_reload FROM meta').fetchone()[0]
+
+
+def set_last_reload(last_reload: int) -> None:
+    c.execute('UPDATE meta SET last_reload = ?', (last_reload,))
+    conn.commit()
+
+
+def total_games() -> int:
     return c.execute("SELECT MAX(gameID) FROM games").fetchone()[0]
 
 
@@ -40,7 +49,7 @@ def conditional_formatting(color: str, value: float, minimum: int, maximum: int)
 
 
 # Returns number of days since first game played
-def days_since_inception() -> int:
+def days_since_first() -> int:
     return c.execute('SELECT julianday(DATE()) - julianday(MIN(date)) FROM games').fetchone()[0]
 
 
@@ -77,7 +86,7 @@ def general_game_stats_over_time_period(start=1, end=None) -> dict[Any]:
 
     # Input validation
     if end is None:
-        end = max_id()
+        end = total_games()
     if start > end:
         raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
     if start <= 0:
@@ -133,180 +142,9 @@ def last_result() -> tuple:
     return c.execute('SELECT goals, against FROM games ORDER BY gameID DESC LIMIT 1').fetchone()
 
 
-# - RECORD GAME QUERIES - #
 def record_games_per_session(limit: int = 1) -> list[Any]:
     return c.execute('SELECT sessionID, wins+losses FROM sessions ORDER BY wins+losses DESC LIMIT ?',
                      (limit,)).fetchall()
-
-
-def record_highest_value_per_stat(stat: str, limit: int = 3) -> list[Any]:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    if stat == 'goals':
-        stat = 'scores.goals'
-
-    return c.execute(f'''
-            SELECT name, {stat}, games.gameID, date 
-            FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
-            ORDER BY {stat} DESC LIMIT ?''', (limit,)).fetchall()
-
-
-def most_points_without_goal(limit: int = 3) -> list[Any]:
-    return c.execute('''
-        SELECT name, score, games.gameID, date 
-        FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
-        WHERE scores.goals = 0
-        ORDER BY score DESC LIMIT ?''', (limit,)).fetchall()
-
-
-def least_points_with_goals(limit: int = 3) -> list[Any]:
-    return c.execute('''
-        SELECT name, score, games.gameID, date 
-        FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
-        WHERE scores.goals > 0
-        ORDER BY score ASC LIMIT ?''', (limit,)).fetchall()
-
-
-def most_against(limit: int = 3) -> list[Any]:
-    return c.execute('SELECT "CG", against, gameID, date FROM games ORDER BY against DESC LIMIT ?', (limit,)).fetchall()
-
-
-def most_against_and_won(limit: int = 3) -> list[Any]:
-    return c.execute(
-        'SELECT "CG", against, gameID, date FROM games WHERE goals > against ORDER BY against DESC LIMIT ?',
-        (limit,)).fetchall()
-
-
-def most_goals_and_lost(limit: int = 3) -> list[Any]:
-    return c.execute(
-        'SELECT "CG", goals, gameID, date FROM games WHERE goals < against ORDER BY goals DESC LIMIT ?',
-        (limit,)).fetchall()
-
-
-def most_total_goals(limit: int = 3) -> list[Any]:
-    return c.execute('SELECT "CG",goals+against, gameID, date FROM games ORDER BY goals + against DESC LIMIT ?',
-                     (limit,)).fetchall()
-
-
-def highest_team(stat: str, limit: int = 3) -> list[Any]:
-    if stat == 'goals':
-        stat = 'scores.goals'
-    return c.execute(f'''
-            SELECT "CG", SUM({stat}) AS stat, games.gameID, date 
-            FROM games JOIN scores ON games.gameID = scores.gameID 
-            GROUP BY games.gameID ORDER BY stat DESC LIMIT ?
-        ''', (limit,)).fetchall()
-
-
-# Difference between MVP and LVP, DESC for most diff, ASC for least diff
-def diff_mvp_lvp(order: str, limit: int = 3) -> list[Any]:
-    if order not in ['ASC', 'DESC']:
-        raise ValueError('Order is not DESC or ASC.')
-    return c.execute(f'''
-        SELECT p.name, msc.score - lsc.score AS diff, ml.gameID, g.date
-        FROM mvplvp ml
-        LEFT JOIN scores msc ON ml.gameID = msc.gameID AND ml.MVP = msc.playerID
-        LEFT JOIN scores lsc ON ml.gameID = lsc.gameID AND ml.LVP = lsc.playerID
-        LEFT JOIN players p ON msc.playerID = p.playerID
-        LEFT JOIN games g ON ml.gameID = g.gameID
-        ORDER BY msc.score-lsc.score {order} LIMIT ? ''', (limit,)).fetchall()
-
-
-def most_solo_goals(limit: int = 3) -> list[Any]:
-    return c.execute('''
-            SELECT "CG", games.goals - SUM(assists) AS ja, games.gameID, date FROM games 
-            JOIN scores ON games.gameID = scores.gameID
-            GROUP BY games.gameID ORDER BY ja DESC LIMIT ?''', (limit,)).fetchall()
-
-
-def trend(stat: str, minmax: str, limit: int = 3) -> list[Any]:
-    if stat not in possible_stats or minmax not in ['MIN', 'MAX']:
-        raise ValueError(f'{stat} is not in possible stats or {minmax} is not "MIN" or "MAX"')
-    if stat == 'goals':
-        stat = 'performance.goals'
-    return c.execute(f'''
-        SELECT name, {minmax}({stat}) AS s, games.gameID, date 
-        FROM performance JOIN games ON games.gameID = performance.gameID NATURAL JOIN players
-        GROUP BY games.gameID ORDER BY s {('DESC' if minmax == 'MAX' else 'ASC')} LIMIT ?''', (limit,)).fetchall()
-
-
-def highest_points_nothing_else(limit: int = 3) -> list[Any]:
-    return c.execute('''
-            SELECT name, MAX(score), games.gameID, date     
-            FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
-            WHERE scores.goals = 0 AND assists=0 AND saves=0 AND shots=0
-            GROUP BY games.gameID ORDER BY score DESC LIMIT ?''', (limit,)).fetchall()
-
-
-def least_points_at_least_1(limit: int = 3) -> list[Any]:
-    return c.execute('''
-            SELECT name, MIN(score), games.gameID, date 
-            FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
-            WHERE scores.goals >= 1 AND assists>=1 AND saves>=1 AND shots>=1
-            GROUP BY games.gameID ORDER BY score ASC LIMIT ?''', (limit,)).fetchall()
-
-
-def most_points_without_goal_or_assist(limit: int = 3) -> list[Any]:
-    return c.execute('''
-            SELECT name, MAX(score), games.gameID, date 
-            FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
-            WHERE scores.goals = 0 AND assists=0
-            GROUP BY games.gameID ORDER BY score DESC LIMIT ?''', (limit,)).fetchall()
-
-
-def build_record_games():
-    game_amount = 10
-    records = [
-        {
-            'Highest Score by player': record_highest_value_per_stat('score', game_amount),
-            'Most goals by player': record_highest_value_per_stat('goals', game_amount),
-            'Most assists by player': record_highest_value_per_stat('assists', game_amount),
-            'Most saves by player': record_highest_value_per_stat('saves', game_amount),
-            'Most shots by player': record_highest_value_per_stat('shots', game_amount)
-        },
-        {
-            'Highest score performance': trend('score', 'MAX', game_amount),
-            'Highest goals performance': trend('goals', 'MAX', game_amount),
-            'Highest assists performance': trend('assists', 'MAX', game_amount),
-            'Highest saves performance': trend('saves', 'MAX', game_amount),
-            'Highest shots performance': trend('shots', 'MAX', game_amount)
-        },
-        {
-            'Lowest score in Trend': trend('score', 'MIN', game_amount),
-            'Lowest goals in Trend': trend('goals', 'MIN', game_amount),
-            'Lowest assists in Trend': trend('assists', 'MIN', game_amount),
-            'Lowest saves in Trend': trend('saves', 'MIN', game_amount),
-            'Lowest shots in Trend': trend('shots', 'MIN', game_amount)
-        },
-        {
-            'Most points by team': highest_team('score', game_amount),
-            'Most goals by team': highest_team('goals', game_amount),
-            'Most assists by team': highest_team('assists', game_amount),
-            'Most saves by team': highest_team('saves', game_amount),
-            'Most shots by team': highest_team('shots', game_amount)
-        },
-        {
-            'Most goals conceded by team': most_against(game_amount),
-            'Most goals conceded and still won': most_against_and_won(game_amount),
-            'Most goals scored and still lost': most_goals_and_lost(game_amount),
-            'Most total goals in one game': most_total_goals(game_amount),
-        },
-        {
-            'Most points with all stats being 0': highest_points_nothing_else(game_amount),
-            'Most points without scoring or assisting': most_points_without_goal_or_assist(game_amount),
-            'Least points with all stats being at least 1': least_points_at_least_1(game_amount),
-            'Least points with at least one goal': least_points_with_goals(game_amount)
-        },
-        {
-            'Most points with no goal': most_points_without_goal(game_amount),
-            'Highest score diff between MVP and LVP': diff_mvp_lvp('DESC', game_amount),
-            'Lowest score diff between MVP and LVP': diff_mvp_lvp('ASC', game_amount),
-            'Most solo goals by "team"': most_solo_goals(game_amount),
-        }
-    ]
-    # Segmentation for two separate tables
-    return [{k: v for k, v in sorted(x.items(), key=lambda item: item[1][0][2])} for x in records]
-
 
 
 # Frontpage QUERIES
@@ -342,7 +180,7 @@ def performance_profile_view(p_id: int):
             (SELECT row_number() OVER (ORDER BY {stat} DESC) AS n, gameID, ? 
             FROM performance WHERE playerID = ?) 
             WHERE gameID = ?
-    """, (stat, player_id, max_id())).fetchone()[0]
+    """, (stat, player_id, total_games())).fetchone()[0]
 
     def color(value: float) -> str:
         if value <= 2:
@@ -358,13 +196,13 @@ def performance_profile_view(p_id: int):
         else:
             return "IndianRed"
 
-    values = c.execute('SELECT * FROM performance WHERE playerID = ? AND gameID = ?', (p_id, max_id())).fetchone()[
+    values = c.execute('SELECT * FROM performance WHERE playerID = ? AND gameID = ?', (p_id, total_games())).fetchone()[
              2:]
-    top = [round(performance_rank('score', p_id) / max_id() * 100, 1),
-           round(performance_rank('goals', p_id) / max_id() * 100, 1),
-           round(performance_rank('assists', p_id) / max_id() * 100, 1),
-           round(performance_rank('saves', p_id) / max_id() * 100, 1),
-           round(performance_rank('shots', p_id) / max_id() * 100, 1)]
+    top = [round(performance_rank('score', p_id) / total_games() * 100, 1),
+           round(performance_rank('goals', p_id) / total_games() * 100, 1),
+           round(performance_rank('assists', p_id) / total_games() * 100, 1),
+           round(performance_rank('saves', p_id) / total_games() * 100, 1),
+           round(performance_rank('shots', p_id) / total_games() * 100, 1)]
     return list(zip(values, top, [color(x) for x in top]))
 
 
@@ -430,7 +268,7 @@ def session_start_id() -> int:
     return c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1").fetchone()[0]
 
 
-def build_fun_facts() -> list:
+def generate_fun_facts() -> list:
     # "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
     # p1 > p2+p3
     def ff_solo_carry(player_id: int) -> tuple:  # TODO: unused
@@ -610,7 +448,7 @@ def seasons_dashboard_short():
 # TODO: use all these queries
 def mvp_wins(player_id, start=1, end=None):
     if end is None:
-        end = max_id()
+        end = total_games()
     c.execute("""
     SELECT COUNT(playerID) AS MVPs FROM (
         SELECT wins.gameID, playerID, score
@@ -632,7 +470,7 @@ def total_losses() -> int:
 
 
 def winrates() -> list:
-    latest_game_id = max_id()
+    latest_game_id = total_games()
     season_start = season_start_id()
     last_session = latest_session_main_data()
     games_last_session = last_session[2] + last_session[3]
@@ -689,7 +527,7 @@ def results_table_ordered():
 
 def goals_without_assist_between_games(start=1, end=None) -> int:
     if end is None:
-        end = max_id()
+        end = total_games()
     if start > end:
         raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
     c.execute("""

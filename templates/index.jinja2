@@ -502,8 +502,8 @@
                     <div class="general-info-container">
                         <table>
                             <tr>
-                                <td>Days since inception</td>
-                                <td>{{ days_since_inception | int }}</td>
+                                <td>Days since first game</td>
+                                <td>{{ days_since_first | int }}</td>
                             </tr>
                             <tr>
                                 <td>Games</td>
@@ -770,4 +770,27 @@
         font-size: 22px;
     }
 </style>
+<script>
+    function reloadCheck() {
+        fetch('/reload', {
+            method: "GET",
+        })/*
+            .then(response => {
+                response.json().then(json => {
+                    let infobox = document.getElementById('username_infobox');
+                    let wholeBox = document.getElementById('pfd')
+                    if (json.check) {
+                        document.cookie = "username=" + username.value
+                        document.cookie = "identifier=" + json.identifier
+                        location.reload()
+                    } else {
+                        infobox.innerHTML = json.reason;
+                        wholeBox.style.backgroundColor = 'rgb(107,15,15)'
+                    }
+
+                })
+            });
+            */
+    }
+</script>
 </html>

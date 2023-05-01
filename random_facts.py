@@ -1,5 +1,6 @@
 import math
 import queries as q
+import records as r
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -59,7 +60,7 @@ def last_session_facts() -> list[tuple]:
 
 def game_count_facts() -> list[tuple]:
     facts = []
-    month, year, total = q.game_amount_this_month(), q.game_amount_this_year(), q.max_id()
+    month, year, total = q.game_amount_this_month(), q.game_amount_this_year(), q.total_games()
     if total % 100 == 0 and total > 0:
         facts.append((f'You just played the {total}th game in total.', 4))
 
@@ -76,7 +77,7 @@ def last_month_summary() -> list[tuple]:
     games_this_month = q.game_amount_this_month()
 
     # Only show if less than 3 games have been played this month, and it's before the fifth of a month
-    if True or 5 >= games_this_month > 0 and datetime.today().day < 5:
+    if 5 >= games_this_month > 0 and datetime.today().day < 5:
         last_month_str = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%m-%Y")
         month_gc = q.unique_months_game_count()
 
@@ -95,7 +96,7 @@ def result_facts() -> list[tuple]:
     goals, against = q.last_result()
     for entry in data:
         if entry[0] == goals and entry[1] == against:
-            total, percent = entry[2], entry[2] / q.max_id()
+            total, percent = entry[2], entry[2] / q.total_games()
             if percent <= 0.0025:
                 facts.append(
                     (
@@ -119,7 +120,6 @@ def result_facts() -> list[tuple]:
 
 
 # Player reaches milestone in stat y
-
 def milestone_facts() -> list[tuple]:
     facts = []
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
@@ -140,87 +140,87 @@ def close_to_record() -> list[tuple]:
     facts = []
 
     # Record games
-    last_id = q.max_id()
-    limit = 100  # round(last_id / 100) # TODO: find better metric, some crash for max_id
-    record_data = [(q.record_highest_value_per_stat('score', limit),
+    last_id = q.total_games()
+    limit = 100  # round(last_id / 100) # TODO: find better metric, some crash for total_games
+    record_data = [(r.record_highest_value_per_stat('score', limit),
                     'The score of {value} reached by {name} last game was in the Top 100 of all scores, ranking at '
                     'spot number {rank}!'),
-                   (q.record_highest_value_per_stat('goals', limit),
+                   (r.record_highest_value_per_stat('goals', limit),
                     'The goal amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.record_highest_value_per_stat('assists', limit),
+                   (r.record_highest_value_per_stat('assists', limit),
                     'The assist amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.record_highest_value_per_stat('saves', limit),
+                   (r.record_highest_value_per_stat('saves', limit),
                     'The save amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.record_highest_value_per_stat('shots', limit),
+                   (r.record_highest_value_per_stat('shots', limit),
                     'The shot amount of {value} reached by {name} last game was in the Top 100 of all games, '
                     'ranking at spot number {rank}!'),
-                   (q.most_points_without_goal(limit),
+                   (r.most_points_without_goal(limit),
                     '''A total amount of {value} points was reached by {name} last game, without scoring! 
                        It was in the Top 100 of score without a goal, ranking at spot number {rank}!'''),
-                   (q.least_points_with_goals(limit),
+                   (r.least_points_with_goals(limit),
                     '{name} only reached a total amount of {value} score, even though he scored... he was in the '
                     'Bottom 100 of score having scored at least one goal, ranking at spot number {rank}!'),
-                   (q.most_against(limit),
+                   (r.most_against(limit),
                     'Last game you conceded a Top 100 amount of goals... {value} in total. It ranks at number {rank} '
                     'of all games'),
-                   (q.most_against_and_won(limit),
+                   (r.most_against_and_won(limit),
                     'Last game you conceded a total of {value} goals, but still won. The game ranks at number {rank} '
                     'in that regard.'),
-                   (q.most_goals_and_lost(limit),
+                   (r.most_goals_and_lost(limit),
                     'Last game you scored a total of {value} goals, but still lost. The game ranks at number {rank} '
                     'in that regard.'),
-                   (q.most_total_goals(limit),
+                   (r.most_total_goals(limit),
                     'Last game, both teams scored a total of {value} goals. The game ranks at number {rank} in that '
                     'regard.'),
-                   (q.highest_team('score', limit),
+                   (r.highest_team('score', limit),
                     'Last game you scored a total of {value} points. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('goals', limit),
+                   (r.highest_team('goals', limit),
                     'Last game you scored a total of {value} goals. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('assists', limit),
+                   (r.highest_team('assists', limit),
                     'Last game you got a total of {value} assists. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('saves', limit),
+                   (r.highest_team('saves', limit),
                     'Last game you scored a total of {value} saves. The game ranks at number {rank} in that regard.'),
-                   (q.highest_team('shots', limit),
+                   (r.highest_team('shots', limit),
                     'Last game you scored a total of {value} shots. The game ranks at number {rank} in that regard.'),
-                   (q.diff_mvp_lvp('DESC', limit),
+                   (r.diff_mvp_lvp('DESC', limit),
                     'Last game the difference between the MVP and LVP was {value} points. That is the {rank}. highest '
                     'difference.'),
-                   (q.diff_mvp_lvp('ASC', limit),
+                   (r.diff_mvp_lvp('ASC', limit),
                     'Last game the difference between the MVP and LVP was only {value} points. That is the {rank}. '
                     'lowest difference.'),
-                   (q.most_solo_goals(limit),
+                   (r.most_solo_goals(limit),
                     'Last game had with {value} goals an usual amount of solo goals. The game ranks at number {rank} '
                     'in that regard.'),
-                   (q.trend('score', 'MIN', limit),
+                   (r.trend('score', 'MIN', limit),
                     'The point trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('score', 'MAX', limit),
+                   (r.trend('score', 'MAX', limit),
                     'The point trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('goals', 'MIN', limit),
+                   (r.trend('goals', 'MIN', limit),
                     'The goal trend of {name} reached a value of {value}, which is the {rank}. lowest value in total.'),
-                   (q.trend('goals', 'MAX', limit),
+                   (r.trend('goals', 'MAX', limit),
                     'The goal trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('assists', 'MIN', limit),
+                   (r.trend('assists', 'MIN', limit),
                     'The assist trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('assists', 'MAX', limit),
+                   (r.trend('assists', 'MAX', limit),
                     'The assist trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('saves', 'MIN', limit),
+                   (r.trend('saves', 'MIN', limit),
                     'The saves trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('saves', 'MAX', limit),
+                   (r.trend('saves', 'MAX', limit),
                     'The saves trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.'),
-                   (q.trend('shots', 'MIN', limit),
+                   (r.trend('shots', 'MIN', limit),
                     'The shots trend of {name} reached a value of {value}, which is the {rank}. lowest value in '
                     'total.'),
-                   (q.trend('shots', 'MAX', limit),
+                   (r.trend('shots', 'MAX', limit),
                     'The shots trend of {name} reached a value of {value}, which is the {rank}. highest value in '
                     'total.')
                    ]
