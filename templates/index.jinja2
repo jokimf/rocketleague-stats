@@ -200,14 +200,16 @@
     <hr>
     <div class="data-boxes-outer">
         <div class="data-boxes-inner">
-            <div class="data-box">
-                <div style="text-align: center">
-                    <h1>RANDOM FACTS</h1>
-                    <ul class="randomfacts">{% for fact in random_facts %}
-                        <li>{{ fact[0] }}</li>{% endfor %}
-                    </ul>
+            {% if random_facts %}
+                <div class="data-box">
+                    <div style="text-align: center">
+                        <h1>RANDOM FACTS</h1>
+                        <ul class="randomfacts">{% for fact in random_facts %}
+                            <li>{{ fact[0] }}</li>{% endfor %}
+                        </ul>
+                    </div>
                 </div>
-            </div>
+            {% endif %}
             <div class="data-box">
                 <h1>WINRATES</h1>
                 <div id="winrates">

@@ -37,7 +37,7 @@ def reload():
     data['LAST_GAMES'] = q.last_x_games_stats(len(data['GAMES_FROM_SESSION_DATE']), False)
     data['GRAND_TOTAL'] = q.general_game_stats_over_time_period(1, data['TOTAL_GAMES'])
     data['SEASON_DATA'] = q.general_game_stats_over_time_period(q.season_start_id(), data['TOTAL_GAMES'])
-    data['SESSION_DATA'] = q.general_game_stats_over_time_period(q.session_start_id(), data['TOTAL_GAMES']),
+    data['SESSION_DATA'] = q.general_game_stats_over_time_period(q.session_start_id(), data['TOTAL_GAMES'])
     data['K_PERFORMANCE'] = q.performance_profile_view(0)
     data['P_PERFORMANCE'] = q.performance_profile_view(1)
     data['S_PERFORMANCE'] = q.performance_profile_view(2)
