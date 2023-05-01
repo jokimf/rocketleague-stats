@@ -1,21 +1,7 @@
 import math
-import time
-from datetime import datetime, timedelta
-
-from dateutil.relativedelta import relativedelta
-
 import queries as q
-
-
-def timer_func(func):
-    def function_timer(*args, **kwargs):
-        start = time.time()
-        value = func(*args, **kwargs)
-        runtime = time.time() - start
-        print(f"{func.__name__} took {runtime} seconds to complete its execution.")
-        return value
-
-    return function_timer
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 # Invoked every time data is added
@@ -26,7 +12,6 @@ def generate_random_facts() -> list:
 
 
 # Things related to date
-@timer_func
 def date_facts() -> list[tuple]:
     facts = []
     # TODO: Do more special date facts
@@ -41,7 +26,7 @@ def date_facts() -> list[tuple]:
 
 
 # Last session was xy
-@timer_func
+
 def last_session_facts() -> list[tuple]:
     facts = []
     session_id, session_date, wins, losses, goals, against, quality = q.latest_session_main_data()
@@ -72,7 +57,6 @@ def last_session_facts() -> list[tuple]:
     return facts
 
 
-@timer_func
 def game_count_facts() -> list[tuple]:
     facts = []
     month, year, total = q.game_amount_this_month(), q.game_amount_this_year(), q.max_id()
@@ -87,12 +71,11 @@ def game_count_facts() -> list[tuple]:
     return facts
 
 
-@timer_func
 def last_month_summary() -> list[tuple]:
     facts = []
     games_this_month = q.game_amount_this_month()
 
-    # Only show if less than 3 games have been played this month and it's before the fifth of a month
+    # Only show if less than 3 games have been played this month, and it's before the fifth of a month
     if True or 5 >= games_this_month > 0 and datetime.today().day < 5:
         last_month_str = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%m-%Y")
         month_gc = q.unique_months_game_count()
@@ -100,12 +83,12 @@ def last_month_summary() -> list[tuple]:
         # Works because month are sorted by game count
         rank = [months[0] for months in month_gc].index(last_month_str)
         game_amount = [t for t in month_gc if t[0] == last_month_str][0][1]
-        facts.append((f'Last month, you played {game_amount} games, which ranks at {rank} out of {}.', 5))
+        facts.append((f'Last month, you played {game_amount} games, which ranks at {rank} out of {len(month_gc)}.', 5))
     return facts
 
 
 # Unusual result
-@timer_func
+
 def result_facts() -> list[tuple]:
     facts = []
     data = q.results_table()
@@ -127,8 +110,8 @@ def result_facts() -> list[tuple]:
                         4))
             elif percent <= 0.04:
                 facts.append((
-                             f'The result of last match was rare, in total it happened {total} times ({round(percent * 100, 4)}%)',
-                             3))
+                    f'The result of last match was rare, in total it happened {total} times ({round(percent * 100, 4)}%)',
+                    3))
             elif percent < 0.0025:
                 facts.append(
                     (f'Last game was the first time that this result happened. {goals}:{against}, a real rarity.', 5))
@@ -136,7 +119,7 @@ def result_facts() -> list[tuple]:
 
 
 # Player reaches milestone in stat y
-@timer_func
+
 def milestone_facts() -> list[tuple]:
     facts = []
     possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
@@ -152,7 +135,7 @@ def milestone_facts() -> list[tuple]:
 
 
 # Came close to a record
-@timer_func
+
 def close_to_record() -> list[tuple]:
     facts = []
 
@@ -250,7 +233,6 @@ def close_to_record() -> list[tuple]:
     return facts
 
 
-@timer_func
 def record_session() -> list[tuple]:
     facts = []
     # TODO: Session is close to being a record session
