@@ -1,10 +1,10 @@
 import random
-import sqlite3
-import queries as q
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-database_path = 'resources/test.db'
-conn = sqlite3.connect(database_path, check_same_thread=False)
+import database
+import queries as q
+
+conn = database.connect_to_database()
 c = conn.cursor()
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 

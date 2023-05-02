@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link rel="stylesheet" href="https://jok.im/static/standard.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 <header>
@@ -32,7 +33,7 @@
                      alt="Knus">
                 <div class="in-box-highlighting caption" style="padding: 5px">
                     <img alt={{ ranks[0] }} class="icon" src="https://jok.im/static/rl/ranks/{{ ranks[0] }}.png">
-                    Knus
+                    <a href="/rl/profile/0">Knus</a>
                 </div>
             </div>
             <div class="profile-stats-left in-box-highlighting">
@@ -89,7 +90,7 @@
                      alt="Puad">
                 <div class="in-box-highlighting caption" style="padding: 5px">
                     <img alt={{ ranks[1] }} class="icon" src="https://jok.im/static/rl/ranks/{{ ranks[1] }}.png">
-                    Puad
+                    <a href="/rl/profile/1">Puad</a>
                 </div>
             </div>
             <div class="profile-stats-left in-box-highlighting">
@@ -146,7 +147,7 @@
                      alt="Sticker">
                 <div class="in-box-highlighting caption" style="padding: 5px">
                     <img alt={{ ranks[2] }} class="icon" src="https://jok.im/static/rl/ranks/{{ ranks[2] }}.png">
-                    Sticker
+                    <a href="/rl/profile/2">Sticker</a>
                 </div>
             </div>
             <div class="profile-stats-left in-box-highlighting">
@@ -572,227 +573,4 @@
     </div>
 </div>
 </body>
-<style>
-    .data-boxes-outer, #winrates {
-        display: flex;
-        justify-content: space-evenly;
-    }
-
-    .data-boxes-inner {
-        display: flex;
-        flex-direction: column;
-        width: 50%;
-    }
-
-    .data-box {
-        background-color: #1f1f1f;
-        border-radius: 1em;
-        margin: 1em;
-        padding: 1em;
-        overflow: hidden;
-    }
-
-    .in-box-highlighting {
-        background-color: #1a1a1a;
-        border-radius: 1em;
-        padding: 1em;
-    }
-
-    h1 {
-        text-align: center;
-        font-size: 2em;
-        margin-block-start: 0.67em;
-        margin-block-end: 0.67em;
-        margin: 15px;
-    }
-
-    .profiles {
-        display: flex;
-        justify-content: space-evenly;
-    }
-
-    .profile {
-        display: flex;
-        justify-content: space-evenly;
-        border-radius: 1em;
-        background-color: #1f1f1f;
-        padding: 5px;
-        gap: 1em;
-    }
-
-    .profile-pics {
-        margin: 10px;
-        border-radius: 100px;
-        border: 1px solid;
-        height: 100px;
-    }
-
-    .icon {
-        width: 22px;
-        height: 22px;
-        max-height: 22px;
-        max-width: 22px;
-    }
-
-    .total-stats, .profile-stats-right, .profile-stats-left {
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-    }
-
-    .profile-stats-value {
-        vertical-align: top;
-    }
-
-    caption {
-        font-size: 2em;
-        line-height: 1.8em;
-    }
-
-    table {
-        border-collapse: collapse;
-        font-style: normal;
-        font-size: smaller;
-        margin-right: auto;
-        margin-left: auto;
-    }
-
-    th {
-        color: white;
-        font-weight: bold;
-        border-color: inherit;
-    }
-
-    td, th {
-        padding: 0.5rem;
-        text-align: center;
-    }
-
-    .infobox td {
-        font-size: smaller;
-    }
-
-    table tr:nth-child(even) {
-        background-color: #2b2b2b;
-    }
-
-    .mvp_highlighting_table_cell {
-        border: 2px double darkgoldenrod !important;
-    }
-
-    table td {
-        border: 1px solid #cccccc;
-    }
-
-    .session td {
-        border: 1px solid #232323;
-    }
-
-    .randomfacts li {
-        text-align: left;
-        color: #ffffff;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: 1.5;
-    }
-
-    .randomfacts {
-        padding-left: 32px;
-    }
-
-    hr {
-        border: 0;
-        padding: 0;
-        height: 1px;
-        margin: 0;
-        background-image: linear-gradient(to right, rgba(35, 35, 35, 0), rgba(67, 67, 67, 0.6), rgba(35, 35, 35, 0));
-        margin-block-start: 20px;
-        margin-block-end: 20px;
-    }
-
-    .fun-facts {
-        display: flex;
-        justify-content: center;
-        gap: 25px;
-    }
-
-    .table-general {
-        background-color: #434343;
-        color: white;
-    }
-
-    .here {
-        color: #ffffff;
-        font-weight: 700;
-        font-size: larger;
-    }
-
-    .knus {
-        background-color: #263326;
-    }
-
-    .puad {
-        background-color: #332626;
-    }
-
-    .sticker {
-        background-color: #262633;
-    }
-
-    .profile-stats-middle-top {
-        font-size: x-small;
-        vertical-align: top;
-    }
-
-    .profile-stats-right-name {
-        font-size: x-small;
-        text-align: center;
-    }
-
-    .profile-stats-right-value {
-        text-align: center;
-        font-size: larger;
-        font-weight: bold;
-    }
-
-    .winrate-name {
-        font-size: smaller;
-        text-align: center;
-    }
-
-    .winrate-value {
-        font-weight: bolder;
-        font-size: 2em;
-    }
-
-    .caption {
-        display: flex;
-        justify-content: space-evenly;
-        font-weight: bolder;
-        font-size: 22px;
-    }
-</style>
-<script>
-    function reloadCheck() {
-        fetch('/reload', {
-            method: "GET",
-        })/*
-            .then(response => {
-                response.json().then(json => {
-                    let infobox = document.getElementById('username_infobox');
-                    let wholeBox = document.getElementById('pfd')
-                    if (json.check) {
-                        document.cookie = "username=" + username.value
-                        document.cookie = "identifier=" + json.identifier
-                        location.reload()
-                    } else {
-                        infobox.innerHTML = json.reason;
-                        wholeBox.style.backgroundColor = 'rgb(107,15,15)'
-                    }
-
-                })
-            });
-            */
-    }
-</script>
 </html>

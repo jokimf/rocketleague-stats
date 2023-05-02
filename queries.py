@@ -254,6 +254,19 @@ def ranks() -> list[str]:
     return ranks_list
 
 
+def performance_score():
+    def performance(stat, player_id):
+        if stat not in ['score', 'goals', 'assists', 'saves', 'shots']:
+            raise ValueError(f'{stat} not valid.')
+        if player_id >= 3 or player_id < 0:
+            raise ValueError(f'{player_id} not valid.')
+        return c.execute(f'SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1;',
+                         (player_id,)).fetchone()[0]
+
+    player_average = sum(players := [performance('score', x) for x in range(0, 3)]) / 3
+    return [round(p - player_average, 2) for p in players]
+
+
 def season_start_id() -> int:
     return c.execute("""SELECT g.gameID
     FROM games g 
@@ -412,9 +425,29 @@ def generate_fun_facts() -> list:
              ]]
 
 
-# Season queries
-# TODO: unused
+def winrates() -> list:
+    latest_game_id = total_games()
+    season_start = season_start_id()
+    last_session = latest_session_main_data()
+    games_last_session = last_session[2] + last_session[3]
+    winrates_list = [total_wins() / latest_game_id * 100,
+                     wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
+                     float(wins_in_range(latest_game_id - 99, latest_game_id)),
+                     wins_in_range(latest_game_id - 19, latest_game_id) / 20 * 100,
+                     last_session[2] / games_last_session * 100
+                     ]
+
+    return winrates_list
+
+
+# 6 hours behind real time to account for after midnight gaming
+def website_date() -> str:
+    return (datetime.datetime.now() - datetime.timedelta(hours=6)).strftime('%Y-%m-%d')
+
+
+# UNUSED
 # TODO: player details page
+# TODO: use all these queries
 def seasons_dashboard():
     return c.execute("""SELECT se.season_name, 
     SUM(IIF(g.goals > g.against,1,0)) 'wins', 
@@ -444,8 +477,6 @@ def seasons_dashboard_short():
     GROUP BY seasonID""").fetchall()
 
 
-# UNUSED #
-# TODO: use all these queries
 def mvp_wins(player_id, start=1, end=None):
     if end is None:
         end = total_games()
@@ -469,21 +500,6 @@ def total_losses() -> int:
     return c.execute("SELECT COUNT(gameID) FROM games WHERE goals < against").fetchone()[0]
 
 
-def winrates() -> list:
-    latest_game_id = total_games()
-    season_start = season_start_id()
-    last_session = latest_session_main_data()
-    games_last_session = last_session[2] + last_session[3]
-    winrates_list = [total_wins() / latest_game_id * 100,
-                     wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
-                     float(wins_in_range(latest_game_id - 99, latest_game_id)),
-                     wins_in_range(latest_game_id - 19, latest_game_id) / 20 * 100,
-                     last_session[2] / games_last_session * 100
-                     ]
-
-    return winrates_list
-
-
 def one_diff_wins() -> int:
     return c.execute("SELECT COUNT(gameID) FROM games WHERE goals - against = 1").fetchone()[0]
 
@@ -503,11 +519,6 @@ def session_details():
     return details
 
 
-# 6 hours behind real time to account for after midnight gaming
-def website_date() -> str:
-    return (datetime.datetime.now() - datetime.timedelta(hours=6)).strftime('%Y-%m-%d')
-
-
 def results_table_ordered():
     data = c.execute("""
     WITH cG AS (SELECT COUNT(*) allG FROM games)
@@ -525,7 +536,7 @@ def results_table_ordered():
     return d
 
 
-def goals_without_assist_between_games(start=1, end=None) -> int:
+def solo_goals_in_range(start=1, end=None) -> int:
     if end is None:
         end = total_games()
     if start > end:
@@ -537,102 +548,6 @@ SELECT SUM(goalsSum - assistsSum) AS diff FROM (
 )
 """, (start, end))
     return c.fetchone()[0]
-
-
-# Generates table of the longest winning streaks [streak, gameStartID, gameEndID]
-def longest_winning_streak() -> list[Any]:
-    return c.execute("""
-WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-FROM (SELECT gameID
-    FROM games
-    WHERE goals > against)h)
-    SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-    FROM Streaks
-    GROUP BY grouper
-    ORDER BY 1 DESC, 2 ASC
-""").fetchone()[0]
-
-
-# Generate table of the longest losing streaks [steak, gameStartID, gameEndID]
-def longest_losing_streak() -> list[Any]:
-    return c.execute("""
-WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-FROM (SELECT gameID
-    FROM games
-    WHERE goals < against)h)
-    SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-    FROM Streaks
-    GROUP BY grouper
-    ORDER BY 1 DESC, 2 ASC
-""").fetchone()[0]
-
-
-# Table of [streak, startGameID, endGameID]
-def mvp_streak(player_id: int) -> list[Any]:
-    return c.execute("""
-WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-FROM (SELECT gameID, score, playerID
-    FROM scores
-    GROUP BY gameID
-    HAVING MAX(score) AND playerID = ?) AS MVPTable
-    )
-    SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-    FROM MVPs
-    GROUP BY grouper
-    ORDER BY 1 DESC, 2 ASC
-""", (player_id,)).fetchall()
-
-
-# Table of [streak, startGameID, endGameID]
-def not_mvp_streak(player_id: int) -> list[Any]:
-    return c.execute("""
-WITH helperTable AS(
-    SELECT gameID AS helperID, score, playerID
-    FROM scores GROUP BY helperID
-    HAVING MAX(score) AND playerID = ?),
-NotMVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
-SELECT gameID FROM games,helperTable 
-GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
-    SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-    FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
-""", (player_id,)).fetchall()
-
-
-# Table of [streak, startGameID, endGameID]
-def not_lvp_streak(player_id) -> list[Any]:
-    return c.execute("""
-WITH helperTable AS(
-    SELECT gameID AS helperID, score, playerID
-    FROM scores GROUP BY helperID
-    HAVING MIN(score) AND playerID = ?),
-NotMVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID FROM (
-SELECT gameID FROM games,helperTable
-GROUP BY gameID HAVING gameID NOT IN (SELECT helperID FROM helperTable)) AS NotMVPTable)
-    SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-    FROM NotMVPs GROUP BY grouper ORDER BY 1 DESC, 2 ASC
-""", (player_id,)).fetchall()
-
-
-# Table of [streak, startGameID, endGameID]
-def lvp_streak(player_id) -> list[Any]:
-    return c.execute("""
-WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
-gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
-FROM (SELECT gameID, score, playerID
-    FROM scores
-    GROUP BY gameID
-    HAVING MIN(score) AND playerID = ?) AS MVPTable
-    )
-    SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
-    FROM MVPs
-    GROUP BY grouper
-    ORDER BY 1 DESC, 2 ASC
-""", (player_id,)).fetchall()
 
 
 # Calculates average games per day based on start and end dates.
@@ -683,16 +598,3 @@ SELECT scores.gameID, scores.playerID, scores.score FROM scores, maxId
 WHERE gameID = maxId.mId - 19
 ORDER BY playerID
 """).fetchall()
-
-
-def performance_score():
-    def performance(stat, player_id):
-        if stat not in ['score', 'goals', 'assists', 'saves', 'shots']:
-            raise ValueError(f'{stat} not valid.')
-        if player_id >= 3 or player_id < 0:
-            raise ValueError(f'{player_id} not valid.')
-        return c.execute(f'SELECT {stat} FROM performance WHERE playerID = ? ORDER BY gameID DESC LIMIT 1;',
-                         (player_id,)).fetchone()[0]
-
-    player_average = sum(players := [performance('score', x) for x in range(0, 3)]) / 3
-    return [round(p - player_average, 2) for p in players]

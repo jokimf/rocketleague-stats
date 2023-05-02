@@ -1,6 +1,7 @@
 import queries as q
 import random_facts as rf
 import records as r
+import streaks as s
 import time
 
 # RELOADABLE
@@ -16,6 +17,7 @@ LAST_GAMES_HIGHLIGHTING = [None, None, None, None,
                            (K, 100, 700), (K, 100, 700), (K, 0, 5), (K, 0, 5), (K, 0, 5), (K, 0, 10),
                            (P, 100, 700), (P, 100, 700), (P, 0, 5), (P, 0, 5), (P, 0, 5), (P, 0, 10),
                            (S, 100, 700), (S, 100, 700), (S, 0, 5), (S, 0, 5), (S, 0, 5), (S, 0, 10)]
+RANK_HIGHLIGHTING = ['rgb(201, 176, 55, 0.3)', 'rgb(215, 215, 215, 0.3)', 'rgb(173, 138, 86, 0.3)']
 
 
 def reload():
@@ -23,6 +25,7 @@ def reload():
     data['RANDOM_FACTS'] = rf.generate_random_facts()
     data['FUN_FACTS'] = q.generate_fun_facts()
     data['RECORD_GAMES'] = r.generate_record_games()
+    data['STREAK_RECORD_PAGE'] = s.generate_streaks_record_page()
     data['TOTAL_GAMES'] = q.total_games()
     data['LAST_100_GAMES_STATS'] = q.last_x_games_stats(100, True)
     data['SESSION_DETAILS'] = q.session_details()
@@ -50,3 +53,4 @@ def reload():
     data['TO_BEAT_NEXT'] = q.to_beat_next()
     data['SEASONS'] = q.seasons_dashboard_short()
     data['LAST_RELOAD'] = q.last_reload()
+    data['PROFILE_STREAKS'] = [s.generate_profile_streaks(p) for p in [0, 1, 2]]

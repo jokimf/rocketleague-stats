@@ -76,13 +76,25 @@ def records():  # TODO: Highlight records that happened not long ago
         'record_headlines': ['Most stat by player in one game', 'Highest performance by player',
                              'Lowest performance by player',
                              'Most stat by team', 'Goal stats by team', 'Points stats', 'Miscellaneous'],
-        'rank_highlighting': ['rgb(201, 176, 55, 0.3)', 'rgb(215, 215, 215, 0.3)', 'rgb(173, 138, 86, 0.3)'],
+        'rank_highlighting': c.RANK_HIGHLIGHTING,
         'k': 'rgba(12,145,30,0.2)',
         'p': 'rgba(151,3,14,0.2)',
         's': 'rgba(12,52,145,0.2)',
-        'cg': 'rgba(255, 225, 0, 0.2)'
+        'cg': 'rgba(255, 225, 0, 0.2)',
+        'streaks': c.data.get('STREAK_RECORD_PAGE'),
     }
     return render_template('records.jinja2', **context)
+
+
+@app.route('/profile/<player_id>')
+def streaks(player_id: int):
+    player_id = int(player_id)
+    ctx = {
+        'name': ['Knus', 'Puad', 'Sticker'][player_id],
+        'streaks': c.data.get('PROFILE_STREAKS')[player_id],
+        'rank_highlighting': c.RANK_HIGHLIGHTING,
+    }
+    return render_template('profile.jinja2', **ctx)
 
 
 @app.route('/games')

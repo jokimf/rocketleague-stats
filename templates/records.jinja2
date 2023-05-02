@@ -25,7 +25,7 @@
     </div>
 </header>
 <div class="website-center-setup">
-    <div style="display:flex;justify-content: center;flex-direction: column">
+    <div class="record-boxes">
         {% for record_types in record_games %}
             <h1 style="text-align: center">{{ record_headlines[loop.index - 1] }}</h1>
             <div class="box">
@@ -33,11 +33,11 @@
                     <div>
                         <h3>{{ record }}</h3>
                         <table>
-                        <th>#</th>
-                        <th>Player</th>
-                        <th>Value</th>
-                        <th>ID</th>
-                        <th>Date</th>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Value</th>
+                            <th>ID</th>
+                            <th>Date</th>
                             {% for entry in record_types[record] %}
                                 <tr>
                                     <td
@@ -68,6 +68,42 @@
             <hr>
         {% endfor %}
     </div>
+    <div class="box">
+        {% for streak in streaks %}
+        <div>
+            <h3>{{ streak }}</h3>
+            <table>
+                <th>#</th>
+                <th>Value</th>
+                <th>Start</th>
+                <th>End</th>
+                {% for entry in streaks[streak] %}
+                    <tr>
+                        <td
+                                {% if loop.index in [1,2,3] %}
+                                    style="background-color: {{ rank_highlighting[loop.index - 1] }}"
+                                {% endif %}>
+                            {{ loop.index }}</td>
+                        {% for data in entry %}
+                            <td
+                                    {% if data == 'Knus' %}
+                                        style="background-color: {{ k }}"
+                                    {% elif data == 'Puad' %}
+                                        style="background-color: {{ p }}"
+                                    {% elif data == 'Sticker' %}
+                                        style="background-color: {{ s }}"
+                                    {% elif data == 'CG' %}
+                                        style="background-color: {{ cg }}"
+                                    {% endif %}
+
+                            >{{ data }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 </body>
 <style>
@@ -75,6 +111,12 @@
         display: flex;
         flex-direction: row;
         justify-content: space-evenly;
+    }
+
+    .record-boxes {
+        display: flex;
+        justify-content: center;
+        flex-direction: column
     }
 
     h3 {
