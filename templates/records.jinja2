@@ -55,8 +55,9 @@
                                                     style="background-color: {{ s }}"
                                                 {% elif data == 'CG' %}
                                                     style="background-color: {{ cg }}"
+                                                {% elif loop.index == 3 and latest - 100  < data %}
+                                                    style="background-color: {{ fade(data, 100) }}"
                                                 {% endif %}
-
                                         >{{ data }}</td>
                                     {% endfor %}
                                 </tr>
@@ -70,38 +71,38 @@
     </div>
     <div class="box">
         {% for streak in streaks %}
-        <div>
-            <h3>{{ streak }}</h3>
-            <table>
-                <th>#</th>
-                <th>Value</th>
-                <th>Start</th>
-                <th>End</th>
-                {% for entry in streaks[streak] %}
-                    <tr>
-                        <td
-                                {% if loop.index in [1,2,3] %}
-                                    style="background-color: {{ rank_highlighting[loop.index - 1] }}"
-                                {% endif %}>
-                            {{ loop.index }}</td>
-                        {% for data in entry %}
+            <div>
+                <h3>{{ streak }}</h3>
+                <table>
+                    <th>#</th>
+                    <th>Value</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    {% for entry in streaks[streak] %}
+                        <tr>
                             <td
-                                    {% if data == 'Knus' %}
-                                        style="background-color: {{ k }}"
-                                    {% elif data == 'Puad' %}
-                                        style="background-color: {{ p }}"
-                                    {% elif data == 'Sticker' %}
-                                        style="background-color: {{ s }}"
-                                    {% elif data == 'CG' %}
-                                        style="background-color: {{ cg }}"
-                                    {% endif %}
+                                    {% if loop.index in [1,2,3] %}
+                                        style="background-color: {{ rank_highlighting[loop.index - 1] }}"
+                                    {% endif %}>
+                                {{ loop.index }}</td>
+                            {% for data in entry %}
+                                <td
+                                        {% if data == 'Knus' %}
+                                            style="background-color: {{ k }}"
+                                        {% elif data == 'Puad' %}
+                                            style="background-color: {{ p }}"
+                                        {% elif data == 'Sticker' %}
+                                            style="background-color: {{ s }}"
+                                        {% elif data == 'CG' %}
+                                            style="background-color: {{ cg }}"
+                                        {% endif %}
 
-                            >{{ data }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </table>
-        </div>
+                                >{{ data }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
         {% endfor %}
     </div>
 </div>

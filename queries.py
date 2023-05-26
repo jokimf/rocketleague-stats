@@ -48,6 +48,10 @@ def conditional_formatting(color: str, value: float, minimum: int, maximum: int)
     return rgb_code
 
 
+def fade_highlighting(game: int, game_range: int):
+    return f'rgba(53, 159, 159,{(game_range - (total_games() - game)) / game_range})'
+
+
 # Returns number of days since first game played
 def days_since_first() -> int:
     return c.execute('SELECT julianday(DATE()) - julianday(MIN(date)) FROM games').fetchone()[0]
@@ -148,10 +152,13 @@ def record_games_per_session(limit: int = 1) -> list[Any]:
 
 
 # Frontpage QUERIES
-def tilt():  # TODO: Write tilt-o-meter
+def tilt() -> float:  # TODO: Write tilt-o-meter
     # Enemy goals last 14 days
     # Winrate
-    return 5 + 9
+    date14ago = (datetime.datetime.now() - datetime.timedelta(days=14)).strftime('%Y-%m-%d')
+    enemy_goals = c.execute("SELECT SUM(against) FROM games WHERE date > ?;", (date14ago,)).fetchone()[0]
+    losses = c.execute("SELECT COUNT(1) FROM losses WHERE date > ?;", (date14ago,)).fetchone()[0]
+    return enemy_goals * 0.8 + losses * 0.2
 
 
 def average_session_length() -> int:

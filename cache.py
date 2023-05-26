@@ -54,3 +54,4 @@ def reload():
     data['SEASONS'] = q.seasons_dashboard_short()
     data['LAST_RELOAD'] = q.last_reload()
     data['PROFILE_STREAKS'] = [s.generate_profile_streaks(p) for p in [0, 1, 2]]
+    data['SESSION_INFORMATION'] = q.session_data_by_date(data['LATEST_SESSION_DATE'])

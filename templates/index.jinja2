@@ -10,6 +10,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <style>
+    .profile-stat {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 5px;
+    }
+
     .data-boxes-outer, #winrates {
         display: flex;
         justify-content: space-evenly;
@@ -33,6 +40,7 @@
         background-color: #1a1a1a;
         border-radius: 1em;
         padding: 1em;
+        padding-top: 0.5em;
     }
 
     h1 {
@@ -50,11 +58,11 @@
 
     .profile {
         display: flex;
-        justify-content: space-evenly;
+        justify-content: space-around;
         border-radius: 1em;
         background-color: #1f1f1f;
         padding: 5px;
-        gap: 1em;
+        gap: 10px;
     }
 
     .profile-pics {
@@ -77,8 +85,12 @@
         flex-direction: column;
     }
 
-    .profile-stats-value {
-        vertical-align: top;
+    .profile-stats-middle {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-self: center;
+        gap: 0.25em;
     }
 
     caption {
@@ -192,14 +204,15 @@
         font-weight: bold;
     }
 
-    .winrate-name {
+    .databox-name {
         font-size: smaller;
         text-align: center;
     }
 
-    .winrate-value {
+    .databox-value {
         font-weight: bolder;
         font-size: 2em;
+        text-align: center;
     }
 
     .caption {
@@ -207,6 +220,7 @@
         justify-content: space-evenly;
         font-weight: bolder;
         font-size: 22px;
+        padding: 0.5em;
     }
 
     a {
@@ -237,12 +251,12 @@
                 <img class="profile-pics"
                      src="https://avatars.akamai.steamstatic.com/c63017936fd4aa600bf832af661314aeae2991dd_full.jpg"
                      alt="Knus">
-                <div class="in-box-highlighting caption" style="padding: 5px">
+                <div class="in-box-highlighting caption">
                     <img alt={{ ranks[0] }} class="icon" src="https://jok.im/static/rl/ranks/{{ ranks[0] }}.png">
                     <a href="/rl/profile/0">Knus</a>
                 </div>
             </div>
-            <div class="profile-stats-left in-box-highlighting">
+            <div class="profile-stats-middle in-box-highlighting">
                 <div class="profile-stat">
                     <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
                     <span class="profile-stats-value">{{ k_perf[0][0] }}</span>
@@ -283,7 +297,7 @@
                     <div class="profile-stats-right-name">JUST OUT</div>
                     <div class="profile-stats-right-value">{{ just_out[0][2] }} → {{ just_out[1][2] }}</div>
                 </div>
-                <div class="in-box-highlighting" style="padding:5px;">
+                <div class="in-box-highlighting">
                     <div class="profile-stats-right-name">TO BEAT</div>
                     <div class="profile-stats-right-value">{{ to_beat_next[0][2] }}</div>
                 </div>
@@ -294,12 +308,12 @@
                 <img class="profile-pics"
                      src="https://avatars.akamai.steamstatic.com/8908adb9e020ff034bde9e2b1363467870436f35_full.jpg"
                      alt="Puad">
-                <div class="in-box-highlighting caption" style="padding: 5px">
+                <div class="in-box-highlighting caption">
                     <img alt={{ ranks[1] }} class="icon" src="https://jok.im/static/rl/ranks/{{ ranks[1] }}.png">
                     <a href="/rl/profile/1">Puad</a>
                 </div>
             </div>
-            <div class="profile-stats-left in-box-highlighting">
+            <div class="profile-stats-middle in-box-highlighting">
                 <div class="profile-stat">
                     <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
                     <span class="profile-stats-value">{{ p_perf[0][0] }}</span>
@@ -340,7 +354,7 @@
                     <div class="profile-stats-right-name">JUST OUT</div>
                     <div class="profile-stats-right-value">{{ just_out[2][2] }} → {{ just_out[3][2] }}</div>
                 </div>
-                <div class="in-box-highlighting" style="padding:5px;">
+                <div class="in-box-highlighting">
                     <div class="profile-stats-right-name">TO BEAT</div>
                     <div class="profile-stats-right-value">{{ to_beat_next[1][2] }}</div>
                 </div>
@@ -351,12 +365,12 @@
                 <img class="profile-pics"
                      src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
                      alt="Sticker">
-                <div class="in-box-highlighting caption" style="padding: 5px">
+                <div class="in-box-highlighting caption">
                     <img alt={{ ranks[2] }} class="icon" src="https://jok.im/static/rl/ranks/{{ ranks[2] }}.png">
                     <a href="/rl/profile/2">Sticker</a>
                 </div>
             </div>
-            <div class="profile-stats-left in-box-highlighting">
+            <div class="profile-stats-middle in-box-highlighting">
                 <div class="profile-stat">
                     <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
                     <span class="profile-stats-value">{{ s_perf[0][0] }}</span>
@@ -397,7 +411,7 @@
                     <div class="profile-stats-right-name">JUST OUT</div>
                     <div class="profile-stats-right-value">{{ just_out[4][2] }} → {{ just_out[5][2] }}</div>
                 </div>
-                <div class="in-box-highlighting" style="padding:5px;">
+                <div class="in-box-highlighting">
                     <div class="profile-stats-right-name">TO BEAT</div>
                     <div class="profile-stats-right-value">{{ to_beat_next[2][2] }}</div>
                 </div>
@@ -421,24 +435,24 @@
                 <h1>WINRATES</h1>
                 <div id="winrates">
                     <div class="winrate-box in-box-highlighting">
-                        <div class="winrate-name">Total</div>
-                        <div class="winrate-value">{{ winrates[0]|round(1) }}%</div>
+                        <div class="databox-name">Total</div>
+                        <div class="databox-value">{{ winrates[0]|round(1) }}%</div>
                     </div>
                     <div class="winrate-box in-box-highlighting">
-                        <div class="winrate-name">L100</div>
-                        <div class="winrate-value">{{ winrates[2]|round(1) }}%</div>
+                        <div class="databox-name">L100</div>
+                        <div class="databox-value">{{ winrates[2]|round(1) }}%</div>
                     </div>
                     <div class="winrate-box in-box-highlighting">
-                        <div class="winrate-name">Season</div>
-                        <div class="winrate-value">{{ winrates[1]|round(1) }}%</div>
+                        <div class="databox-name">Season</div>
+                        <div class="databox-value">{{ winrates[1]|round(1) }}%</div>
                     </div>
                     <div class="winrate-box in-box-highlighting">
-                        <div class="winrate-name">L20</div>
-                        <div class="winrate-value">{{ winrates[3]|round(1) }}%</div>
+                        <div class="databox-name">L20</div>
+                        <div class="databox-value">{{ winrates[3]|round(1) }}%</div>
                     </div>
                     <div class="winrate-box in-box-highlighting">
-                        <div class="winrate-name">Session</div>
-                        <div class="winrate-value">{{ winrates[4]|round(1) }}%</div>
+                        <div class="databox-name">Session</div>
+                        <div class="databox-value">{{ winrates[4]|round(1) }}%</div>
                     </div>
                 </div>
             </div>
@@ -617,6 +631,20 @@
             <div class="data-box">
                 <div class="session">
                     <h1>SESSION DETAILS</h1>
+                    <div style="display:flex;justify-content: space-evenly;margin-bottom: 1em">
+                        <div class="in-box-highlighting">
+                            <div class="databox-name">Session ID</div>
+                            <div class="databox-value">{{ session_information[0] }}</div>
+                        </div>
+                        <div class="in-box-highlighting">
+                            <div class="databox-name">Date</div>
+                            <div class="databox-value">{{ session_information[1] }}</div>
+                        </div>
+                        <div class="in-box-highlighting">
+                            <div class="databox-name">W/L</div>
+                            <div class="databox-value">{{ session_information[2] }} - {{ session_information[3] }}</div>
+                        </div>
+                    </div>
                     <table>
                         <tr>
                             <th colspan="3" class="table-general">General</th>

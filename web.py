@@ -1,15 +1,15 @@
-from flask import Flask
-from flask import render_template
+import time
+
+from flask import Flask, render_template, redirect
 
 import cache as c
-import queries
 import data_import
-import time
+import queries
 
 app = Flask(__name__)
 
 
-@app.route('/data/<graph>')
+@app.route('/rl/data/<graph>')
 def data(graph):
     """
     new_graphs = {'goals_heatmap': g.goal_heatmap()}
@@ -50,12 +50,13 @@ def build_context():
         "just_out": c.data.get('JUST_OUT'),
         "performance_score": c.data.get('PERFORMANCE_SCORE'),
         "to_beat_next": c.data.get('TO_BEAT_NEXT'),
-        "seasons": c.data.get('SEASONS')
+        "seasons": c.data.get('SEASONS'),
+        "session_information": c.data.get('SESSION_INFORMATION'),
     }
     return context
 
 
-@app.route('/')
+@app.route('/rl')
 def main():
     # Check cooldown
     if not c.data.get('LAST_RELOAD') + 15 > int(time.time()) and data_import.new_data_available():
@@ -64,13 +65,13 @@ def main():
     return render_template('index.jinja2', **build_context())
 
 
-@app.route('/graphs')
+@app.route('/rl/graphs')
 def graphs():
     return render_template('graphs.jinja2')
 
 
-@app.route('/records')
-def records():  # TODO: Highlight records that happened not long ago
+@app.route('/rl/records')
+def records():
     context = {
         'record_games': c.data.get('RECORD_GAMES'),
         'record_headlines': ['Most stat by player in one game', 'Highest performance by player',
@@ -82,11 +83,12 @@ def records():  # TODO: Highlight records that happened not long ago
         's': 'rgba(12,52,145,0.2)',
         'cg': 'rgba(255, 225, 0, 0.2)',
         'streaks': c.data.get('STREAK_RECORD_PAGE'),
+        'latest': c.data.get('TOTAL_GAMES'),
     }
     return render_template('records.jinja2', **context)
 
 
-@app.route('/profile/<player_id>')
+@app.route('/rl/profile/<player_id>')
 def streaks(player_id: int):
     player_id = int(player_id)
     ctx = {
@@ -97,7 +99,7 @@ def streaks(player_id: int):
     return render_template('profile.jinja2', **ctx)
 
 
-@app.route('/games')
+@app.route('/rl/games')
 def games():
     k, p, s = c.K, c.P, c.S
     ctx = {
@@ -116,7 +118,13 @@ def games():
     return render_template('games.jinja2', **ctx)
 
 
+@app.route('/')
+def test():
+    return redirect('/rl')
+
+
 if __name__ == '__main__':
     app.jinja_env.globals.update(cf=queries.conditional_formatting)
+    app.jinja_env.globals.update(fade=queries.fade_highlighting)
     c.reload()  # Load all data into memory
     app.run(host='127.0.0.1', port=6543)

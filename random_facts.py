@@ -41,11 +41,11 @@ def last_session_facts() -> list[tuple]:
     last_session_date = q.last_two_sessions_dates()[0][0]
     diff = (today - datetime.strptime(last_session_date, "%Y-%m-%d")).days
     if diff >= 21:
-        facts.append((f'Last session is already {diff} days ago', 4))
+        facts.append((f'The last session was as far back as {diff} days ago!', 4))
     elif diff >= 12:
-        facts.append((f'The last session was {diff} days ago.', 2))
+        facts.append((f'The last session was {diff} days ago...', 3))
     elif diff >= 5:
-        facts.append((f'Last session was {diff} days ago...', 3))
+        facts.append((f'The last session was {diff} days ago.', 2))
 
     # At the same date x years ago
     for years_ago in range(1, today.year - 2018):
