@@ -403,7 +403,7 @@ def generate_fun_facts() -> list:
              format_fun_facts("Everyone scored", ff_everyone_scored()),
              format_fun_facts("No solo goals were scored", ff_no_solo_goals()),
              format_fun_facts("CG concedes zero goals", ff_team_concedes_x_times(0)),
-             format_fun_facts("CG concedes one goals", ff_team_concedes_x_times(1)),
+             format_fun_facts("CG concedes one goal", ff_team_concedes_x_times(1)),
              format_fun_facts("CG concedes two goals", ff_team_concedes_x_times(2)),
              format_fun_facts("CG concedes three goals", ff_team_concedes_x_times(3)),
              format_fun_facts("CG concedes four goals", ff_team_concedes_x_times(4)),

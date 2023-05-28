@@ -509,7 +509,7 @@
                             <tr>
                                 <td>MVPs</td>
                                 {% for goal in grand_total["MVPs"] %}
-                                    <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+                                    <td>{{ goal|round(2) }}{% if goal is float %}%{% endif %}</td>
                                 {% endfor %}
                             </tr>
                         </table>
@@ -564,7 +564,7 @@
                             <tr>
                                 <td>MVPs</td>
                                 {% for goal in season_data["MVPs"] %}
-                                    <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+                                    <td>{{ goal|round(2) }}{% if goal is float %}%{% endif %}</td>
                                 {% endfor %}
                             </tr>
                         </table>
@@ -619,7 +619,7 @@
                             <tr>
                                 <td>MVPs</td>
                                 {% for goal in session_data["MVPs"] %}
-                                    <td>{{ goal|round(1) }}{% if goal is float %}%{% endif %}</td>
+                                    <td>{{ goal|round(2) }}{% if goal is float %}%{% endif %}</td>
                                 {% endfor %}
                             </tr>
                         </table>
