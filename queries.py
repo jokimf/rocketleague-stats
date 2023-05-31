@@ -2,8 +2,10 @@ import datetime
 import sqlite3
 from typing import Any
 
+import database
+
 database_path = 'resources/test.db'
-conn = sqlite3.connect(database_path, check_same_thread=False)
+conn = database.connect_to_database()
 c = conn.cursor()
 
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']

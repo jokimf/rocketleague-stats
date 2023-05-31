@@ -107,6 +107,51 @@ FROM (SELECT gameID, score, playerID
 """, (player_id, limit)).fetchall()
 
 
+def streak_stat_is_zero(player_id: int, stat: str, comparison: str, value: int) -> list[Any]:
+    if stat not in ["goals", "assists", "saves", "shots"]:
+        return []
+    if comparison not in ['>', '<', '=']:
+        return []
+    if value < 0:
+        return []
+    return c.execute(f"""
+     WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+            gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+        FROM (  SELECT gameID 
+                FROM scores
+                WHERE playerID = ? AND {stat} {comparison} {value}
+            )
+        )
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM Streaks
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """, (player_id,)).fetchall()
+
+
+def streak_win_or_loss_by_one(win: bool):
+    return c.execute("""
+        WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
+            gameID - row_number() OVER (ORDER BY gameID) AS grouper, gameID
+        
+            FROM (SELECT gameID 
+            FROM games
+            WHERE goals - against = ?
+            )
+        )
+                
+        SELECT COUNT(*) AS Streak, MIN(gameId) AS 'Start', MAX(gameId) AS 'End'
+        FROM Streaks
+        GROUP BY grouper
+        ORDER BY 1 DESC, 2 ASC
+    """, (1 if win else -1,))
+
+
+def generate_streaks_profile_page(user_id: int):
+    pass  # tODO
+    return streaks
+
+
 def generate_streaks_record_page():
     streaks = {
         'Longest Winning Streak': longest_winning_streak(),

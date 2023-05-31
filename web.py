@@ -74,9 +74,13 @@ def graphs():
 def records():
     context = {
         'record_games': c.data.get('RECORD_GAMES'),
-        'record_headlines': ['Most stat by player in one game', 'Highest performance by player',
+        'record_headlines': ['Most stat by player in one game',
+                             'Highest performance by player',
                              'Lowest performance by player',
-                             'Most stat by team', 'Goal stats by team', 'Points stats', 'Miscellaneous'],
+                             'Most stat by team',
+                             'Goal stats by team',
+                             'Points stats',
+                             'Miscellaneous'],
         'rank_highlighting': c.RANK_HIGHLIGHTING,
         'k': 'rgba(12,145,30,0.2)',
         'p': 'rgba(151,3,14,0.2)',
