@@ -62,12 +62,12 @@ def main():
     if not c.data.get('LAST_RELOAD') + 15 > int(time.time()) and data_import.new_data_available():
         data_import.insert_new_data()
         c.reload()
-    return render_template('index.jinja2', **build_context())
+    return render_template('index.html', **build_context())
 
 
 @app.route('/rl/graphs')
 def graphs():
-    return render_template('graphs.jinja2')
+    return render_template('graphs.html')
 
 
 @app.route('/rl/records')
@@ -89,7 +89,7 @@ def records():
         'streaks': c.data.get('STREAK_RECORD_PAGE'),
         'latest': c.data.get('TOTAL_GAMES'),
     }
-    return render_template('records.jinja2', **context)
+    return render_template('records.html', **context)
 
 
 @app.route('/rl/profile/<player_id>')
@@ -100,7 +100,7 @@ def streaks(player_id: int):
         'streaks': c.data.get('PROFILE_STREAKS')[player_id],
         'rank_highlighting': c.RANK_HIGHLIGHTING,
     }
-    return render_template('profile.jinja2', **ctx)
+    return render_template('profile.html', **ctx)
 
 
 @app.route('/rl/games')
@@ -119,7 +119,7 @@ def games():
                                     (s, 0, 5), (s, 0, 5), (s, 0, 5),
                                     (s, 0, 10)]
     }
-    return render_template('games.jinja2', **ctx)
+    return render_template('games.html', **ctx)
 
 
 @app.route('/')
