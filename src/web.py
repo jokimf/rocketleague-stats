@@ -4,7 +4,7 @@ from flask import Flask, render_template, redirect
 
 import cache as c
 import data_import
-import queries
+import queries as q
 
 app = Flask(__name__)
 
@@ -128,7 +128,7 @@ def test():
 
 
 if __name__ == '__main__':
-    app.jinja_env.globals.update(cf=queries.conditional_formatting)
-    app.jinja_env.globals.update(fade=queries.fade_highlighting)
+    app.jinja_env.globals.update(cf=q.conditional_formatting)
+    app.jinja_env.globals.update(fade=q.fade_highlighting)
     c.reload()  # Load all data into memory
     app.run(host='127.0.0.1', port=6543)

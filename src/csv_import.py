@@ -1,5 +1,4 @@
 import database as db
-import sqlite3
 
 name = 'newest.csv'
 conn = db.connect_to_database()
