@@ -7,7 +7,9 @@ import data_import
 import queries as q
 
 app = Flask(__name__)
-
+app.jinja_env.globals.update(cf=q.conditional_formatting)
+app.jinja_env.globals.update(fade=q.fade_highlighting)
+c.reload()  # Load all data into memory
 
 @app.route('/rl/data/<graph>')
 def data(graph):
@@ -125,10 +127,3 @@ def games():
 @app.route('/')
 def test():
     return redirect('/rl')
-
-
-if __name__ == '__main__':
-    app.jinja_env.globals.update(cf=q.conditional_formatting)
-    app.jinja_env.globals.update(fade=q.fade_highlighting)
-    c.reload()  # Load all data into memory
-    app.run(host='127.0.0.1', port=6543)

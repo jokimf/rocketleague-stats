@@ -4,7 +4,6 @@ from typing import Any
 
 import database
 
-database_path = 'resources/test.db'
 conn = database.connect_to_database()
 c = conn.cursor()
 
@@ -158,7 +157,7 @@ def tilt() -> float:  # TODO: Write tilt-o-meter
     # Enemy goals last 14 days
     # Winrate
     date14ago = (datetime.datetime.now() - datetime.timedelta(days=14)).strftime('%Y-%m-%d')
-    enemy_goals = c.execute("SELECT SUM(against) FROM games WHERE date > ?;", (date14ago,)).fetchone()[0]
+    enemy_goals = c.execute("SELECT IFNULL(SUM(against),0) FROM games WHERE date > ?;", (date14ago,)).fetchone()[0]
     losses = c.execute("SELECT COUNT(1) FROM losses WHERE date > ?;", (date14ago,)).fetchone()[0]
     return enemy_goals * 0.8 + losses * 0.2
 
