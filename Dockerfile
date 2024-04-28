@@ -9,4 +9,4 @@ EXPOSE 7823
 
 ENV FLASK_APP .\src\web.py
 ENV FLASK_RUNPORT 7823
-CMD [ "flask", "--app", "./src/web.py", "run", "--port", "7823" ]
+CMD [ "flask", "--app", "./src/web.py", "run", "--port", "7823", "--host", "0.0.0.0" ]
