@@ -4,8 +4,8 @@ __pycache__
 *.db-journal
 *.vscode
 steamkey.txt
-credentials.json
-token.json
 *.db
 *.csv
 resources
+.venv
+*.json

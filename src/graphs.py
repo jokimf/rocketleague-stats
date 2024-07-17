@@ -1,11 +1,7 @@
 import random
 from typing import List, Optional
-
-import database
 import queries as q
 
-conn = database.connect_to_database()
-c = conn.cursor()
 possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
 
 

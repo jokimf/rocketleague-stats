@@ -6,7 +6,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 import cache as cc
-import queries as q
+from queries import RLQueries
 
 
 def fetch_credits():
@@ -14,17 +14,17 @@ def fetch_credits():
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('resources/token.json'):
-        creds = Credentials.from_authorized_user_file('resources/token.json', scope)
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', scope)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:  # Create token.json in first time setup
-            flow = InstalledAppFlow.from_client_secrets_file('resources/credentials.json', scope)
+            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', scope)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('resources/token.json', 'w') as token:
+        with open('token.json', 'w') as token:
             token.write(creds.to_json())
     return creds
 
@@ -42,7 +42,8 @@ def new_data_available() -> bool:
     return game_data and int(game_data[0][0]) > total and all(game_data[0]) and len(game_data[0]) == 23
 
 
-def insert_new_data():
+def insert_new_data() -> None:
+    q = RLQueries()
     total = q.total_games()
     result = service.spreadsheets().values().get(spreadsheetId=rl_doc, range=f'Games!A{total + 1}:W').execute()
     game_data = result.get('values', [])

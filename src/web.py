@@ -1,62 +1,14 @@
 import time
 
-from flask import Flask, render_template, redirect
+from flask import Flask, redirect, render_template, send_from_directory
 
 import cache as c
 import data_import
 import queries as q
 
 app = Flask(__name__)
-app.jinja_env.globals.update(cf=q.conditional_formatting)
-app.jinja_env.globals.update(fade=q.fade_highlighting)
+app.jinja_env.globals.update(cf=q.conditional_formatting, fade=q.fade_highlighting)
 c.reload()  # Load all data into memory
-
-@app.route('/rl/data/<graph>')
-def data(graph):
-    """
-    new_graphs = {'goals_heatmap': g.goal_heatmap()}
-    if graph in new_graphs:
-        return new_graphs[graph]
-    else:
-        return {} if graph not in g.graphs else g.graphs[graph].to_dict()
-    """
-    results_table = {
-        'data': q.results_table(),
-        'labels': [1, 2, 3, 4, 5]
-    }
-    return results_table
-
-
-def build_context():
-    context = {
-        "ranks": c.data.get('RANKS'),
-        "winrates": c.data.get('WINRATES'),
-        "random_facts": c.data.get('RANDOM_FACTS'),
-        "days_since_first": c.data.get('DAYS_SINCE_FIRST'),
-        "total_games": c.data.get('TOTAL_GAMES'),
-        "tilt": c.data.get('TILT'),
-        "average_session_length": c.data.get('AVERAGE_SESSION_LENGTH'),
-        "last_games": c.data.get('SESSION_GAMES_DETAILS'),
-        "last_games_highlighting": c.LAST_GAMES_HIGHLIGHTING,
-        "grand_total": c.data.get('GRAND_TOTAL'),
-        "season_data": c.data.get('SEASON_DATA'),
-        "session_data": c.data.get('SESSION_DATA'),
-        "fun_facts": c.data.get('FUN_FACTS'),
-        "k_perf": c.data.get('K_PERFORMANCE'),
-        "p_perf": c.data.get('P_PERFORMANCE'),
-        "s_perf": c.data.get('S_PERFORMANCE'),
-        "website_date": c.data.get('WEBSITE_DATE'),
-        "latest_session_date": c.data.get('LATEST_SESSION_DATE'),
-        "w_and_l": c.data.get('W_AND_L'),
-        "session_game_count": c.data.get('SESSION_GAME_COUNT'),
-        "just_out": c.data.get('JUST_OUT'),
-        "performance_score": c.data.get('PERFORMANCE_SCORE'),
-        "to_beat_next": c.data.get('TO_BEAT_NEXT'),
-        "seasons": c.data.get('SEASONS'),
-        "session_information": c.data.get('SESSION_INFORMATION'),
-    }
-    return context
-
 
 @app.route('/rl')
 def main():
@@ -64,7 +16,7 @@ def main():
     if not c.data.get('LAST_RELOAD') + 15 > int(time.time()) and data_import.new_data_available():
         data_import.insert_new_data()
         c.reload()
-    return render_template('index.html', **build_context())
+    return render_template('index.html', **c.build_context())
 
 
 @app.route('/rl/graphs')
@@ -123,6 +75,24 @@ def games():
     }
     return render_template('games.html', **ctx)
 
+@app.route('/rl/data/<graph>')
+def data(graph):
+    """
+    new_graphs = {'goals_heatmap': g.goal_heatmap()}
+    if graph in new_graphs:
+        return new_graphs[graph]
+    else:
+        return {} if graph not in g.graphs else g.graphs[graph].to_dict()
+    """
+    results_table = {
+        'data': q.results_table(),
+        'labels': [1, 2, 3, 4, 5]
+    }
+    return results_table
+
+@app.route('/main/static/<filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
 
 @app.route('/')
 def test():

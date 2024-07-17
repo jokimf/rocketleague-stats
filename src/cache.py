@@ -1,8 +1,9 @@
-import queries as q
-import random_facts as rf
-import records as r
-import streaks as s
 import time
+
+from queries import RLQueries
+from random_facts import RandomFactQueries
+from records import RecordQueries
+from streaks import StreakQueries
 
 # RELOADABLE
 data = {}
@@ -21,9 +22,14 @@ RANK_HIGHLIGHTING = ['rgb(201, 176, 55, 0.3)', 'rgb(215, 215, 215, 0.3)', 'rgb(1
 
 
 def reload():
+    q = RLQueries()
+    rf = RandomFactQueries()
+    r = RecordQueries()
+    s = StreakQueries()
+    
     q.set_last_reload(int(time.time()))
     data['RANDOM_FACTS'] = rf.generate_random_facts()
-    data['FUN_FACTS'] = q.generate_fun_facts()
+    data['FUN_FACTS'] = [] #q.generate_fun_facts()
     data['RECORD_GAMES'] = r.generate_record_games()
     data['STREAK_RECORD_PAGE'] = s.generate_streaks_record_page()
     data['TOTAL_GAMES'] = q.total_games()
@@ -54,4 +60,34 @@ def reload():
     data['SEASONS'] = q.seasons_dashboard_short()
     data['LAST_RELOAD'] = q.last_reload()
     data['PROFILE_STREAKS'] = [s.generate_profile_streaks(p) for p in [0, 1, 2]]
-    data['SESSION_INFORMATION'] = q.session_data_by_date(data['LATEST_SESSION_DATE'])
+    data['SESSION_INFORMATION'] = rf.session_data_by_date(data['LATEST_SESSION_DATE'])
+
+def build_context():
+    context = {
+        "ranks": data.get('RANKS'),
+        "winrates": data.get('WINRATES'),
+        "random_facts": data.get('RANDOM_FACTS'),
+        "days_since_first": data.get('DAYS_SINCE_FIRST'),
+        "total_games": data.get('TOTAL_GAMES'),
+        "tilt": data.get('TILT'),
+        "average_session_length": data.get('AVERAGE_SESSION_LENGTH'),
+        "last_games": data.get('SESSION_GAMES_DETAILS'),
+        "last_games_highlighting": LAST_GAMES_HIGHLIGHTING,
+        "grand_total": data.get('GRAND_TOTAL'),
+        "season_data": data.get('SEASON_DATA'),
+        "session_data": data.get('SESSION_DATA'),
+        "fun_facts": data.get('FUN_FACTS'),
+        "k_perf": data.get('K_PERFORMANCE'),
+        "p_perf": data.get('P_PERFORMANCE'),
+        "s_perf": data.get('S_PERFORMANCE'),
+        "website_date": data.get('WEBSITE_DATE'),
+        "latest_session_date": data.get('LATEST_SESSION_DATE'),
+        "w_and_l": data.get('W_AND_L'),
+        "session_game_count": data.get('SESSION_GAME_COUNT'),
+        "just_out": data.get('JUST_OUT'),
+        "performance_score": data.get('PERFORMANCE_SCORE'),
+        "to_beat_next": data.get('TO_BEAT_NEXT'),
+        "seasons": data.get('SEASONS'),
+        "session_information": data.get('SESSION_INFORMATION'),
+    }
+    return context
