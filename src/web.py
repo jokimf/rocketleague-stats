@@ -90,7 +90,7 @@ def data(graph):
     }
     return results_table
 
-@app.route('/main/static/<filename>')
+@app.route('/rl/static/<filename>')
 def static_files(filename):
     return send_from_directory('static', filename)
 

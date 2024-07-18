@@ -1,0 +1,36 @@
+table {
+    border-collapse: collapse;
+    font-style: normal;
+    font-size: smaller;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+
+td, th {
+    border: 1px solid #999;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+th {
+    background-color: #1c1c1c;
+    color: white;
+    border: 1px solid #101010;
+    font-weight: bold;
+}
+
+table tr:nth-child(even) {
+    background-color: #2b2b2b;
+}
+
+td {
+    border: 1px solid #232323;
+}
+
+.mvp_highlighting_table_cell {
+    border: 2px double darkgoldenrod !important;
+}
+
+.result_highlighting_table_cell {
+}
