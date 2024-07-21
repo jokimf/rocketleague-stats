@@ -3,7 +3,7 @@ import json
 import mysql.connector as mysql
 
 connections = dict()
-def get_cursor(table: str = "ungameable"):
+def get_cursor(table: str = "rl"):
     global connections
     existing_connection = connections.get(table)
     if not existing_connection:

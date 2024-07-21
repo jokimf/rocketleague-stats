@@ -10,8 +10,8 @@ from records import RecordQueries
 
 random_facts = list()
 class RandomFactQueries(BackendConnection):
-    def __init__(self, database_name="rl") -> None:
-        super().__init__(database_name)
+    def __init__(self) -> None:
+        super().__init__()
         self.q = RLQueries()
         self.r = RecordQueries()
         global random_facts
