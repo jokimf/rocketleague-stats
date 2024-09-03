@@ -9,32 +9,39 @@ import queries as q
 app = Flask(__name__)
 app.jinja_env.globals.update(cf=q.conditional_formatting, fade=q.fade_highlighting)
 c.reload()  # Load all data into memory
+currently_reloading = False
 
-@app.route('/rl')
+@app.route("/rl", methods=['GET'])
 def main():
-    # Check cooldown
-    if not c.data.get('LAST_RELOAD') + 15 > int(time.time()) and data_import.new_data_available():
-        data_import.insert_new_data()
-        c.reload()
-    return render_template('index.html', **c.build_context())
+    return render_template("index.html", **c.build_context())
 
+@app.route("/rl/reload", methods=["GET"])
+def reload():
+    global currently_reloading
+    if not currently_reloading:
+        currently_reloading = True
+        if data_import.new_data_available():
+            data_import.insert_new_data()
+            c.reload()
+            currently_reloading = False
+    return redirect("/rl")
 
-@app.route('/rl/graphs')
+@app.route("/rl/graphs", methods=["GET"])
 def graphs():
-    return render_template('graphs.html')
+    return render_template("graphs.html")
 
 
-@app.route('/rl/records')
+@app.route("/rl/records", methods=["GET"])
 def records():
     context = {
-        'record_games': c.data.get('RECORD_GAMES'),
-        'record_headlines': ['Most stat by player in one game',
-                             'Highest performance by player',
-                             'Lowest performance by player',
-                             'Most stat by team',
-                             'Goal stats by team',
-                             'Points stats',
-                             'Miscellaneous'],
+        "record_games": c.data.get("RECORD_GAMES"),
+        "record_headlines": ["Most stat by player in one game",
+                             "Highest performance by player",
+                             "Lowest performance by player",
+                             "Most stat by team",
+                             "Goal stats by team",
+                             "Points stats",
+                             "Miscellaneous"],
         'rank_highlighting': c.RANK_HIGHLIGHTING,
         'k': 'rgba(12,145,30,0.2)',
         'p': 'rgba(151,3,14,0.2)',
@@ -46,7 +53,7 @@ def records():
     return render_template('records.html', **context)
 
 
-@app.route('/rl/profile/<player_id>')
+@app.route('/rl/profile/<player_id>', methods=['GET'])
 def streaks(player_id: int):
     player_id = int(player_id)
     ctx = {
@@ -57,7 +64,7 @@ def streaks(player_id: int):
     return render_template('profile.html', **ctx)
 
 
-@app.route('/rl/games')
+@app.route('/rl/games', methods=['GET'])
 def games():
     k, p, s = c.K, c.P, c.S
     ctx = {
@@ -75,7 +82,7 @@ def games():
     }
     return render_template('games.html', **ctx)
 
-@app.route('/rl/data/<graph>')
+@app.route('/rl/data/<graph>', methods=['GET'])
 def data(graph):
     """
     new_graphs = {'goals_heatmap': g.goal_heatmap()}
@@ -90,7 +97,7 @@ def data(graph):
     }
     return results_table
 
-@app.route('/rl/static/<filename>')
+@app.route('/rl/static/<filename>', methods=['GET'])
 def static_files(filename):
     return send_from_directory('static', filename)
 

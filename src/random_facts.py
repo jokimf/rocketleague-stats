@@ -95,7 +95,7 @@ class RandomFactQueries(BackendConnection):
 
     def last_month_summary(self) -> list[tuple]:
         def unique_months_game_count() -> list[Any]:
-            self.c.execute("SELECT strftime('%m-%Y',date) as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC")
+            self.c.execute("SELECT DATE_FORMAT(date, '%m-%Y') as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC")
             return self.c.fetchall()
 
         facts = []

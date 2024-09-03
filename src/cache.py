@@ -89,5 +89,11 @@ def build_context():
         "to_beat_next": data.get('TO_BEAT_NEXT'),
         "seasons": data.get('SEASONS'),
         "session_information": data.get('SESSION_INFORMATION'),
+
+        "players": [
+            {"name":"Knus", "rank": data.get('RANKS')[0], "performance": data.get("PERFORMANCE_SCORE")[0]},
+            {"name":"Puad", "rank": data.get('RANKS')[1], "performance": data.get("PERFORMANCE_SCORE")[1]},
+            {"name":"Sticker", "rank": data.get('RANKS')[2], "performance": data.get("PERFORMANCE_SCORE")[2]}
+        ]
     }
     return context
