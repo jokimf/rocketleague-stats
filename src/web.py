@@ -1,3 +1,4 @@
+import json
 import time
 
 from flask import Flask, redirect, render_template, send_from_directory
@@ -5,6 +6,7 @@ from flask import Flask, redirect, render_template, send_from_directory
 import cache as c
 import data_import
 import queries as q
+from graphs import GraphBuilder, DatasetColor
 
 app = Flask(__name__)
 app.jinja_env.globals.update(cf=q.conditional_formatting, fade=q.fade_highlighting)
@@ -84,18 +86,17 @@ def games():
 
 @app.route('/rl/data/<graph>', methods=['GET'])
 def data(graph):
-    """
-    new_graphs = {'goals_heatmap': g.goal_heatmap()}
-    if graph in new_graphs:
-        return new_graphs[graph]
-    else:
-        return {} if graph not in g.graphs else g.graphs[graph].to_dict()
-    """
-    results_table = {
-        'data': q.results_table(),
-        'labels': [1, 2, 3, 4, 5]
-    }
-    return results_table
+    return {}
+
+@app.route('/rl/data', methods=['GET'])
+def graphTEST():
+    graph = GraphBuilder() \
+        .withTitle("Pudding") \
+        .withLabels([1,2,3]) \
+        .withDataset([5,7,2], "PFD", DatasetColor.random_color()) \
+        .withDataset([10,4,3], "Knus", DatasetColor.random_color()) \
+        .toJSON()
+    return graph
 
 @app.route('/rl/static/<filename>', methods=['GET'])
 def static_files(filename):

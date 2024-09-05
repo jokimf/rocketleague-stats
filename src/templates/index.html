@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/rl/static/rl.css">
     <link rel="stylesheet" href="https://matcha.mizu.sh/matcha.css">
     <link rel="stylesheet" href="https://matcha.mizu.sh/@syntax-highlighting.css">
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="layout-simple">
@@ -60,6 +60,7 @@
             {% endfor %}
         </section>
         <hr>
+        <canvas id="myChart"></canvas>
         <section>
             <h1>LATEST SESSION</h1>
             <p>
@@ -433,5 +434,6 @@
 
 </body>
 <script src="/rl/static/topHighlighting.js"></script>
+<script src="/rl/static/graphs.js"></script>
 
 </html>
