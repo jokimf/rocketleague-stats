@@ -1,12 +1,9 @@
-import json
-import time
-
 from flask import Flask, redirect, render_template, send_from_directory
 
 import cache as c
 import data_import
 import queries as q
-from graphs import GraphBuilder, DatasetColor
+from graphs import DatasetColor, GraphBuilder, GraphQueries
 
 app = Flask(__name__)
 app.jinja_env.globals.update(cf=q.conditional_formatting, fade=q.fade_highlighting)
@@ -16,17 +13,6 @@ currently_reloading = False
 @app.route("/rl", methods=['GET'])
 def main():
     return render_template("index.html", **c.build_context())
-
-@app.route("/rl/reload", methods=["GET"])
-def reload():
-    global currently_reloading
-    if not currently_reloading:
-        currently_reloading = True
-        if data_import.new_data_available():
-            data_import.insert_new_data()
-            c.reload()
-            currently_reloading = False
-    return redirect("/rl")
 
 @app.route("/rl/graphs", methods=["GET"])
 def graphs():
@@ -84,19 +70,26 @@ def games():
     }
     return render_template('games.html', **ctx)
 
+@app.route("/rl/reload", methods=["GET"])
+def reload():
+    global currently_reloading
+    if not currently_reloading:
+        currently_reloading = True
+        if data_import.new_data_available():
+            data_import.insert_new_data()
+            c.reload()
+            currently_reloading = False
+    return redirect("/rl")
+
 @app.route('/rl/data/<graph>', methods=['GET'])
 def data(graph):
-    return {}
-
-@app.route('/rl/data', methods=['GET'])
-def graphTEST():
-    graph = GraphBuilder() \
-        .withTitle("Pudding") \
-        .withLabels([1,2,3]) \
-        .withDataset([5,7,2], "PFD", DatasetColor.random_color()) \
-        .withDataset([10,4,3], "Knus", DatasetColor.random_color()) \
-        .toJSON()
-    return graph
+    g = GraphQueries()
+    graph_lookup = {
+        "performance_knus":  g.performance_graph(),
+        "days": g.dates_table(),
+    }
+    graph_data = graph_lookup.get(graph)
+    return graph_data
 
 @app.route('/rl/static/<filename>', methods=['GET'])
 def static_files(filename):

@@ -17,7 +17,7 @@ def get_cursor(table: str = "rl"):
             user=user, 
             password=password,
             host=host,
-            database=table
+            database=table,
         )
         connections[table] = new_connection
     else:

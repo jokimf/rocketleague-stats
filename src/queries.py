@@ -371,22 +371,6 @@ class RLQueries(BackendConnection):
 # def one_diff_loss() -> int:
 #     return self.c.execute("SELECT COUNT(gameID) FROM games WHERE against - goals = 1").fetchone()[0]
 
-# def results_table_ordered():
-#     data = self.c.execute("""
-#     WITH cG AS (SELECT COUNT(*) allG FROM games)
-#     SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / cG.allG AS ch  FROM games, cG
-#     GROUP BY goals, against
-#     ORDER BY goals ASC
-# """).fetchall()
-#     d = {}
-#     for x in data:
-#         key = x[0]
-#         if key in d:
-#             d[key].append(x)
-#         else:
-#             d[key] = [x]
-#     return d
-
 # def solo_goals_in_range(start=1, end=None) -> int:
 #     if end is None:
 #         end = total_games()

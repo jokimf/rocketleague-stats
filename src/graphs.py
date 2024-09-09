@@ -1,11 +1,11 @@
 from __future__ import annotations  # for class type hints
 
-import json
 import random
 from enum import Enum
 
-import queries as q
+import simplejson as json
 
+from connect import BackendConnection
 
 class GraphBuilder:
     def __init__(self) -> None:
@@ -16,14 +16,17 @@ class GraphBuilder:
                 "datasets": [],
             },
             "options": {
-                "plugins": dict()
+                "plugins": {
+                    "legend": dict(),
+                    "title": dict()
+                }
             }
         }
 
     def toJSON(self) -> dict:
         return json.dumps(self._graph)
 
-    def withType(self, graphType: str):
+    def withType(self, graphType: str) -> GraphBuilder:
         self._graph |= {"type": graphType}
         return self
 
@@ -36,38 +39,44 @@ class GraphBuilder:
         title_attributes = {
             "text": text,
             "align": align,
-            "position": position
+            "position": position,
+            "display": True
         }
-        plugins_section = self._graph.get("options").get("plugins")
-        plugins_section |= {"title": title_attributes}
+        title_section = self._graph.get("options").get("plugins").get("title")
+        title_section |= title_attributes
         return self
     
-    def withDataset(self, data: list[int|float], label: str, color: DatasetColor|str, borderWidth: int = 1) -> GraphBuilder:
+    def withLegend(self, show: bool):
+        legend_section = self._graph.get("options").get("plugins").get("legend")
+        legend_section |= {"display": show}
+        return self
+    
+    def withDataset(self, data: list[int|float], label: str, color: DatasetColor|str, border_color, borderWidth: int = 1) -> GraphBuilder:
         if isinstance(color, DatasetColor):
             color = color.value
+        if isinstance(border_color, DatasetColor):
+            border_color = border_color.value
+
         dataset_attributes = {
             "data": data,
             "label": label,
             "borderWidth": borderWidth,
-            "backgroundColor": color
+            "backgroundColor": color,
+            "borderColor": border_color
         }
         data_section: list = self._graph.get("data").get("datasets")
         data_section.append(dataset_attributes)
         return self
     
-    def withLimits(self, xmin: int|None = None, xmax: int|None = None, ymin: int|None = None, ymax: int|None = None):
+    
+    def withLimits(self, xmin: int|None = None, xmax: int|None = None, ymin: int|None = None, ymax: int|None = None) -> GraphBuilder:
         options_section = self._graph.get("options")
-        attributes = {"xmin": xmin, "xmax": xmax, "ymin": ymin, "ymax": ymax}
+        attributes = {"x_min": xmin, "x_max": xmax, "y_min": ymin, "y_max": ymax}
         
         # Filter None
         attributes = {key: value for key, value in attributes.items() if value is not None}
         
         options_section |= attributes
-        return self
-    
-    def withLegend(self, show: bool):
-        options_section = self._graph.get("options")
-        options_section |= {"show_legend": show}
         return self
     
 class DatasetColor(Enum):
@@ -82,31 +91,53 @@ class DatasetColor(Enum):
     WIN = 'rgba(3, 58, 3, 0.8)',  
     LOSS = 'rgba(58, 3, 3, 0.8)',  
     GAME ='rgba(17, 3, 58, 0.8)',
+    NEUTRAL = 'rgba(128,128,128,0.6)'
 
+class GraphQueries(BackendConnection):
+    def dates_table(self) -> dict:
+        self.c.execute("""
+            SELECT DATE_FORMAT(date, '%d') AS day, 
+                SUM(IF(goals > against,1,0)) AS Wins,
+                SUM(IF(goals < against,1,0)) AS Losses 
+            FROM games GROUP BY day ORDER BY day ASC
+        """)
+        raw = self.c.fetchall()
+        labels, wins, losses = zip(*raw)
+        graph = GraphBuilder() \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withLabels(labels)
+        return graph.toJSON()
+ 
+    def performance_graph(self) -> dict:
+        player_ids = [0, 1, 2]
+        data_list = []
+
+        for player_id in player_ids:
+            self.c.execute(f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
+            raw = self.c.fetchall()
+            data_list.append(list(reversed([x[0] for x in raw])))
+            average = [sum(group) / len(group) for group in zip(*data_list)]
+        graph = GraphBuilder() \
+            .withType("line") \
+            .withDataset(data_list[0], "Knus", DatasetColor.KNUS, DatasetColor.NEUTRAL) \
+            .withDataset(data_list[1], "Puad", DatasetColor.PUAD, DatasetColor.NEUTRAL) \
+            .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.NEUTRAL) \
+            .withDataset(average, "Average", DatasetColor.GAME, DatasetColor.NEUTRAL, 3) \
+            .withLabels(list(range(1,21)))
+        return graph.toJSON()
+    
+    def results_table(self):
+        self.c.execute("""
+            WITH cG AS (SELECT COUNT(*) allG FROM games)
+            SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / MAX(cG.allG) AS ch  
+            FROM games, cG
+            GROUP BY goals, against
+            ORDER BY goals ASC;
+        """)
+        return [{"x": str(g), "y": str(a), "v": v} for g, a, v, _ in self.c.fetchall()]
+ 
 # OLD GRAPH QUERIES
-
-# possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
-
-# def goal_heatmap():
-#     return q.results_table()
-
-
-# def graph_performance(stat: str) -> OldGraph:
-#     if stat not in possible_stats:
-#         raise ValueError(f'{stat} is not in possible stats.')
-#     data = c.execute(f"""
-#         WITH kT AS (SELECT * FROM performance WHERE playerID = 0),
-#         pT AS (SELECT * FROM performance WHERE playerID = 1),
-#         sT AS (SELECT * FROM performance WHERE playerID = 2)
-#         SELECT kT.gameID AS GameID, kT.{stat} AS Knus, pT.{stat} AS Puad, sT.{stat} AS Sticker FROM kT
-#         LEFT JOIN pT ON kT.gameID = pT.gameID
-#         LEFT JOIN sT ON kT.gameID = sT.gameID
-#     """).fetchall()
-#     return OldGraph(f'{stat.capitalize()} performance', 'line', data,
-#                  [f'{x[0]}{stat.capitalize()}' for x in c.description], None, None,
-#                  None, None, False)
-
-
 # def graph_performance_team(stat: str) -> OldGraph:
 #     if stat not in possible_stats:
 #         raise ValueError(f'{stat} is not in possible stats.')
@@ -263,17 +294,6 @@ class DatasetColor(Enum):
 #         SUM(IIF(goals < against, 1,0)) AS Losses FROM games GROUP BY year""")
 #     new = [list(x) for x in c.fetchall()]
 #     return OldGraph('Years', 'bar', new, [x[0] for x in c.description], None, None, None, None, False)
-
-
-# def dates_table() -> OldGraph:
-#     c.execute("""
-#         SELECT STRFTIME('%d', date) AS day, COUNT(date) as Games, SUM(IIF(goals > against,1,0)) AS Wins, 
-#         SUM(IIF(goals < against,1,0)) AS Losses FROM games GROUP BY day
-#     """)
-#     new = [list(x) for x in c.fetchall()]
-#     return OldGraph('Dates', 'bar', new, [x[0] for x in c.description], None, None, None, None, True)
-
-
 # graphs = {
 #     'performance_score': graph_performance('score').symbiose(graph_performance_team('score')),
 #     'performance_goals': graph_performance('goals').symbiose(graph_performance_team('goals')),

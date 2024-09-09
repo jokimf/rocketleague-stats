@@ -4,6 +4,7 @@ from queries import RLQueries
 from random_facts import RandomFactQueries
 from records import RecordQueries
 from streaks import StreakQueries
+from graphs import GraphQueries
 
 # RELOADABLE
 data = {}
@@ -63,6 +64,7 @@ def reload():
     data['SESSION_INFORMATION'] = rf.session_data_by_date(data['LATEST_SESSION_DATE'])
 
 def build_context():
+    g = GraphQueries()
     context = {
         "ranks": data.get('RANKS'),
         "winrates": data.get('WINRATES'),
@@ -94,6 +96,9 @@ def build_context():
             {"name":"Knus", "rank": data.get('RANKS')[0], "performance": data.get("PERFORMANCE_SCORE")[0]},
             {"name":"Puad", "rank": data.get('RANKS')[1], "performance": data.get("PERFORMANCE_SCORE")[1]},
             {"name":"Sticker", "rank": data.get('RANKS')[2], "performance": data.get("PERFORMANCE_SCORE")[2]}
-        ]
+        ],
+        "performance_graph": g.performance_graph(),
+        "days_graph": g.dates_table(),
+        "heatmap": g.results_table()
     }
     return context

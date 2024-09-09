@@ -7,11 +7,11 @@
     <link rel="icon" href="https://jok.im/static/icons/rl_cg_logo_grey.png">
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-    <!-- <link rel="stylesheet" href="https://jok.im/static/standard.css"> -->
     <link rel="stylesheet" href="/rl/static/rl.css">
     <link rel="stylesheet" href="https://matcha.mizu.sh/matcha.css">
     <link rel="stylesheet" href="https://matcha.mizu.sh/@syntax-highlighting.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1"></script>
 </head>
 
 <body class="layout-simple">
@@ -60,7 +60,6 @@
             {% endfor %}
         </section>
         <hr>
-        <canvas id="myChart"></canvas>
         <section>
             <h1>LATEST SESSION</h1>
             <p>
@@ -107,9 +106,17 @@
                 {% endfor %}
             </table>
             {% if session_game_count < 5 %} {% if latest_session_date==website_date %} {% if 5 - session_game_count==1
-                %} You need to play one more game to make this a valid session. {% else %} You need to play {{ 5 -
-                session_game_count }} more games to make this a valid session. {% endif %} {% else %} Last session did
-                not make it to five games and can no longer do so. {% endif %} {% else %} {% endif %} </div>
+                %} <p>You need to play one more game to make this a valid session.</p>
+                {% else %}
+                <p>You need to play {{ 5 - session_game_count }} more games to make this a valid session.</p>
+                {% endif %}
+                {% else %}
+                <p>Last session did not make it to five games and can no longer do so.</p>
+                {% endif %}
+                {% else %}
+                {% endif %}
+                <h3>Performance by GameID</h3>
+                <canvas id="performanceGraph"></canvas>
         </section>
         {% if random_facts %}
         <section>
@@ -430,10 +437,18 @@
                 </div>
             </div>
         </section>
+        <section>
+            <h1>DATE FACTS</h1>
+            <h3>Wins & Losses by day of the month</h3>
+            <canvas id="daysGraph"></canvas>
+        </section>
     </main>
 
 </body>
 <script src="/rl/static/topHighlighting.js"></script>
-<script src="/rl/static/graphs.js"></script>
+<script lang="undefined">
+    new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }});
+    new Chart(document.getElementById('daysGraph'), {{ days_graph | safe }});
+</script>
 
 </html>
