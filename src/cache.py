@@ -65,6 +65,7 @@ def reload():
 
 def build_context():
     g = GraphQueries()
+    q = RLQueries()
     context = {
         "ranks": data.get('RANKS'),
         "winrates": data.get('WINRATES'),
@@ -97,8 +98,13 @@ def build_context():
             {"name":"Puad", "rank": data.get('RANKS')[1], "performance": data.get("PERFORMANCE_SCORE")[1]},
             {"name":"Sticker", "rank": data.get('RANKS')[2], "performance": data.get("PERFORMANCE_SCORE")[2]}
         ],
+        "session_rank": q.session_rank(458),
         "performance_graph": g.performance_graph(),
-        "days_graph": g.dates_table(),
-        "heatmap": g.results_table()
+        "days_graph": g.days_graph(),
+        "weekdays_graph": g.weekdays_graph(),
+        "month_graph": g.month_graph(),
+        "year_graph": g.year_graph(),
+        "heatmap": g.results_table(),
+        "score_distribution": g.score_distribution_graph()
     }
     return context

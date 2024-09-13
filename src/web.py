@@ -86,7 +86,7 @@ def data(graph):
     g = GraphQueries()
     graph_lookup = {
         "performance_knus":  g.performance_graph(),
-        "days": g.dates_table(),
+        "days": g.days_graph(),
     }
     graph_data = graph_lookup.get(graph)
     return graph_data

@@ -117,6 +117,30 @@
                 {% endif %}
                 <h3>Performance by GameID</h3>
                 <canvas id="performanceGraph"></canvas>
+                <h2>Session Ranking</h2>
+                <table>
+                    <th>Rank</th>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>W-L</th>
+                    <th>G-A</th>
+                    <th>Score</th>
+                    {% for row in session_rank %}
+                    {% if loop.index in [1,7] %}
+                    <tr style="opacity:0.1">
+                        {% elif loop.index in [2,6] %}
+                    <tr style="opacity:0.25">
+                        {% elif loop.index in [3,5] %}
+                    <tr style="opacity:0.5">{{ data }}
+                        {% elif loop.index == 4 %}
+                    <tr class="bold" style="border-color:white">
+                        {% endif %}
+                        {% for data in row %}
+                        <td>{{ data }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
         </section>
         {% if random_facts %}
         <section>
@@ -441,6 +465,13 @@
             <h1>DATE FACTS</h1>
             <h3>Wins & Losses by day of the month</h3>
             <canvas id="daysGraph"></canvas>
+            <h3>Wins & Losses by weekday</h3>
+            <canvas id="weekdaysGraph"></canvas>
+            <h3>Wins & Losses by month</h3>
+            <canvas id="monthGraph"></canvas>
+            <h3>Wins & Losses by year</h3>
+            <canvas id="yearGraph"></canvas>
+            <canvas id="scoreDistribution"></canvas>
         </section>
     </main>
 
@@ -449,6 +480,10 @@
 <script lang="undefined">
     new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }});
     new Chart(document.getElementById('daysGraph'), {{ days_graph | safe }});
+    new Chart(document.getElementById('weekdaysGraph'), {{ weekdays_graph | safe }});
+    new Chart(document.getElementById('monthGraph'), {{ month_graph | safe }});
+    new Chart(document.getElementById('yearGraph'), {{ year_graph | safe }});
+    new Chart(document.getElementById('scoreDistribution'), {{ score_distribution | safe }});
 </script>
 
 </html>

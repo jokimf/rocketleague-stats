@@ -308,6 +308,30 @@ class RLQueries(BackendConnection):
         details['latest_session_date'] = s_date
         details['w_and_l'] = ["W" if game[2] > game[3] else "L" for game in self.games_from_session_date(s_date)]
         return details
+    
+    # Session rank is determined by the delta of wins and losses, goals and against, and finally sum of player scores.
+    def session_rank(self, session_id: int) -> dict:
+        self.c.execute("""
+            SELECT t1.session_rank 
+            FROM (
+                SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, wins - losses, goals - against, KnusScore + PuadScore + StickerScore
+                FROM sessions 
+                ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
+            ) t1
+            WHERE t1.sessionId = %s
+        """, (session_id,))
+        session_ranking = self.c.fetchone()[0]
+        self.c.execute("""
+            SELECT * 
+            FROM (
+                SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, CONCAT(wins,"-",losses), CONCAT(goals,"-",against), KnusScore + PuadScore + StickerScore
+                FROM sessions 
+                ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
+            ) t1
+            WHERE t1.session_rank BETWEEN %s-3 AND %s+3
+        """, (session_ranking, session_ranking))
+        neighbours = self.c.fetchall() # three sessions above and three sessions below
+        return neighbours
 
 
 ###TODO: Use unused queries
