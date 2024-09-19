@@ -1,9 +1,6 @@
 /* New and improved */
-.icon {
-    width: 22px;
-    height: 22px;
-    max-height: 22px;
-    max-width: 22px;
+img {
+    max-width: 10% !important; 
 }
 
 .pbox {

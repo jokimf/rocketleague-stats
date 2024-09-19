@@ -45,16 +45,41 @@
             <article>
                 <header>
                     <h1>
-                        <img alt={{ player.rank }} class="icon mr-.125"
+                        <img alt={{ player.rank }} class="mr-.125 border-box"
                             src="https://jok.im/static/rl/ranks/{{ player.rank }}.png">
-                        {{ player.name }}
+                        <a href="/rl/profile/{{ loop.index0 }}">{{ player.name }}</a>
                     </h1>
                 </header>
-                <p class="bd-variant bg-variant pbox"><span class="bold">Performance:</span> {{ player.performance }}
+                <p class="bg-muted pbox">
+                    <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
+                    {{ player.stats[0][0] | round(2) }} <span class="top_color" value="{{ player.stats[0][1] }}">Top {{ player.stats[0][1] }}%</span>
                 </p>
-                rofile-stats-leftrofile-stats-leftrofile-stats-leftrofile-stats-leftrofile-stats-leftrofile-stats-leftrofile-stats-left
+                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
+                <span class="profile-stats-value">{{ player.stats[1][0] | round(2) }}</span>
+                <span class="profile-stats-middle-top" value="{{ player.stats[1][1] }}">Top {{ player.stats[1][1]
+                    }}%</span>
+                <img class="icon" alt="Assists" src="https://jok.im/static/rl/Assist_points_icon.png">
+                <span class="profile-stats-value">{{ player.stats[2][0] | round(2) }}</span>
+                <span class="profile-stats-middle-top" value="{{ player.stats[2][1] }}">Top {{ player.stats[2][1]
+                    }}%</span>
+                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Save_points_icon.png">
+                <span class="profile-stats-value">{{ player.stats[3][0] | round(2) }}</span>
+                <span class="profile-stats-middle-top" value="{{ player.stats[3][1] }}">Top {{ player.stats[3][1]
+                    }}%</span>
+                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Shot_on_Goal_points_icon.png">
+                <span class="profile-stats-value">{{ player.stats[4][0] | round(2) }}</span>
+                <span class="profile-stats-middle-top" value="{{ player.stats[4][1] }}">Top {{ player.stats[4][1]
+                    }}%</span>
+                <div class="profile-stats-right-name">PERFORMANCE</div>
+                <div class="profile-stats-right-value">{{ performance_score[2] }}</div>
+                <div class="profile-stats-right-name">JUST OUT</div>
+                <div class="profile-stats-right-value">{{ just_out[4][2] }} → {{ just_out[5][2] }}</div>
+                <div class="profile-stats-right-name">TO BEAT</div>
+                <div class="profile-stats-right-value">{{ to_beat_next[2][2] }}</div>
                 <footer>
-                    {{ player.name }}
+                    <p class="bd-variant bg-variant pbox"><span class="bold">Performance:</span> {{ player.performance
+                        }}
+                    </p>
                 </footer>
             </article>
             {% endfor %}
@@ -323,66 +348,6 @@
                     {% endfor %}
                 </tr>
             </table>
-            <div class="profiles">
-                <div class="profile">
-                    <div class="profile-stats-left">
-                        <!--<img class="profile-pics"
-                         src="https://avatars.akamai.steamstatic.com/df2f480f21dd90062e7ce37dd798d67b64c55d1c_full.jpg"
-                         alt="Sticker">-->
-                        <div class="in-box-highlighting caption">
-                            <img alt={{ ranks[2] }} class="icon"
-                                src="https://jok.im/static/rl/ranks/{{ ranks[2] }}.png">
-                            <a href="/rl/profile/2">Sticker</a>
-                        </div>
-                    </div>
-                    <div class="profile-stats-middle in-box-highlighting">
-                        <div class="profile-stat">
-                            <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
-                            <span class="profile-stats-value">{{ s_perf[0][0] | round(2) }}</span>
-                            <span class="profile-stats-middle-top" value="{{ s_perf[0][1] }}">Top {{ s_perf[0][1]
-                                }}%</span>
-                        </div>
-                        <div class="profile-stat">
-                            <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
-                            <span class="profile-stats-value">{{ s_perf[1][0] | round(2) }}</span>
-                            <span class="profile-stats-middle-top" value="{{ s_perf[1][1] }}">Top {{ s_perf[1][1]
-                                }}%</span>
-                        </div>
-                        <div class="profile-stat">
-                            <img class="icon" alt="Assists" src="https://jok.im/static/rl/Assist_points_icon.png">
-                            <span class="profile-stats-value">{{ s_perf[2][0] | round(2) }}</span>
-                            <span class="profile-stats-middle-top" value="{{ s_perf[2][1] }}">Top {{ s_perf[2][1]
-                                }}%</span>
-                        </div>
-                        <div class="profile-stat">
-                            <img class="icon" alt="Goals" src="https://jok.im/static/rl/Save_points_icon.png">
-                            <span class="profile-stats-value">{{ s_perf[3][0] | round(2) }}</span>
-                            <span class="profile-stats-middle-top" value="{{ s_perf[3][1] }}">Top {{ s_perf[3][1]
-                                }}%</span>
-                        </div>
-                        <div class="profile-stat">
-                            <img class="icon" alt="Goals" src="https://jok.im/static/rl/Shot_on_Goal_points_icon.png">
-                            <span class="profile-stats-value">{{ s_perf[4][0] | round(2) }}</span>
-                            <span class="profile-stats-middle-top" value="{{ s_perf[4][1] }}">Top {{ s_perf[4][1]
-                                }}%</span>
-                        </div>
-                    </div>
-                    <div class="profile-stats-right" style="gap:1em;">
-                        <div class="in-box-highlighting">
-                            <div class="profile-stats-right-name">PERFORMANCE</div>
-                            <div class="profile-stats-right-value">{{ performance_score[2] }}</div>
-                        </div>
-                        <div class="in-box-highlighting">
-                            <div class="profile-stats-right-name">JUST OUT</div>
-                            <div class="profile-stats-right-value">{{ just_out[4][2] }} → {{ just_out[5][2] }}</div>
-                        </div>
-                        <div class="in-box-highlighting">
-                            <div class="profile-stats-right-name">TO BEAT</div>
-                            <div class="profile-stats-right-value">{{ to_beat_next[2][2] }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </section>
         <section>
             <h1>SEASONS</h1>

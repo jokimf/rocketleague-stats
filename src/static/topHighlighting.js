@@ -1,4 +1,4 @@
-const tops = document.getElementsByClassName("profile-stats-middle-top")
+const tops = document.getElementsByClassName("top_color")
 for (let i = 0; i < tops.length; i++) {
     const element = tops[i];
     const value = element.getAttribute("value");

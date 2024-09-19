@@ -1,18 +1,31 @@
 from flask import Flask, redirect, render_template, send_from_directory
 
 import cache as c
-import data_import
+import util.data_import as data
 import queries as q
-from graphs import DatasetColor, GraphBuilder, GraphQueries
+from cache import Dashboard
 
 app = Flask(__name__)
 app.jinja_env.globals.update(cf=q.conditional_formatting, fade=q.fade_highlighting)
-c.reload()  # Load all data into memory
 currently_reloading = False
+
+dashboard = Dashboard()
+dashboard.reload()
 
 @app.route("/rl", methods=['GET'])
 def main():
-    return render_template("index.html", **c.build_context())
+    return render_template("index.html", **dashboard.build_dashboard())
+
+@app.route("/rl/reload", methods=["GET"])
+def reload():
+    global currently_reloading
+    if not currently_reloading:
+        currently_reloading = True
+        if data.new_data_available():
+            data.insert_new_data()
+            dashboard.reload()
+            currently_reloading = False
+    return redirect("/rl")
 
 @app.route("/rl/graphs", methods=["GET"])
 def graphs():
@@ -69,27 +82,6 @@ def games():
                                     (s, 0, 10)]
     }
     return render_template('games.html', **ctx)
-
-@app.route("/rl/reload", methods=["GET"])
-def reload():
-    global currently_reloading
-    if not currently_reloading:
-        currently_reloading = True
-        if data_import.new_data_available():
-            data_import.insert_new_data()
-            c.reload()
-            currently_reloading = False
-    return redirect("/rl")
-
-@app.route('/rl/data/<graph>', methods=['GET'])
-def data(graph):
-    g = GraphQueries()
-    graph_lookup = {
-        "performance_knus":  g.performance_graph(),
-        "days": g.days_graph(),
-    }
-    graph_data = graph_lookup.get(graph)
-    return graph_data
 
 @app.route('/rl/static/<filename>', methods=['GET'])
 def static_files(filename):
