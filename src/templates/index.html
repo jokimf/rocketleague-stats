@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Rocket League Dashboard</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <link rel="icon" href="https://jok.im/static/icons/rl_cg_logo_grey.png">
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
@@ -13,14 +12,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1"></script>
 </head>
-
 <body class="layout-simple">
     <header>
         <h1>
-            <a class="success" href="/rl">
+            <a class="success" href="/rl" style="text-decoration: none;">
                 <img src="https://jok.im/static/icons/rl_cg_logo_grey.png" height="30" width="30">
             </a>
-            <a class="accent" href="/rl">ROCKET LEAGUE</a>
+            <a class="accent" href="/rl" style="color:rgb(215, 215, 215);text-decoration: none;">ROCKET LEAGUE</a>
         </h1>
         <a href="/rl/reload"><button class="bg-muted">Reload stats</button></a>
         <nav>
@@ -50,36 +48,57 @@
                         <a href="/rl/profile/{{ loop.index0 }}">{{ player.name }}</a>
                     </h1>
                 </header>
-                <p class="bg-muted pbox">
-                    <img class="icon" alt="Score" src="https://jok.im/static/rl/MVP_points_icon.png">
-                    {{ player.stats[0][0] | round(2) }} <span class="top_color" value="{{ player.stats[0][1] }}">Top {{ player.stats[0][1] }}%</span>
+                <!--
+                {% for stat in player.stats %}
+                <p class="bg-muted pbox modern" value="{{ stat[1] }}">
+                    <img class="icon" alt="Score"
+                        src="https://jok.im/static/rl/{{ players_stat_icons[loop.index0] }}.png">
+                    {{ stat[0] | round(2) }}
+                    <span class="top_color" value="{{ stat[1] }}">
+                        Top {{ stat[1] }}%
+                    </span>
                 </p>
-                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Goal_points_icon.png">
-                <span class="profile-stats-value">{{ player.stats[1][0] | round(2) }}</span>
-                <span class="profile-stats-middle-top" value="{{ player.stats[1][1] }}">Top {{ player.stats[1][1]
-                    }}%</span>
-                <img class="icon" alt="Assists" src="https://jok.im/static/rl/Assist_points_icon.png">
-                <span class="profile-stats-value">{{ player.stats[2][0] | round(2) }}</span>
-                <span class="profile-stats-middle-top" value="{{ player.stats[2][1] }}">Top {{ player.stats[2][1]
-                    }}%</span>
-                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Save_points_icon.png">
-                <span class="profile-stats-value">{{ player.stats[3][0] | round(2) }}</span>
-                <span class="profile-stats-middle-top" value="{{ player.stats[3][1] }}">Top {{ player.stats[3][1]
-                    }}%</span>
-                <img class="icon" alt="Goals" src="https://jok.im/static/rl/Shot_on_Goal_points_icon.png">
-                <span class="profile-stats-value">{{ player.stats[4][0] | round(2) }}</span>
-                <span class="profile-stats-middle-top" value="{{ player.stats[4][1] }}">Top {{ player.stats[4][1]
-                    }}%</span>
-                <div class="profile-stats-right-name">PERFORMANCE</div>
-                <div class="profile-stats-right-value">{{ performance_score[2] }}</div>
-                <div class="profile-stats-right-name">JUST OUT</div>
-                <div class="profile-stats-right-value">{{ just_out[4][2] }} → {{ just_out[5][2] }}</div>
-                <div class="profile-stats-right-name">TO BEAT</div>
-                <div class="profile-stats-right-value">{{ to_beat_next[2][2] }}</div>
+                {% endfor %}
+-->
+                <p>
+                <p class="bg-subtle pbox flex centered cols" style="font-size: x-small;">
+                    <span>Stat</span>
+                    <span>Session</span>
+                    <span>20</span>
+                    <span>Season</span>
+                    <span>500</span>
+                    <span>All</span>
+                </p>
+                {% for stat in player.stats %}
+                {% if loop.index == 1 %}
+                {% set rounding = 1 %}
+                {% else %}
+                {% set rounding = 2 %}
+                {% endif %}
+                <p class="bg-muted pbox flex centered cols modern" value="{{ stat[1] }}"
+                    style="font-size: small;justify-content: space-between;">
+                    <span>Goals</span>
+                    <span>{{ stat[0] | round(rounding) }}</span>
+                    <span>{{ stat[0] | round(rounding) }}</span>
+                    <span>{{ stat[0] | round(rounding) }}</span>
+                    <span>{{ stat[0] | round(rounding) }}</span>
+                    <span>{{ stat[0] | round(rounding) }}</span>
+                    <!--<span class="top_color" value="{{ stat[1] }}">
+                            Top {{ stat[1] }}%
+                        </span>-->
+                </p>
+                {% endfor %}
+                </p>
+                <p>
+                    <output class="bg-active">
+                        <span class="bold">JUST OUT</span>
+                        {{ just_out[4][2] }} → {{ just_out[5][2] }}
+                    </output>
+                </p>
+                <p><output class="bg-muted"><span class="bold">TO BEAT</span> {{ to_beat_next[2][2] }}</output> </p>
                 <footer>
-                    <p class="bd-variant bg-variant pbox"><span class="bold">Performance:</span> {{ player.performance
-                        }}
-                    </p>
+                    <p><output class="bg-variant"><span class="bold">PERORMANCE</span> {{ performance_score[2]
+                            }}</output></p>
                 </footer>
             </article>
             {% endfor %}
@@ -87,6 +106,7 @@
         <hr>
         <section>
             <h1>LATEST SESSION</h1>
+            <h3>Overview</h3>
             <p>
                 <output class="bg-variant"><span class="bold">Session ID:</span> {{ session_information[0] }}</output>
                 <output class="bg-active"><span class="bold">Date:</span> {{ session_information[1] }}</output>
@@ -103,12 +123,11 @@
                 {% for row in last_games %}
                 <tr>
                     {% for data in row %}
-                    <td {% if loop.index not in [1,2,3,4,10,16] %}
-                        style="background-color:{{ cf(last_games_highlighting[loop.index][0],data, last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
-                        {% elif loop.index in [4,10,16] %}
-                        style="background-color:{{ cf(last_games_highlighting[loop.index][0],row[loop.index], last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
-                        {% elif loop.index==2 or loop.index==3 %} {% if row[1]> row[2] and loop.index == 2
-                        %}
+                    <td class="highlight_td" value="{{ data }}" col="{{ loop.index }}"
+                        min="{{ last_games_highlighting[loop.index][1] }}"
+                        color="{{ last_games_highlighting[loop.index][0] }}"
+                        max="{{ last_games_highlighting[loop.index][2] }}" {% if loop.index==2 or loop.index==3 %} {% if
+                        row[1]> row[2] and loop.index == 2 %}
                         style="background-color: rgba(30,133,30,0.4)"
                         class="result_highlighting_table_cell"
                         {% elif row[2] > row[1] and loop.index == 3 %}
@@ -130,42 +149,32 @@
                 </tr>
                 {% endfor %}
             </table>
-            {% if session_game_count < 5 %} {% if latest_session_date==website_date %} {% if 5 - session_game_count==1
-                %} <p>You need to play one more game to make this a valid session.</p>
-                {% else %}
-                <p>You need to play {{ 5 - session_game_count }} more games to make this a valid session.</p>
-                {% endif %}
-                {% else %}
-                <p>Last session did not make it to five games and can no longer do so.</p>
-                {% endif %}
-                {% else %}
-                {% endif %}
-                <h3>Performance by GameID</h3>
-                <canvas id="performanceGraph"></canvas>
-                <h2>Session Ranking</h2>
-                <table>
-                    <th>Rank</th>
-                    <th>ID</th>
-                    <th>Date</th>
-                    <th>W-L</th>
-                    <th>G-A</th>
-                    <th>Score</th>
-                    {% for row in session_rank %}
-                    {% if loop.index in [1,7] %}
-                    <tr style="opacity:0.1">
-                        {% elif loop.index in [2,6] %}
-                    <tr style="opacity:0.25">
-                        {% elif loop.index in [3,5] %}
-                    <tr style="opacity:0.5">{{ data }}
-                        {% elif loop.index == 4 %}
-                    <tr class="bold" style="border-color:white">
-                        {% endif %}
-                        {% for data in row %}
-                        <td>{{ data }}</td>
-                        {% endfor %}
-                    </tr>
+            <h3>Session Ranking</h3>
+            <table>
+                <th>Rank</th>
+                <th>ID</th>
+                <th>Date</th>
+                <th>W-L</th>
+                <th>G-A</th>
+                <th>Score</th>
+                {% for row in session_rank %}
+                {% if loop.index in [1,7] %}
+                <tr style="opacity:0.1">
+                    {% elif loop.index in [2,6] %}
+                <tr style="opacity:0.25">
+                    {% elif loop.index in [3,5] %}
+                <tr style="opacity:0.5">{{ data }}
+                    {% elif loop.index == 4 %}
+                <tr class="bold" style="border-color:white">
+                    {% endif %}
+                    {% for data in row %}
+                    <td>{{ data }}</td>
                     {% endfor %}
-                </table>
+                </tr>
+                {% endfor %}
+            </table>
+            <h3>Performance by GameID</h3>
+            <canvas id="performanceGraph"></canvas>
         </section>
         {% if random_facts %}
         <section>
@@ -436,13 +445,14 @@
             <canvas id="monthGraph"></canvas>
             <h3>Wins & Losses by year</h3>
             <canvas id="yearGraph"></canvas>
+            <h3>Points per game distribution</h3>
             <canvas id="scoreDistribution"></canvas>
         </section>
     </main>
 
 </body>
-<script src="/rl/static/topHighlighting.js"></script>
-<script lang="undefined">
+<script src="/rl/static/dynamicColor.js"></script>
+<script type="text/javascript">
     new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }});
     new Chart(document.getElementById('daysGraph'), {{ days_graph | safe }});
     new Chart(document.getElementById('weekdaysGraph'), {{ weekdays_graph | safe }});

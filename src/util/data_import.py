@@ -5,10 +5,6 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-import cache as cc
-from queries import RLQueries
-
-
 def fetch_credits():
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -30,24 +26,21 @@ def fetch_credits():
 
 
 scope = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-rl_doc = '1zjW4_TEsyd4yDSsVuZsrUritfwHgHZQ3e0t9GnWXrKA'
+RL_DOC = '1zjW4_TEsyd4yDSsVuZsrUritfwHgHZQ3e0t9GnWXrKA'
 creds = fetch_credits()
 service = build('sheets', 'v4', credentials=creds)
 
 
-def new_data_available() -> bool:
-    total = cc.data.get('TOTAL_GAMES')
-    result = service.spreadsheets().values().get(spreadsheetId=rl_doc, range=f'Games!A{total + 1}:W').execute()
+def is_new_data_available(latest_game_id_excel: int) -> bool:
+    result = service.spreadsheets().values().get(spreadsheetId=RL_DOC, range=f'Games!A{latest_game_id_excel + 1}:W').execute()
     game_data = result.get('values', [])
-    return game_data and int(game_data[0][0]) > total and all(game_data[0]) and len(game_data[0]) == 23
+    return game_data and int(game_data[0][0]) > latest_game_id_excel and all(game_data[0]) and len(game_data[0]) == 23
 
 
-def insert_new_data() -> None:
-    q = RLQueries()
-    total = q.total_games()
-    result = service.spreadsheets().values().get(spreadsheetId=rl_doc, range=f'Games!A{total + 1}:W').execute()
+def insert_new_data(dashboard) -> None:
+    result = service.spreadsheets().values().get(spreadsheetId=RL_DOC, range=f'Games!A{dashboard.q.total_games() + 1}:W').execute()
     game_data = result.get('values', [])
 
     # Insert if data does not match, assert that not data point is missing
     for game in game_data:
-        q.insert_game_data(game)
+        dashboard.q.insert_game_data(game)

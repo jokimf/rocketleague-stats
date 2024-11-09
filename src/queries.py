@@ -3,7 +3,7 @@ from typing import Any
 
 from connect import BackendConnection
 
-possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
+possible_stats = ["score", "goals", "assists", "saves", "shots"]
 
 def conditional_formatting(color: str, value: float, minimum: int, maximum: int) -> str:
         minimum = int(minimum)
@@ -11,54 +11,36 @@ def conditional_formatting(color: str, value: float, minimum: int, maximum: int)
         if color is None or (type(value) is not float and type(value) is not int):
             raise ValueError(f"Color can't be None and value needs to be int or float: color={color}, value={type(value)}")
         if maximum - minimum == 0:
-            return f'{color[:-1]},0)'
+            return f"{color[:-1]},0)"
         opacity = (value - minimum) / (maximum - minimum)
-        rgb_code = f'{color[:-1]},{opacity})'
+        rgb_code = f"{color[:-1]},{opacity})"
         return rgb_code
 
 def fade_highlighting(game: int, game_range: int):
         helper = RLQueries()
-        return f'rgba(53, 159, 159,{(game_range - (helper.total_games() - game)) / game_range})'
+        return f"rgba(53, 159, 159,{(game_range - (helper.total_games() - game)) / game_range})"
 
 class RLQueries(BackendConnection):
     def last_reload(self):
-        self.c.execute('SELECT last_reload FROM meta')
+        self.c.execute("SELECT last_reload FROM meta")
         return self.c.fetchone()[0]
 
-
     def set_last_reload(self, last_reload: int) -> None:
-        self.c.execute('UPDATE meta SET last_reload=%s', (last_reload,))
+        self.c.execute("UPDATE meta SET last_reload=%s", (last_reload,))
         self.connection.commit()
-
 
     def total_games(self) -> int:
         self.c.execute("SELECT MAX(gameID) FROM games")
         return self.c.fetchone()[0]
 
-
-    # Inserts game data fetched from Google Sheets API
-    def insert_game_data(self, d: list) -> bool:
-        #try:
-        self.c.execute('INSERT INTO games VALUES (%s,%s,%s,%s)', (d[0], d[1], d[3], d[4]))
-        self.c.execute('INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)', (d[0], 0, d[5], d[6], d[7], d[8], d[9], d[10]))
-        self.c.execute('INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)', (d[0], 1, d[11], d[12], d[13], d[14], d[15], d[16]))
-        self.c.execute('INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)', (d[0], 2, d[17], d[18], d[19], d[20], d[21], d[22]))
-        self.connection.commit()
-        return True
-        #except sqlite3.Error as e:
-        #    print(e)
-         #   return False
-
-    # Returns number of days since first game played
-    def days_since_first(self) -> int:
-        self.c.execute('SELECT DATEDIFF(CURDATE(), MIN(date)) FROM games')
+    def days_since_first_game(self) -> int:
+        self.c.execute("SELECT DATEDIFF(CURDATE(), MIN(date)) FROM games")
         return self.c.fetchone()[0]
-
 
     def last_x_games_stats(self, limit, with_date: bool) -> list[Any]: #TODO rewrite
         self.c.execute(f"""
                 SELECT 
-                    games.gameID AS ID, {'games.date,' if with_date else ''} games.goals As CG, against AS Enemy,
+                    games.gameID AS ID, {"games.date," if with_date else ""} games.goals As CG, against AS Enemy,
                     k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
                     p.rank, p.score, p.goals, p.assists, p.saves, p.shots,
                     s.rank, s.score, s.goals, s.assists, s.saves, s.shots
@@ -96,7 +78,7 @@ class RLQueries(BackendConnection):
         if end is None:
             end = self.total_games()
         if start > end:
-            raise ValueError(f'StartIndex was larger than EndIndex: {start} > {end}')
+            raise ValueError(f"StartIndex was larger than EndIndex: {start} > {end}")
         if start <= 0:
             raise ValueError("StartIndex can't be 0 or lower")
         wins = self.wins_in_range(start, end)
@@ -107,7 +89,7 @@ class RLQueries(BackendConnection):
 
         def formatted_over_time_box_query(stat: str) -> tuple:
             if stat not in possible_stats:
-                raise ValueError(f'{stat} is not in possible stats.')
+                raise ValueError(f"{stat} is not in possible stats.")
 
             self.c.execute(f"""
                 SELECT SUM(k.{stat}), AVG(k.{stat}), SUM(p.{stat}), 
@@ -147,7 +129,7 @@ class RLQueries(BackendConnection):
 
 
     def average_session_length(self) -> int:
-        self.c.execute('SELECT AVG(wins+losses) FROM sessions')
+        self.c.execute("SELECT AVG(wins+losses) FROM sessions")
         return self.c.fetchone()[0]
 
 
@@ -176,26 +158,24 @@ class RLQueries(BackendConnection):
             else:
                 return "IndianRed"
 
-        self.c.execute('SELECT * FROM performance WHERE playerID = %s AND gameID = %s', (p_id, self.total_games()))
+        self.c.execute("SELECT * FROM performance WHERE playerID = %s AND gameID = %s", (p_id, self.total_games()))
         values = self.c.fetchone()[2:]
-        top = [round(performance_rank('score', p_id) / self.total_games() * 100, 1),
-            round(performance_rank('goals', p_id) / self.total_games() * 100, 1),
-            round(performance_rank('assists', p_id) / self.total_games() * 100, 1),
-            round(performance_rank('saves', p_id) / self.total_games() * 100, 1),
-            round(performance_rank('shots', p_id) / self.total_games() * 100, 1)]
+        top = [round(performance_rank("score", p_id) / self.total_games() * 100, 1),
+            round(performance_rank("goals", p_id) / self.total_games() * 100, 1),
+            round(performance_rank("assists", p_id) / self.total_games() * 100, 1),
+            round(performance_rank("saves", p_id) / self.total_games() * 100, 1),
+            round(performance_rank("shots", p_id) / self.total_games() * 100, 1)]
         return list(zip(values, top, [color(x) for x in top]))
 
 
     def player_name(self, player_id: int) -> str:
-        self.c.execute('SELECT name FROM players WHERE playerID = %s', (player_id,))
+        self.c.execute("SELECT name FROM players WHERE playerID = %s", (player_id,))
         return self.c.fetchone()[0]
 
     def latest_session_main_data(self) -> list[Any]:
         self.c.execute(
-            '''SELECT sessionID, date, wins, losses, Goals, Against, quality
-               FROM sessions ORDER BY SessionID desc LIMIT 1''')
+            "SELECT sessionID, date, wins, losses, Goals, Against, quality FROM sessions ORDER BY SessionID desc LIMIT 1")
         return self.c.fetchone()
-
 
     def games_from_session_date(self, session_date: str = None) -> list[Any]:
         if session_date is None:
@@ -207,14 +187,12 @@ class RLQueries(BackendConnection):
         self.c.execute("SELECT COUNT(1) FROM sessions")
         return self.c.fetchone()[0]
 
-
     def ranks(self) -> list[str]:
         ranks_list = []
         for i in range(3):
             self.c.execute("SELECT scores.rank FROM scores WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (i,))
             ranks_list.append(self.c.fetchone()[0].lower())
         return ranks_list
-
 
     def performance_score(self):
         def performance(stat, player_id):
