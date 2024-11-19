@@ -19,6 +19,11 @@ class GraphBuilder:
                 "plugins": {
                     "legend": dict(),
                     "title": dict()
+                },
+                "scales": {
+                    "x": dict(),
+                    "y": dict(),
+                    #"y1": 
                 }
             }
         }
@@ -62,7 +67,7 @@ class GraphBuilder:
             "label": label,
             "borderWidth": borderWidth,
             "backgroundColor": color,
-            "borderColor": border_color,
+            "borderColor": border_color
             #"fill": True
         }
         data_section: list = self._graph.get("data").get("datasets")
@@ -78,6 +83,27 @@ class GraphBuilder:
         attributes = {key: value for key, value in attributes.items() if value is not None}
         
         options_section |= attributes
+        return self
+    
+    def withGrid(self, x_color: DatasetColor|str = None, y_color: DatasetColor|str = None) -> GraphBuilder:
+        if x_color is not None:
+            if isinstance(x_color, DatasetColor):
+                x_color = x_color.value
+            x_section = self._graph.get("options").get("scales").get("x")
+            x_section |= {"x": {"grid": {"color": x_color}}}
+        
+        if y_color is not None:
+            if isinstance(y_color, DatasetColor):
+                y_color = y_color.value
+            y_section = self._graph.get("options").get("scales").get("y")
+            y_section |= {"y": {"grid": {"color": y_color}}}
+        return self
+    
+    def withSecondYAxis(self) -> GraphBuilder:
+        raise NotImplementedError
+        y1_section = self._graph.get("options").get("scales").get("y1")
+        y1_section |= {"display": True, "position": "right"}
+        #TODO: Labels are unrelated to graph
         return self
     
 class DatasetColor(Enum):
@@ -172,10 +198,11 @@ class GraphQueries(BackendConnection):
             .withDataset(data_list[1], "Puad", DatasetColor.PUAD, DatasetColor.PUAD) \
             .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.STICKER) \
             .withDataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL, 3) \
-            .withLabels(list(range(total_games_count - 20,total_games_count)))
+            .withLabels(list(range(total_games_count - 20,total_games_count))) \
+            .withGrid(y_color="rgba(209, 209, 209, 0.1)")
         return graph.toJSON()
     
-    def results_table(self) -> GraphBuilder:
+    def results_table(self):
         self.c.execute("""
             WITH cG AS (SELECT COUNT(*) allG FROM games)
             SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / MAX(cG.allG) AS ch  
@@ -185,7 +212,7 @@ class GraphQueries(BackendConnection):
         """)
         return [{"x": str(g), "y": str(a), "v": v} for g, a, v, _ in self.c.fetchall()]
     
-    def score_distribution_graph(self) -> GraphBuilder:
+    def score_distribution_graph(self) -> dict:
         datasets = []
         for player_id in [0, 1, 2]:
             self.c.execute("""
@@ -207,6 +234,25 @@ class GraphQueries(BackendConnection):
             .withDataset(datasets[1], "Puad", DatasetColor.PUAD, DatasetColor.NEUTRAL) \
             .withDataset(datasets[2], "Sticker", DatasetColor.STICKER, DatasetColor.NEUTRAL) \
             .withLabels(labels)
+        return graph.toJSON()
+    
+    def seasons_graph(self) -> dict:
+        self.c.execute(""" 
+            SELECT se.season_name,
+            SUM(IF(g.goals > g.against,1,0)) 'wins',
+            SUM(IF(g.goals < g.against,1,0)) 'losses',
+            ROUND(CAST(SUM(IF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT)*100,2) 'wr'
+            FROM games g
+            LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date
+            GROUP BY seasonID
+        """)
+        dataset = self.c.fetchall()
+        labels, wins, losses, _ = zip(*dataset)
+        graph = GraphBuilder() \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withLabels(labels) \
+            .withLegend(False)
         return graph.toJSON()
  
 # def graph_stat_share(stat: str) -> OldGraph:

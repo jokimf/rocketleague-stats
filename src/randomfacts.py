@@ -25,19 +25,6 @@ class RandomFactQueries(BackendConnection):
         return sorted(union, key=lambda i: i[1], reverse=True)
 
 
-    # Things related to date
-    def date_facts(self) -> list[tuple]:
-        facts = []
-        # TODO: Do more special date facts
-        # date_data = q.dates_table()[int(date.today().strftime('%d')) - 1]
-        # month_data = q.month_table()[int(date.today().strftime('%m')) - 1]
-        # year_data = q.year_table()[int(date.today().strftime('%y')) - 18]
-
-        # facts.append((f'On the {date_data[0]} day of a month, CG wins {round(date_data[2], 1)}% of games.', 1))
-        # facts.append((f'In {month_data[0]}, CG wins {round(month_data[2], 1)}% of games.', 1))
-        # facts.append((f'In {year_data[0]}, CG wins {round(year_data[2], 1)}% of games.', 1))
-        return facts
-
     def session_data_by_date(self, date: str):
         self.c.execute("SELECT * FROM sessions WHERE date=%s", (date,))
         return self.c.fetchone()

@@ -19,10 +19,6 @@ def main():
 def records():
     return render_template("records.html", **dashboard.build_record_context())
 
-@app.route("/rl/graphs", methods=["GET"])
-def graphs():
-    return render_template("graphs.html")
-
 @app.route("/rl/games", methods=["GET"])
 def games():
     return render_template("games.html", **dashboard.build_games_context())

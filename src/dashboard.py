@@ -61,15 +61,21 @@ class Dashboard:
         self.just_out = self.q.just_out()
         self.performance_score = self.q.performance_score()
         self.to_beat_next = self.q.to_beat_next()
-        self.seasons = self.q.seasons_dashboard_short()
         self.last_reload = self.q.last_reload()
         self.session_information = self.rf.session_data_by_date(self.latest_session_date)
 
     def build_dashboard_context(self):
         context = {
-            "ranks": self.ranks,
-            "winrates": self.winrates,
+            "players": [
+                {"name":"Knus", "rank": self.ranks[0], "performance": self.k_performance[0][0], "stats": self.q.profile_averages(0), "top": self.k_performance, "color":self.K},
+                {"name":"Puad", "rank": self.ranks[1], "performance": self.p_performance[0][0], "stats": self.q.profile_averages(1), "top": self.p_performance, "color":self.P},
+                {"name":"Sticker", "rank": self.ranks[2], "performance": self.s_performance[0][0], "stats": self.q.profile_averages(2), "top": self.s_performance, "color":self.S}
+            ],
+            "k_perf": self.k_performance,
+            "p_perf": self.p_performance,
+            "s_perf": self.s_performance,
             "random_facts": self.random_facts,
+            "winrates": self.winrates,
             "days_since_first": self.days_since_first,
             "total_games": self.total_games,
             "tilt": self.tilt,
@@ -80,9 +86,6 @@ class Dashboard:
             "season_data": self.season_data,
             "session_data": self.session_data,
             "fun_facts": self.fun_facts,
-            "k_perf": self.k_performance,
-            "p_perf": self.p_performance,
-            "s_perf": self.s_performance,
             "website_date": self.website_date,
             "latest_session_date": self.latest_session_date,
             "w_and_l": self.w_and_l,
@@ -90,13 +93,7 @@ class Dashboard:
             "just_out": self.just_out,
             "performance_score": self.performance_score,
             "to_beat_next": self.to_beat_next,
-            "seasons": self.seasons,
             "session_information": self.session_information,
-            "players": [
-                {"name":"Knus", "rank": self.ranks[0], "performance": self.k_performance[0][0], "stats": self.q.profile_averages(0), "top": self.k_performance, "color":self.K},
-                {"name":"Puad", "rank": self.ranks[1], "performance": self.p_performance[0][0], "stats": self.q.profile_averages(1), "top": self.p_performance, "color":self.P},
-                {"name":"Sticker", "rank": self.ranks[2], "performance": self.s_performance[0][0], "stats": self.q.profile_averages(2), "top": self.s_performance, "color":self.S}
-            ],
             "profile_stat_names": ["Score", "Goals", "Assists", "Saves", "Shots"],
             "players_stat_icons": ["MVP_points_icon", "Goal_points_icon", "Assist_points_icon", "Save_points_icon", "Shot_on_Goal_points_icon"],
             "session_rank": self.q.session_rank(458),
@@ -106,7 +103,8 @@ class Dashboard:
             "month_graph": self.g.month_graph(),
             "year_graph": self.g.year_graph(),
             "heatmap": self.g.results_table(),
-            "score_distribution": self.g.score_distribution_graph()
+            "score_distribution": self.g.score_distribution_graph(),
+            "seasons_graph": self.g.seasons_graph(),
         }
         return context
     
@@ -115,8 +113,15 @@ class Dashboard:
             'latest': self.total_games,
             "record_games": self.record_games,
             'streaks': self.streaks_record,
-            "record_headlines": ["Most stat by player in one game", "Highest performance by player", "Lowest performance by player",
-                                "Most stat by team", "Goal stats by team", "Points stats", "Miscellaneous"],
+            "record_headlines": [
+                "Most stat by player in one game", 
+                "Highest performance by player", 
+                "Lowest performance by player",
+                "Most stat by team", 
+                "Goal stats by team", 
+                "Points stats", 
+                "Miscellaneous"
+            ],
             'rank_highlighting': self.RANK_HIGHLIGHTING,
             'k': self.Ktransparent,
             'p': self.Ptransparent,

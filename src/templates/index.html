@@ -27,7 +27,6 @@
             <menu>
                 <li><a class="here" href="/rl">Dashboard</a></li>
                 <li><a href="/rl/records">Records</a></li>
-                <li><a href="/rl/graphs">Graphs</a></li>
                 <li><a href="/rl/games">Games</a></li>
             </menu>
         </nav>
@@ -35,17 +34,20 @@
     <aside>
         <nav>
             <ul>
-                <li><b><a href="#session">LATEST SESSION</a></b></li>
-                <li><small><a href="#sessionoverview">Overview</a></small></li>
-                <li><small><a href="#sessionsessionranking">Session Ranking</a></small></li>
-                <li><small><a href="#sessiongraph"><var>Graph</var> Performance</a></small></li>
+                <li><b><a href="#session">LATEST SESSION</a></b>
+                    <ul>
+                        <li><small><a href="#sessionoverview">Overview</a></small></li>
+                        <li><small><a href="#sessionsessionranking">Session Ranking</a></small></li>
+                        <li><small><a href="#sessiongraph"><var>Graph</var> Performance</a></small></li>
+                    </ul>
+                </li>
                 {% if random_facts %}
                 <li><b><a href="#randomfacts">RANDOM FACTS</a></b></li>
                 {% endif %}
                 <li><b><a href="#winrates">WINRATES</a></b></li>
                 <li><b><a href="#seasons">SEASONS</a></b></li>
                 <li><b><a href="#funfacts">FUN FACTS</a></b></li>
-                <li><b><a href="#datefacts">FUN FACTS</a></b></li>
+                <li><b><a href="#datefacts">DATE FACTS</a></b></li>
                 <li><small><a href="#g1"><var>Graph</var> Days</a></small></li>
                 <li><small><a href="#g2"><var>Graph</var> Weekdays</a></small></li>
                 <li><small><a href="#g3"><var>Graph</var> Months</a></small></li>
@@ -111,7 +113,6 @@
             </article>
             {% endfor %}
         </section>
-        <hr>
         <section>
             <h1 id="session">LATEST SESSION</h1>
             <h3 id="sessionoverview">Overview</h3>
@@ -150,7 +151,7 @@
                                 {{ data }}
                                 {% else %}
                                 <img src="https://jok.im/static/rl/ranks/{{ data.lower() }}.png" alt="{{ data }}"
-                                    width="20" height="20">
+                                   >
                                 {% endif %}
                     </td>
                     {% endfor %}
@@ -181,7 +182,7 @@
                 </tr>
                 {% endfor %}
             </table>
-            <h3 id="sessiongraph">Performance by GameID</h3>
+            <h3 id="sessiongraph">Weighted average of score, last 20 games</h3>
             <canvas id="performanceGraph"></canvas>
         </section>
         {% if random_facts %}
@@ -206,15 +207,8 @@
         </section>
         <section>
             <h1 id="seasons">SEASONS</h1>
-            <table>
-                {% for season in seasons %}
-                <tr>
-                    {% for data in season %}
-                    <td>{{ data }}</td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </table>
+            <h3 id="g6">Seasons Graph</h3>
+            <canvas id="seasonsGraph"></canvas>
         </section>
         <section>
             <table>
@@ -259,26 +253,6 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="fact-container">
-                    <table>
-                        <tr>
-                            <th style="width: 300px">Fact</th>
-                            <th>Occurrence</th>
-                            <th>Winrate</th>
-                            <th>Change</th>
-                        </tr>
-                        <tbody>
-                            {% for fact in fun_facts[1] %}
-                            <tr>
-                                <td>{{ fact[0] }}</td>
-                                <td>{{ (fact[1]*100) | round(1) }}%</td>
-                                <td>{{ (fact[2]*100) | round(1) }}%</td>
-                                <td>O</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </section>
         <section>
@@ -298,13 +272,14 @@
 
 </body>
 <script src="/rl/static/dynamicColor.js"></script>
-<script type="text/javascript">
+<script>
     new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }});
     new Chart(document.getElementById('daysGraph'), {{ days_graph | safe }});
     new Chart(document.getElementById('weekdaysGraph'), {{ weekdays_graph | safe }});
     new Chart(document.getElementById('monthGraph'), {{ month_graph | safe }});
     new Chart(document.getElementById('yearGraph'), {{ year_graph | safe }});
     new Chart(document.getElementById('scoreDistribution'), {{ score_distribution | safe }});
+    new Chart(document.getElementById('seasonsGraph'), {{ seasons_graph | safe }});
 </script>
 
 </html>
