@@ -40,7 +40,7 @@ for (let index = 0; index < statBackgrounds.length; index++) {
     }
     //#8d0e0e37
     middleColor += "37";
-    element.style.backgroundImage = "linear-gradient(90deg, #161b22 20%," + middleColor + " 50%, #161b22 80%)"
+    element.style.backgroundImage = "linear-gradient(90deg, #161b22 30%," + middleColor + " 45%, #161b22 60%)"
 }
 
 const highlightTD = document.getElementsByClassName("highlight_td");

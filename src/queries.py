@@ -21,6 +21,15 @@ def fade_highlighting(game: int, game_range: int):
         return f"rgba(53, 159, 159,{(game_range - (helper.total_games() - game)) / game_range})"
 
 class RLQueries(BackendConnection):
+
+    def insert_game_data(self, game: list) -> bool:
+        self.c.execute('INSERT INTO games VALUES (%s,%s,%s,%s)', (game[0], game[1], game[3], game[4]))
+        self.c.execute('INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)', (game[0], 0, game[5], game[6], game[7], game[8], game[9], game[10]))
+        self.c.execute('INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)', (game[0], 1, game[11], game[12], game[13], game[14], game[15], game[16]))
+        self.c.execute('INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)', (game[0], 2, game[17], game[18], game[19], game[20], game[21], game[22]))
+        self.connection.commit()
+        return True
+
     def last_reload(self):
         self.c.execute("SELECT last_reload FROM meta")
         return self.c.fetchone()[0]
@@ -51,17 +60,44 @@ class RLQueries(BackendConnection):
                     ORDER BY ID DESC LIMIT %s
         """, (limit,))
         return self.c.fetchall()
-
+    
+    def profile_averages(self, player_id: int):
+        def profile_average_stats(past_games_amount: int) -> list:
+            self.c.execute("""
+                SELECT AVG(h.score), AVG(h.goals), AVG(h.assists), AVG(h.saves), AVG(h.shots)
+                FROM (
+                    SELECT s.score, s.goals, s.assists, s.saves, s.shots
+                    FROM scores s
+                    WHERE s.playerID = %s
+                    ORDER BY s.gameID DESC 
+                    LIMIT %s
+                ) h
+            """, (player_id, past_games_amount))
+            return self.c.fetchall()
+        
+        game_counts = [self.current_session_games_played(), 20, self.current_season_games_played(), 500, self.total_games()]
+        return list(zip(*[profile_average_stats(amount)[0] for amount in game_counts])) # Transpose results
 
     def wins_in_range(self, start, end) -> int:
         self.c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= %s AND gameID <= %s",
                         (start, end))
         return self.c.fetchone()[0]
 
-
     def losses_in_range(self, start, end) -> int:
         self.c.execute("SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= %s AND gameID <= %s",
                         (start, end))
+        return self.c.fetchone()[0]
+    
+    def current_session_games_played(self) -> int:
+        self.c.execute("SELECT COUNT(*) FROM games g GROUP BY g.`date` ORDER BY date DESC LIMIT 1")
+        return self.c.fetchone()[0]
+
+    def current_season_games_played(self) -> int:
+        self.c.execute("""
+            SELECT COUNT(*) FROM games g
+            LEFT JOIN seasons s ON g.date BETWEEN s.start_date AND s.end_date 
+            GROUP BY s.seasonID ORDER BY s.seasonID DESC LIMIT 1
+        """)
         return self.c.fetchone()[0]
 
 # Used for general stat tables

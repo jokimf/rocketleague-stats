@@ -6,6 +6,7 @@ from randomfacts import RandomFactQueries
 from records import RecordQueries
 from streaks import StreakQueries
 
+
 class Dashboard:
     def __init__(self) -> None:
         self.q = RLQueries()
@@ -91,15 +92,15 @@ class Dashboard:
             "to_beat_next": self.to_beat_next,
             "seasons": self.seasons,
             "session_information": self.session_information,
-
             "players": [
-                {"name":"Knus", "rank": self.ranks[0], "performance": self.ranks[0], "stats": self.k_performance},
-                {"name":"Puad", "rank": self.ranks[1], "performance": self.ranks[1], "stats": self.p_performance},
-                {"name":"Sticker", "rank": self.ranks[2], "performance": self.ranks[2], "stats": self.s_performance}
+                {"name":"Knus", "rank": self.ranks[0], "performance": self.k_performance[0][0], "stats": self.q.profile_averages(0), "top": self.k_performance, "color":self.K},
+                {"name":"Puad", "rank": self.ranks[1], "performance": self.p_performance[0][0], "stats": self.q.profile_averages(1), "top": self.p_performance, "color":self.P},
+                {"name":"Sticker", "rank": self.ranks[2], "performance": self.s_performance[0][0], "stats": self.q.profile_averages(2), "top": self.s_performance, "color":self.S}
             ],
+            "profile_stat_names": ["Score", "Goals", "Assists", "Saves", "Shots"],
             "players_stat_icons": ["MVP_points_icon", "Goal_points_icon", "Assist_points_icon", "Save_points_icon", "Shot_on_Goal_points_icon"],
             "session_rank": self.q.session_rank(458),
-            "performance_graph": self.g.performance_graph(),
+            "performance_graph": self.g.performance_graph(self.total_games),
             "days_graph": self.g.days_graph(),
             "weekdays_graph": self.g.weekdays_graph(),
             "month_graph": self.g.month_graph(),

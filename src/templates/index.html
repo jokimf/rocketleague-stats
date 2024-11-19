@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Rocket League Dashboard</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -12,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1"></script>
 </head>
+
 <body class="layout-simple">
     <header>
         <h1>
@@ -33,7 +35,22 @@
     <aside>
         <nav>
             <ul>
-                <li>Pudding</li>
+                <li><b><a href="#session">LATEST SESSION</a></b></li>
+                <li><small><a href="#sessionoverview">Overview</a></small></li>
+                <li><small><a href="#sessionsessionranking">Session Ranking</a></small></li>
+                <li><small><a href="#sessiongraph"><var>Graph</var> Performance</a></small></li>
+                {% if random_facts %}
+                <li><b><a href="#randomfacts">RANDOM FACTS</a></b></li>
+                {% endif %}
+                <li><b><a href="#winrates">WINRATES</a></b></li>
+                <li><b><a href="#seasons">SEASONS</a></b></li>
+                <li><b><a href="#funfacts">FUN FACTS</a></b></li>
+                <li><b><a href="#datefacts">FUN FACTS</a></b></li>
+                <li><small><a href="#g1"><var>Graph</var> Days</a></small></li>
+                <li><small><a href="#g2"><var>Graph</var> Weekdays</a></small></li>
+                <li><small><a href="#g3"><var>Graph</var> Months</a></small></li>
+                <li><small><a href="#g4"><var>Graph</var> Years</a></small></li>
+                <li><small><a href="#g5"><var>Graph</var> Points Distribution</a></small></li>
             </ul>
         </nav>
     </aside>
@@ -45,22 +62,9 @@
                     <h1>
                         <img alt={{ player.rank }} class="mr-.125 border-box"
                             src="https://jok.im/static/rl/ranks/{{ player.rank }}.png">
-                        <a href="/rl/profile/{{ loop.index0 }}">{{ player.name }}</a>
+                        <a href="/rl/profile/{{ loop.index0 }}" style="color:{{ player.color }};">{{ player.name }}</a>
                     </h1>
                 </header>
-                <!--
-                {% for stat in player.stats %}
-                <p class="bg-muted pbox modern" value="{{ stat[1] }}">
-                    <img class="icon" alt="Score"
-                        src="https://jok.im/static/rl/{{ players_stat_icons[loop.index0] }}.png">
-                    {{ stat[0] | round(2) }}
-                    <span class="top_color" value="{{ stat[1] }}">
-                        Top {{ stat[1] }}%
-                    </span>
-                </p>
-                {% endfor %}
--->
-                <p>
                 <p class="bg-subtle pbox flex centered cols" style="font-size: x-small;">
                     <span>Stat</span>
                     <span>Session</span>
@@ -75,14 +79,14 @@
                 {% else %}
                 {% set rounding = 2 %}
                 {% endif %}
-                <p class="bg-muted pbox flex centered cols modern" value="{{ stat[1] }}"
+                <p class="bg-muted pbox flex centered cols modern" value="{{ player.top[loop.index0][1] }}"
                     style="font-size: small;justify-content: space-between;">
-                    <span>Goals</span>
+                    <span>{{ profile_stat_names[loop.index0] }}</span>
                     <span>{{ stat[0] | round(rounding) }}</span>
-                    <span>{{ stat[0] | round(rounding) }}</span>
-                    <span>{{ stat[0] | round(rounding) }}</span>
-                    <span>{{ stat[0] | round(rounding) }}</span>
-                    <span>{{ stat[0] | round(rounding) }}</span>
+                    <span>{{ stat[1] | round(rounding) }}</span>
+                    <span>{{ stat[2] | round(rounding) }}</span>
+                    <span>{{ stat[3] | round(rounding) }}</span>
+                    <span>{{ stat[4] | round(rounding) }}</span>
                     <!--<span class="top_color" value="{{ stat[1] }}">
                             Top {{ stat[1] }}%
                         </span>-->
@@ -97,16 +101,20 @@
                 </p>
                 <p><output class="bg-muted"><span class="bold">TO BEAT</span> {{ to_beat_next[2][2] }}</output> </p>
                 <footer>
-                    <p><output class="bg-variant"><span class="bold">PERORMANCE</span> {{ performance_score[2]
-                            }}</output></p>
+                    <p>
+                        <!--<output class="bg-variant">
+                            <span class="bold">PERORMANCE</span>
+                            {{ player.performance | round(1) }}
+                        </output>-->
+                    </p>
                 </footer>
             </article>
             {% endfor %}
         </section>
         <hr>
         <section>
-            <h1>LATEST SESSION</h1>
-            <h3>Overview</h3>
+            <h1 id="session">LATEST SESSION</h1>
+            <h3 id="sessionoverview">Overview</h3>
             <p>
                 <output class="bg-variant"><span class="bold">Session ID:</span> {{ session_information[0] }}</output>
                 <output class="bg-active"><span class="bold">Date:</span> {{ session_information[1] }}</output>
@@ -149,7 +157,7 @@
                 </tr>
                 {% endfor %}
             </table>
-            <h3>Session Ranking</h3>
+            <h3 id="sessionsessionranking">Session Ranking</h3>
             <table>
                 <th>Rank</th>
                 <th>ID</th>
@@ -173,19 +181,19 @@
                 </tr>
                 {% endfor %}
             </table>
-            <h3>Performance by GameID</h3>
+            <h3 id="sessiongraph">Performance by GameID</h3>
             <canvas id="performanceGraph"></canvas>
         </section>
         {% if random_facts %}
         <section>
-            <h1>RANDOM FACTS</h1>
+            <h1 id="randomfacts">RANDOM FACTS</h1>
             <ul class="randomfacts">{% for fact in random_facts %}
                 <li>{{ fact[0] }}</li>{% endfor %}
             </ul>
         </section>
         {% endif %}
         <section>
-            <h1>WINRATES</h1>
+            <h1 id="winrates">WINRATES</h1>
             TOTAL: {{ winrates[0]|round(1) }}%
             L100
             {{ winrates[2]|round(1) }}%
@@ -197,169 +205,7 @@
             {{ winrates[4]|round(1) }}%
         </section>
         <section>
-            <h1>TOTAL STATS</h1>
-            <table>
-                <caption>GRAND TOTAL</caption>
-                <tr>
-                    <th rowspan="2" class="table-general"></th>
-                    <th colspan="2" class="knus">Knus</th>
-                    <th colspan="2" class="puad">Puad</th>
-                    <th colspan="2" class="sticker">Sticker</th>
-                </tr>
-                <tr>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                </tr>
-                <tr>
-                    <td>Score</td>
-                    {% for goal in grand_total["Score"] %}
-                    <td>{{ goal|round(2) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Goals</td>
-                    {% for goal in grand_total["Goals"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Assists</td>
-                    {% for goal in grand_total["Assists"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Saves</td>
-                    {% for goal in grand_total["Saves"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Shots</td>
-                    {% for goal in grand_total["Shots"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>MVPs</td>
-                    {% for goal in grand_total["MVPs"] %}
-                    <td>{{ goal|round(2) }}{% if goal is float %}%{% endif %}</td>
-                    {% endfor %}
-                </tr>
-            </table>
-            <table>
-                <caption>THIS SEASON</caption>
-                <tr>
-                    <th rowspan="2" class="table-general"></th>
-                    <th colspan="2" class="knus">Knus</th>
-                    <th colspan="2" class="puad">Puad</th>
-                    <th colspan="2" class="sticker">Sticker</th>
-                </tr>
-                <tr>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                </tr>
-                <tr>
-                    <td>Score</td>
-                    {% for goal in season_data["Score"] %}
-                    <td>{{ goal|round(2) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Goals</td>
-                    {% for goal in season_data["Goals"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Assists</td>
-                    {% for goal in season_data["Assists"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Saves</td>
-                    {% for goal in season_data["Saves"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Shots</td>
-                    {% for goal in season_data["Shots"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>MVPs</td>
-                    {% for goal in season_data["MVPs"] %}
-                    <td>{{ goal|round(2) }}{% if goal is float %}%{% endif %}</td>
-                    {% endfor %}
-                </tr>
-            </table>
-            <table>
-                <caption>THIS SESSION</caption>
-                <tr>
-                    <th rowspan="2" class="table-general"></th>
-                    <th colspan="2" class="knus">Knus</th>
-                    <th colspan="2" class="puad">Puad</th>
-                    <th colspan="2" class="sticker">Sticker</th>
-                </tr>
-                <tr>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                    <td>Σ</td>
-                    <td>ø</td>
-                </tr>
-                <tr>
-                    <td>Score</td>
-                    {% for goal in session_data["Score"] %}
-                    <td>{{ goal|round(2) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Goals</td>
-                    {% for goal in session_data["Goals"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Assists</td>
-                    {% for goal in session_data["Assists"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Saves</td>
-                    {% for goal in session_data["Saves"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>Shots</td>
-                    {% for goal in session_data["Shots"] %}
-                    <td>{{ goal|round(3) }}</td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td>MVPs</td>
-                    {% for goal in session_data["MVPs"] %}
-                    <td>{{ goal|round(2) }}{% if goal is float %}%{% endif %}</td>
-                    {% endfor %}
-                </tr>
-            </table>
-        </section>
-        <section>
-            <h1>SEASONS</h1>
+            <h1 id="seasons">SEASONS</h1>
             <table>
                 {% for season in seasons %}
                 <tr>
@@ -391,7 +237,7 @@
             </table>
         </section>
         <section>
-            <h1>"FUN" FACTS</h1>
+            <h1 id="funfacts">"FUN" FACTS</h1>
             <div class="fun-facts">
                 <div class="fact-container">
                     <table>
@@ -436,16 +282,16 @@
             </div>
         </section>
         <section>
-            <h1>DATE FACTS</h1>
-            <h3>Wins & Losses by day of the month</h3>
+            <h1 id="datefacts">DATE FACTS</h1>
+            <h3 id="g1">Wins & Losses by day of the month</h3>
             <canvas id="daysGraph"></canvas>
-            <h3>Wins & Losses by weekday</h3>
+            <h3 id="g2">Wins & Losses by weekday</h3>
             <canvas id="weekdaysGraph"></canvas>
-            <h3>Wins & Losses by month</h3>
+            <h3 id="g3">Wins & Losses by month</h3>
             <canvas id="monthGraph"></canvas>
-            <h3>Wins & Losses by year</h3>
+            <h3 id="g4">Wins & Losses by year</h3>
             <canvas id="yearGraph"></canvas>
-            <h3>Points per game distribution</h3>
+            <h3 id="g5">Points per game distribution</h3>
             <canvas id="scoreDistribution"></canvas>
         </section>
     </main>

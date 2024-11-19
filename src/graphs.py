@@ -160,20 +160,19 @@ class GraphQueries(BackendConnection):
             .withLegend(False)
         return graph.toJSON()
 
-    def performance_graph(self) -> dict:
+    def performance_graph(self, total_games_count: int) -> dict:
         data_list = []
         for player_id in [0, 1, 2]:
             self.c.execute(f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
-            raw = self.c.fetchall()
-            data_list.append(list(reversed([x[0] for x in raw])))
+            data_list.append(list(reversed([x[0] for x in self.c.fetchall()])))
             average = [sum(group) / len(group) for group in zip(*data_list)]
         graph = GraphBuilder() \
             .withType("line") \
-            .withDataset(data_list[0], "Knus", DatasetColor.KNUS, DatasetColor.NEUTRAL) \
-            .withDataset(data_list[1], "Puad", DatasetColor.PUAD, DatasetColor.NEUTRAL) \
-            .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.NEUTRAL) \
+            .withDataset(data_list[0], "Knus", DatasetColor.KNUS, DatasetColor.KNUS) \
+            .withDataset(data_list[1], "Puad", DatasetColor.PUAD, DatasetColor.PUAD) \
+            .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.STICKER) \
             .withDataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL, 3) \
-            .withLabels(list(range(1,21)))
+            .withLabels(list(range(total_games_count - 20,total_games_count)))
         return graph.toJSON()
     
     def results_table(self) -> GraphBuilder:
