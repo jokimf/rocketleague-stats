@@ -45,6 +45,34 @@ class RLQueries(BackendConnection):
     def days_since_first_game(self) -> int:
         self.c.execute("SELECT DATEDIFF(CURDATE(), MIN(date)) FROM games")
         return self.c.fetchone()[0]
+    
+    def build_player_profiles(self) -> list[dict]:
+        def build_profile(player_id):
+            return {
+                "name": self.player_name(player_id),
+                "rank": self.player_rank(player_id),
+                "stats": self.profile_averages(player_id),
+                "top": self.performance_profile_view(player_id),
+                "color": self.player_color(player_id),
+                "griefing": self.player_average_deviation(player_id),
+                "justout": self.just_out(player_id)
+            }
+        return [build_profile(player_id) for player_id in (0, 1, 2)]
+
+    def player_color(self, player_id: int, transparency: float = 1):
+        if player_id < 0:
+            raise ValueError(f"PlayerID can not be {player_id}.")
+        if transparency < 0 or transparency > 1:
+            raise ValueError(f"Transparency must be between 0 and 1, not {transparency}.")
+        
+        self.c.execute("SELECT color FROM players WHERE playerID = %s", (player_id,))
+        rgba_color: str = self.c.fetchone()[0]
+        return rgba_color[:-1] + "," + str(transparency) + rgba_color[-1]
+    
+    def player_average_deviation(self, player_id: int) -> int:
+        self.c.execute(f"""WITH av AS (SELECT AVG(p2.score) a FROM (SELECT * FROM performance p ORDER BY p.gameID DESC LIMIT 3) p2)
+                        SELECT p.score - av.a FROM performance p, av WHERE p.playerID = %s ORDER BY p.gameID DESC LIMIT 1""", (player_id,))
+        return self.c.fetchone()[0]
 
     def last_x_games_stats(self, limit, with_date: bool) -> list[Any]: #TODO rewrite
         self.c.execute(f"""
@@ -205,6 +233,8 @@ class RLQueries(BackendConnection):
 
 
     def player_name(self, player_id: int) -> str:
+        if player_id < 0:
+            raise ValueError(f"PlayerID can not be {player_id}.")
         self.c.execute("SELECT name FROM players WHERE playerID = %s", (player_id,))
         return self.c.fetchone()[0]
 
@@ -222,15 +252,14 @@ class RLQueries(BackendConnection):
     def session_count(self) -> int:
         self.c.execute("SELECT COUNT(1) FROM sessions")
         return self.c.fetchone()[0]
+    
+    def player_rank(self, player_id: int) -> str:
+        if player_id < 0:
+            raise ValueError(f"PlayerID can not be {player_id}.")
+        self.c.execute("SELECT scores.rank FROM scores WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
+        return self.c.fetchone()[0].lower()
 
-    def ranks(self) -> list[str]:
-        ranks_list = []
-        for i in range(3):
-            self.c.execute("SELECT scores.rank FROM scores WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (i,))
-            ranks_list.append(self.c.fetchone()[0].lower())
-        return ranks_list
-
-    def performance_score(self):
+    def grief_value(self):
         def performance(stat, player_id):
             if stat not in ['score', 'goals', 'assists', 'saves', 'shots']:
                 raise ValueError(f'{stat} not valid.')
@@ -284,15 +313,15 @@ class RLQueries(BackendConnection):
         GROUP BY seasonID""")
         return self.c.fetchall()
 
-    # "Just out" values -> [player0_just_out, player0_new_value, player1_just_out, etself.c.]
-    def just_out(self):
+    def just_out(self, player_id: int) -> tuple[int]:
         self.c.execute("""
                         WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
-                        SELECT scores.gameID, scores.playerID, scores.score FROM scores, maxId
-                        WHERE gameID = maxId.mId - 20 OR gameID = maxId.mId
+                        SELECT scores.score FROM scores, maxId
+                        WHERE (gameID = maxId.mId - 20 OR gameID = maxId.mId) AND playerID = %s
                         ORDER BY playerID
-                        """)
-        return self.c.fetchall()
+                        """, (player_id,))
+        points_out, points_in = self.c.fetchall()
+        return points_out[0], points_in[0]
 
     # "To beat next" values -> [player0_value, player1_value, player2_value]
     def to_beat_next(self):

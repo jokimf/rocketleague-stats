@@ -67,3 +67,17 @@ for (let index = 0; index < highlightTD.length; index++) {
 
     element.style.backgroundColor = backgroundColor;
 }
+
+const griefTD = document.getElementsByClassName("griefHighlighting");
+for (let index = 0; index < griefTD.length; index++) {
+    const element = griefTD[index];
+
+    const value = element.getAttribute("value");
+    const maxKnownGrief = 120;
+    const color = value < 0 ? "rgba(200,0,0)" : "rgba(0,200,0)";
+    
+    opacity = Math.abs(value) / maxKnownGrief;
+    let backgroundColor = color.slice(0, -1) + "," + opacity + ")";
+
+    element.style.backgroundColor = backgroundColor;
+}

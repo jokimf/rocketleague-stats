@@ -20,7 +20,7 @@ class RandomFactQueries(BackendConnection):
 
     # Invoked every time data is added
     def generate_random_facts(self) -> list:
-        union = self.record_session() + self.milestone_facts() + self.date_facts() + self.last_session_facts() + self.last_month_summary() + \
+        union = self.record_session() + self.milestone_facts() + self.last_session_facts() + self.last_month_summary() + \
                 self.result_facts() + self.game_count_facts() + self.close_to_record() + self.outclassed() + self.at_least_1_streak() + self.streak()
         return sorted(union, key=lambda i: i[1], reverse=True)
 

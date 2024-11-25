@@ -16,21 +16,16 @@ class Dashboard:
         self.g = GraphQueries()
 
         self.RANK_HIGHLIGHTING = ['rgb(201, 176, 55, 0.3)', 'rgb(215, 215, 215, 0.3)', 'rgb(173, 138, 86, 0.3)']
-        self.K = 'rgba(12,145,30)'
-        self.Ktransparent = 'rgba(12,145,30,0.2)'
-        self.P = 'rgba(151,3,14)'
-        self.Ptransparent = 'rgba(151,3,14,0.2)'
-        self.S = 'rgba(12,52,145)'
-        self.Stransparent = 'rgba(12,52,145,0.2)'
         self.LAST_GAMES_HIGHLIGHTING = [
             None, None, None, None,
-            (self.K, 100, 700), (self.K, 100, 700), (self.K, 0, 5), (self.K, 0, 5), (self.K, 0, 5), (self.K, 0, 10),
-            (self.P, 100, 700), (self.P, 100, 700), (self.P, 0, 5), (self.P, 0, 5), (self.P, 0, 5), (self.P, 0, 10),
-            (self.S, 100, 700), (self.S, 100, 700), (self.S, 0, 5), (self.S, 0, 5), (self.S, 0, 5), (self.S, 0, 10)
+            ("rgba(12,145,30)", 100, 700), ("rgba(12,145,30)", 100, 700), ("rgba(12,145,30)", 0, 5), ("rgba(12,145,30)", 0, 5), ("rgba(12,145,30)", 0, 5), ("rgba(12,145,30)", 0, 10),
+            ("rgba(151,3,14)", 100, 700), ("rgba(151,3,14)", 100, 700), ("rgba(151,3,14)", 0, 5), ("rgba(151,3,14)", 0, 5), ("rgba(151,3,14)", 0, 5), ("rgba(151,3,14)", 0, 10),
+            ("rgba(12,52,145)", 100, 700), ("rgba(12,52,145)", 100, 700), ("rgba(12,52,145)", 0, 5), ("rgba(12,52,145)", 0, 5), ("rgba(12,52,145)", 0, 5), ("rgba(12,52,145)", 0, 10)
         ]
 
     def reload(self) -> None:
         self.q.set_last_reload(int(time.time()))
+        self.player_profiles = self.q.build_player_profiles()
         self.random_facts = self.rf.generate_random_facts()
         self.fun_facts = [] #q.generate_fun_facts()
         self.record_games = self.r.generate_record_games()
@@ -41,7 +36,6 @@ class Dashboard:
         self.session_details = self.q.session_details()
         self.session_game_amount = len(self.q.games_from_session_date())
         self.session_game_details = self.q.last_x_games_stats(self.session_game_amount, False)
-        self.ranks = self.q.ranks()
         self.winrates = self.q.winrates()
         self.days_since_first = self.q.days_since_first_game()
         self.tilt = self.q.tilt()
@@ -51,29 +45,18 @@ class Dashboard:
         self.grand_total = self.q.general_game_stats_over_time_period(1, self.total_games)
         self.season_data = self.q.general_game_stats_over_time_period(self.q.season_start_id(), self.total_games)
         self.session_data = self.q.general_game_stats_over_time_period(self.q.session_start_id(), self.total_games)
-        self.k_performance = self.q.performance_profile_view(0)
-        self.p_performance = self.q.performance_profile_view(1)
-        self.s_performance = self.q.performance_profile_view(2)
         self.website_date = self.q.website_date()
         self.latest_session_date = self.session_details['latest_session_date']
         self.w_and_l = self.session_details['w_and_l']
         self.session_game_count = self.session_details['session_game_count']
-        self.just_out = self.q.just_out()
-        self.performance_score = self.q.performance_score()
+        self.grief_value = self.q.grief_value()
         self.to_beat_next = self.q.to_beat_next()
         self.last_reload = self.q.last_reload()
         self.session_information = self.rf.session_data_by_date(self.latest_session_date)
 
     def build_dashboard_context(self):
         context = {
-            "players": [
-                {"name":"Knus", "rank": self.ranks[0], "performance": self.k_performance[0][0], "stats": self.q.profile_averages(0), "top": self.k_performance, "color":self.K},
-                {"name":"Puad", "rank": self.ranks[1], "performance": self.p_performance[0][0], "stats": self.q.profile_averages(1), "top": self.p_performance, "color":self.P},
-                {"name":"Sticker", "rank": self.ranks[2], "performance": self.s_performance[0][0], "stats": self.q.profile_averages(2), "top": self.s_performance, "color":self.S}
-            ],
-            "k_perf": self.k_performance,
-            "p_perf": self.p_performance,
-            "s_perf": self.s_performance,
+            "players": self.player_profiles,
             "random_facts": self.random_facts,
             "winrates": self.winrates,
             "days_since_first": self.days_since_first,
@@ -90,8 +73,7 @@ class Dashboard:
             "latest_session_date": self.latest_session_date,
             "w_and_l": self.w_and_l,
             "session_game_count": self.session_game_count,
-            "just_out": self.just_out,
-            "performance_score": self.performance_score,
+            "grief_value": self.grief_value,
             "to_beat_next": self.to_beat_next,
             "session_information": self.session_information,
             "profile_stat_names": ["Score", "Goals", "Assists", "Saves", "Shots"],
@@ -123,9 +105,9 @@ class Dashboard:
                 "Miscellaneous"
             ],
             'rank_highlighting': self.RANK_HIGHLIGHTING,
-            'k': self.Ktransparent,
-            'p': self.Ptransparent,
-            's': self.Stransparent,
+            'k': self.q.player_color(0, 0.2),
+            'p': self.q.player_color(1, 0.2),
+            's': self.q.player_color(2, 0.2),
             'cg': 'rgba(255, 225, 0, 0.2)'
         }
         return context 
@@ -140,16 +122,5 @@ class Dashboard:
     def build_games_context(self):
         return {
             'games': self.last_100_games_stats,
-            "last_games_highlighting": [
-                None, None, None, None, None, (self.K, 100, 700),
-                (self.K, 100, 700), (self.K, 0, 5), (self.K, 0, 5),
-                (self.K, 0, 5),
-                (self.K, 0, 10), (self.P, 100, 700),
-                (self.P, 100, 700), (self.P, 0, 5), (self.P, 0, 5),
-                (self.P, 0, 5),
-                (self.P, 0, 10),
-                (self.S, 100, 700), (self.S, 100, 700),
-                (self.S, 0, 5), (self.S, 0, 5), (self.S, 0, 5),
-                (self.S, 0, 10)
-            ]
+            "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING
         }
