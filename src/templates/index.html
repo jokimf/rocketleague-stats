@@ -101,7 +101,7 @@
                         {{ player.justout[0] }} → {{ player.justout[1] }}
                     </output>
                 </p>
-                <p><output class="bg-muted"><span class="bold">TO BEAT:</span> {{ to_beat_next[2][2] }}</output> </p>
+                <p><output class="bg-muted"><span class="bold">TO BEAT:</span> {{ player.tobeatnext }}</output> </p>
                 <footer>
                     <p style="text-align: right;">
                         <output style="border-style: solid;" class="griefHighlighting" value="{{ player.griefing }}">
@@ -132,21 +132,20 @@
                 {% for row in last_games %}
                 <tr>
                     {% for data in row %}
-                    <td class="highlight_td" value="{{ data }}" col="{{ loop.index }}"
+                    <td value="{{ data }}" col="{{ loop.index }}"
                         min="{{ last_games_highlighting[loop.index][1] }}"
                         color="{{ last_games_highlighting[loop.index][0] }}"
-                        max="{{ last_games_highlighting[loop.index][2] }}" {% if loop.index==2 or loop.index==3 %} {% if
-                        row[1]> row[2] and loop.index == 2 %}
-                        style="background-color: rgba(30,133,30,0.4)"
-                        class="result_highlighting_table_cell"
-                        {% elif row[2] > row[1] and loop.index == 3 %}
-                        style="background-color: rgba(133,30,30,0.4)"
-                        class="result_highlighting_table_cell"
-                        {% endif %}
-                        {% endif %}
-                        {% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10]>
+                        max="{{ last_games_highlighting[loop.index][2] }}"
+                        class="highlight_td 
+                        {% if loop.index==2 or loop.index==3 %} 
+                            {% if row[1] > row[2] and loop.index == 2 %}
+                                win 
+                            {% elif row[2] > row[1] and loop.index == 3 %}
+                                loss 
+                            {% endif %}
+                        {% endif %}{% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10]>
                             row[16] and loop.index == 11 or row[16] > row[10] and row[4] < row[16] and loop.index==17 %}
-                                class="mvp_highlighting_table_cell" {% endif %}>
+                                mvp_highlighting_table_cell{% endif %}">
                                 {% if loop.index not in [4,10,16] %}
                                 {{ data }}
                                 {% else %}
@@ -194,7 +193,12 @@
         {% endif %}
         <section>
             <h1 id="winrates">WINRATES</h1>
-            TOTAL: {{ winrates[0]|round(1) }}%
+            <p>
+                <output class="bg-active">
+                    <span class="bold">TOTAL:</span>
+                    {{ winrates[0]|round(1) }}%
+                </output>
+            </p>
             L100
             {{ winrates[2]|round(1) }}%
             Season

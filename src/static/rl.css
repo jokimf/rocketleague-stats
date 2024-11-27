@@ -1,13 +1,30 @@
-h1, h3 {
+h1,
+h3 {
     scroll-margin-top: 3.5rem;
 }
 
-img {
-    max-width: 10% !important; 
+h1 > img {
+    width: 40px;
+    height: 40px;
+    vertical-align: top;
+}
+
+td > img {
+    width: 25px;
+    height: 25px;
+    vertical-align: top;
 }
 
 a:active {
     color: white !important;
+}
+
+.win {
+    background-color: rgba(30, 133, 30, 0.4);
+}
+
+.loss {
+    background-color: rgba(133, 30, 30, 0.4)
 }
 
 .pbox {
@@ -16,11 +33,11 @@ a:active {
     border-radius: 1rem;
 }
 
-article > .pbox {
+article>.pbox {
     margin-bottom: 0.5rem;
 }
 
-article > footer {
+article>footer {
     text-align: center;
 }
 
@@ -46,6 +63,6 @@ article > footer {
     background-color: #262633;
 }
 
-.cols > * {
+.cols>* {
     flex-basis: 100%;
 }

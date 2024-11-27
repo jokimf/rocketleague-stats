@@ -47,7 +47,7 @@ class RLQueries(BackendConnection):
         return self.c.fetchone()[0]
     
     def build_player_profiles(self) -> list[dict]:
-        def build_profile(player_id):
+        def build_profile(player_id: int):
             return {
                 "name": self.player_name(player_id),
                 "rank": self.player_rank(player_id),
@@ -55,7 +55,8 @@ class RLQueries(BackendConnection):
                 "top": self.performance_profile_view(player_id),
                 "color": self.player_color(player_id),
                 "griefing": self.player_average_deviation(player_id),
-                "justout": self.just_out(player_id)
+                "justout": self.just_out(player_id),
+                "tobeatnext": self.to_beat_next(player_id)
             }
         return [build_profile(player_id) for player_id in (0, 1, 2)]
 
@@ -323,20 +324,14 @@ class RLQueries(BackendConnection):
         points_out, points_in = self.c.fetchall()
         return points_out[0], points_in[0]
 
-    # "To beat next" values -> [player0_value, player1_value, player2_value]
-    def to_beat_next(self):
-        self.c.execute("""
-                        WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
-                        SELECT scores.gameID, scores.playerID, scores.score FROM scores, maxId
-                        WHERE gameID = maxId.mId - 19
-                        ORDER BY playerID
-                        """)
-        return self.c.fetchall()
+    def to_beat_next(self, player_id: int) -> int:
+        self.c.execute("""WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
+                          SELECT scores.score FROM scores, maxId WHERE gameID = maxId.mId - 19 AND playerID = %s""", (player_id,))
+        return self.c.fetchone()[0]
 
     def total_wins(self) -> int:
         self.c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against")
         return self.c.fetchone()[0]
-
 
     def total_losses(self) -> int:
         self.c.execute("SELECT COUNT(gameID) FROM games WHERE goals < against")
@@ -353,7 +348,10 @@ class RLQueries(BackendConnection):
         return details
     
     # Session rank is determined by the delta of wins and losses, goals and against, and finally sum of player scores.
-    def session_rank(self, session_id: int) -> dict:
+    def session_rank(self, session_id: int = None) -> dict:
+        if session_id is None:
+            session_id = self.latest_session_main_data()[0]
+
         self.c.execute("""
             SELECT t1.session_rank 
             FROM (

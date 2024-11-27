@@ -158,7 +158,7 @@ class RandomFactQueries(BackendConnection):
                 total = player_total_of_stat(player_id, stat)
                 overshoot = total % milestone_val
                 if overshoot < player_stat_of_last_game(player_id, stat):  # Milestone crossed
-                    facts.append((f'{self.player_name(player_id)} just reached {total - overshoot} {stat}!', 4))
+                    facts.append((f'{self.q.player_name(player_id)} just reached {total - overshoot} {stat}!', 4))
         return facts
 
     # Came close to a record
