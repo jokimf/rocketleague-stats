@@ -1,4 +1,7 @@
+import logging
+
 from flask import Flask, redirect, render_template, send_from_directory
+from waitress import serve
 
 import dashboard
 import queries as q
@@ -45,5 +48,6 @@ def test():
 
 
 if __name__ == "__main__":
-    from waitress import serve
-    serve(app, port=7823)
+    logger = logging.getLogger("waitress")
+    logger.setLevel(logging.INFO)
+    serve(app, host="127.0.0.1", port=7823, url_scheme="https")
