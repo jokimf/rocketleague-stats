@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" style="display:  inline-block">
+<html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>RL - Records</title>
@@ -10,102 +11,156 @@
     <link rel="stylesheet" href="https://matcha.mizu.sh/matcha.css">
     <link rel="stylesheet" href="https://matcha.mizu.sh/@syntax-highlighting.css">
 </head>
-<body>
-<header>
-    <div class="header_container">
-        <a href="/rl"><img src="https://jok.im/static/icons/rl_cg_logo_grey.png" alt="CG" width="50" height="50"></a>
-        <a id="headline" href="/rl">ROCKET LEAGUE</a>
+
+<body class="layout-simple">
+    <header>
+        <h1>
+            <a class="success" href="/rl" style="text-decoration: none;">
+                <img src="https://jok.im/static/icons/rl_cg_logo_grey.png" height="30" width="30">
+            </a>
+            <a class="accent" href="/rl" style="color:rgb(215, 215, 215);text-decoration: none;">ROCKET LEAGUE</a>
+        </h1>
         <nav>
-            <ul>
+            <menu>
                 <li><a href="/rl">Dashboard</a></li>
                 <li><a class="here" href="/rl/records">Records</a></li>
-                <li><a href="/rl/graphs">Graphs</a></li>
                 <li><a href="/rl/games">Games</a></li>
+            </menu>
+        </nav>
+    </header>
+    <aside>
+        <nav>
+            <ul>
+                <li><b><a href="#HIGHEST STATS IN ONE GAME" class="bg-success">HIGHEST STATS IN ONE GAME</a></b>
+                    <ul>
+                        <li><a href="#maxpointsplayer">Points</a></li>
+                        <li><a href="#maxgoalsplayer">Goals</a></li>
+                        <li><a href="#maxassistsplayer">Assists</a></li>
+                        <li><a href="#maxsavesplayer">Saves</a></li>
+                        <li><a href="#maxshotsplayer">Shots</a></li>
+                    </ul>
+                </li>
+                <li><b><a href="#HIGHEST STATS IN ONE GAME BY CG" class="normal bg-success">HIGHEST STATS IN ONE GAME BY
+                            CG</a></b>
+                    <ul>
+                        <li><a href="#maxpointsteam">Points</a></li>
+                        <li><a href="#maxgoalsteam">Goals</a></li>
+                        <li><a href="#maxassiststeam">Assists</a></li>
+                        <li><a href="#maxsavesteam">Saves</a></li>
+                        <li><a href="#maxshotsteam">Shots</a></li>
+                    </ul>
+                </li>
+                <li><b><a href="#HIGHEST STATS IN LAST 20" class="bg-success">HIGHEST STATS IN LAST 20</a></b>
+                    <ul>
+                        <li><a href="#performanceMAXpoints">Points</a></li>
+                        <li><a href="#performanceMAXgoals">Goals</a></li>
+                        <li><a href="#performanceMAXassists">Assists</a></li>
+                        <li><a href="#performanceMAXsaves">Saves</a></li>
+                        <li><a href="#performanceMAXshots">Shots</a></li>
+                    </ul>
+                </li>
+                <li><b><a href="#LOWEST STATS IN LAST 20" class="bg-danger">LOWEST STATS IN LAST 20</a></b>
+                    <ul>
+                        <li><a href="#performanceMINpoints">Points</a></li>
+                        <li><a href="#performanceMINgoals">Goals</a></li>
+                        <li><a href="#performanceMINassists">Assists</a></li>
+                        <li><a href="#performanceMINsaves">Saves</a></li>
+                        <li><a href="#performanceMINshots">Shots</a></li>
+                    </ul>
+                </li>
+                <li><b><a href="#GOAL STATS" class="bg-muted">GOAL STATS</a></b>
+                    <ul>
+                        <li><a href="#mostagainst">Most goals conceded</a></li>
+                        <li><a href="#mostagainstwon">Most goals conceded but won</a></li>
+                        <li><a href="#mostscoredlost">Most goals scored but lost</a></li>
+                        <li><a href="#mosttotalgoals">Most total goals in one game</a></li>
+                    </ul>
+                </li>
+                <li><b><a href="#POINTS STATS" class="bg-muted">POINTS STATS</a></b>
+                    <ul>
+                        <li><a href="#highestnothing">Most points with all stats being 0</a></li>
+                        <li><a href="#mostpointsnogoalassist">Most points without scoring or assisting</a></li>
+                        <li><a href="#mostpointsnogoal">Most points with no goal</a></li>
+                        <li><a href="#leastwith1">Least points with all stats being at least 1</a></li>
+                        <li><a href="#leastwithgoal">Least points with at least one goal</a></li>
+                    </ul>
+                </li>
+                <li><b><a href="#MISCELLANEOUS" class="bg-muted">MISCELLANEOUS</a></b>
+                    <ul>
+                        <li><a href="#diffDESC">Highest score diff between MVP and LVP</a></li>
+                        <li><a href="#diffASC">Lowest score diff between MVP and LVP</a></li>
+                        <li><a href="#sessionoverview">Most solo goals by 'team'</a></li>
+                    </ul>
+                </li>
+                <li><b><a href="#STREAKS" class="bg-muted">STREAKS</a></b>
+                    <ul>
+                        <li><a href="#longestwin">Longest winning streak</a></li>
+                        <li><a href="#longestloss">Longest losing streak</a></li>
+                    </ul>
+                </li>
             </ul>
         </nav>
-    </div>
-</header>
-<div class="website-center-setup">
-    <div class="record-boxes">
+    </aside>
+    <main>
         {% for record_types in record_games %}
-            <h1 style="text-align: center">{{ record_headlines[loop.index - 1] }}</h1>
-            <div class="box">
-                {% for record in record_types %}
-                    <div>
-                        <h3>{{ record }}</h3>
-                        <table>
-                            <th>#</th>
-                            <th>Player</th>
-                            <th>Value</th>
-                            <th>ID</th>
-                            <th>Date</th>
-                            {% for entry in record_types[record] %}
-                                <tr>
-                                    <td
-                                            {% if loop.index in [1,2,3] %}
-                                                style="background-color: {{ rank_highlighting[loop.index - 1] }}"
-                                            {% endif %}>
-                                        {{ loop.index }}</td>
-                                    {% for data in entry %}
-                                        <td
-                                                {% if data == 'Knus' %}
-                                                    style="background-color: {{ k }}"
-                                                {% elif data == 'Puad' %}
-                                                    style="background-color: {{ p }}"
-                                                {% elif data == 'Sticker' %}
-                                                    style="background-color: {{ s }}"
-                                                {% elif data == 'CG' %}
-                                                    style="background-color: {{ cg }}"
-                                                {% elif loop.index == 3 and latest - 100  < data %}
-                                                    style="background-color: {{ fade(data, 100) }}"
-                                                {% endif %}
-                                        >{{ data }}</td>
-                                    {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    </div>
-                {% endfor %}
-            </div>
-            <hr>
-        {% endfor %}
-    </div>
-    <div class="box">
-        {% for streak in streaks %}
-            <div>
-                <h3>{{ streak }}</h3>
-                <table>
-                    <th>#</th>
-                    <th>Value</th>
-                    <th>Start</th>
-                    <th>End</th>
-                    {% for entry in streaks[streak] %}
-                        <tr>
-                            <td
-                                    {% if loop.index in [1,2,3] %}
-                                        style="background-color: {{ rank_highlighting[loop.index - 1] }}"
-                                    {% endif %}>
-                                {{ loop.index }}</td>
-                            {% for data in entry %}
-                                <td
-                                        {% if data == 'Knus' %}
-                                            style="background-color: {{ k }}"
-                                        {% elif data == 'Puad' %}
-                                            style="background-color: {{ p }}"
-                                        {% elif data == 'Sticker' %}
-                                            style="background-color: {{ s }}"
-                                        {% elif data == 'CG' %}
-                                            style="background-color: {{ cg }}"
-                                        {% endif %}
-
-                                >{{ data }}</td>
-                            {% endfor %}
-                        </tr>
+        <h1 id="{{ record_headlines[loop.index0] }}">{{ record_headlines[loop.index0] }}</h1>
+        {% for record in record_types %}
+        <span class="scroll-margin" id="{{ record.id }}">
+            <table>
+                <caption>{{ record.title }}</caption>
+                <th>#</th>
+                <th>Player</th>
+                <th>Value</th>
+                <th>ID</th>
+                <th>Date</th>
+                {% for entry in record.data %}
+                <tr>
+                    <td {% if loop.index in [1,2,3] %} style="background-color: {{ rank_highlighting[loop.index0] }}" {%
+                        endif %}>
+                        {{ loop.index }}</td>
+                    {% for data in entry %}
+                    <td {% if data=='Knus' %} style="background-color: {{ k }}" {% elif data=='Puad' %}
+                        style="background-color: {{ p }}" {% elif data=='Sticker' %} style="background-color: {{ s }}"
+                        {% elif data=='CG' %} style="background-color: {{ cg }}" {% elif loop.index==3 and latest - 100
+                        < data %} style="background-color: {{ fade(data, 100) }}" {% endif %}>
+                        {% if data is number %}
+                        {{ data | round(2) }}
+                        {% else %}
+                        {{ data }}
+                        {% endif %}
+                    </td>
                     {% endfor %}
-                </table>
-            </div>
+                </tr>
+                {% endfor %}
+            </table>
+        </span>
         {% endfor %}
-    </div>
-</div>
+        {% endfor %}
+        <h1 id="STREAKS">STREAKS</h1>
+        {% for streak in streaks %}
+        <span class="scroll-margin" id="{{ streak.id }}">
+            <table>
+                <caption>{{ streak.title }}</caption>
+                <th>#</th>
+                <th>Value</th>
+                <th>Start</th>
+                <th>End</th>
+                {% for entry in streak.data %}
+                <tr>
+                    <td {% if loop.index in [1,2,3] %} style="background-color: {{ rank_highlighting[loop.index0] }}" {%
+                        endif %}>
+                        {{ loop.index }}</td>
+                    {% for data in entry %}
+                    <td {% if data=='Knus' %} style="background-color: {{ k }}" {% elif data=='Puad' %}
+                        style="background-color: {{ p }}" {% elif data=='Sticker' %} style="background-color: {{ s }}"
+                        {% elif data=='CG' %} style="background-color: {{ cg }}" {% endif %}>{{ data }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </span>
+        {% endfor %}
+    </main>
 </body>
+
 </html>

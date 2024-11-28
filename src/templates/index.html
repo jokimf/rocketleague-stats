@@ -132,11 +132,9 @@
                 {% for row in last_games %}
                 <tr>
                     {% for data in row %}
-                    <td value="{{ data }}" col="{{ loop.index }}"
-                        min="{{ last_games_highlighting[loop.index][1] }}"
+                    <td value="{{ data }}" col="{{ loop.index }}" min="{{ last_games_highlighting[loop.index][1] }}"
                         color="{{ last_games_highlighting[loop.index][0] }}"
-                        max="{{ last_games_highlighting[loop.index][2] }}"
-                        class="highlight_td 
+                        max="{{ last_games_highlighting[loop.index][2] }}" class="highlight_td 
                         {% if loop.index==2 or loop.index==3 %} 
                             {% if row[1] > row[2] and loop.index == 2 %}
                                 win 
@@ -146,11 +144,11 @@
                         {% endif %}{% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10]>
                             row[16] and loop.index == 11 or row[16] > row[10] and row[4] < row[16] and loop.index==17 %}
                                 mvp_highlighting_table_cell{% endif %}">
-                                {% if loop.index not in [4,10,16] %}
-                                {{ data }}
-                                {% else %}
-                                <img src="https://jok.im/static/rl/ranks/{{ data.lower() }}.png" alt="{{ data }}">
-                                {% endif %}
+                        {% if loop.index not in [4,10,16] %}
+                        {{ data }}
+                        {% else %}
+                        <img src="https://jok.im/static/rl/ranks/{{ data.lower() }}.png" alt="{{ data }}">
+                        {% endif %}
                     </td>
                     {% endfor %}
                 </tr>
@@ -193,20 +191,22 @@
         {% endif %}
         <section>
             <h1 id="winrates">WINRATES</h1>
-            <p>
-                <output class="bg-active">
-                    <span class="bold">TOTAL:</span>
-                    {{ winrates[0]|round(1) }}%
-                </output>
-            </p>
-            L100
-            {{ winrates[2]|round(1) }}%
-            Season
-            {{ winrates[1]|round(1) }}%
-            L20
-            {{ winrates[3]|round(1) }}%
-            Session
-            {{ winrates[4]|round(1) }}%
+            <output class="bg-active m-.25">
+                <span class="bold">TOTAL:</span>
+                {{ winrates[0]|round(1) }}%
+            </output>
+            <output class="bg-variant m-.25">
+                <span class="bold">SEASON:</span>
+                {{ winrates[1]|round(1) }}%
+            </output>
+            <output class="bg-accent m-.25">
+                <span class="bold">L100:</span>
+                {{ winrates[2]|round(1) }}%
+            </output>
+            <output class="bg-severe m-.25">
+                <span class="bold">L20:</span>
+                {{ winrates[3]|round(1) }}%
+            </output>
         </section>
         <section>
             <h1 id="seasons">SEASONS</h1>
@@ -262,7 +262,7 @@
     new Chart(document.getElementById('weekdaysGraph'), {{ weekdays_graph | safe }});
     new Chart(document.getElementById('monthGraph'), {{ month_graph | safe }});
     new Chart(document.getElementById('yearGraph'), {{ year_graph | safe }});
-    new Chart(document.getElementById('scoreDistribution'), {{ score_distribution | safe }});
+    new Chart(document.getElementById('scoreDistribution'), {{ score_distribution_graph | safe }});
     new Chart(document.getElementById('seasonsGraph'), {{ seasons_graph | safe }});
 </script>
 

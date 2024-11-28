@@ -1,86 +1,88 @@
 <!DOCTYPE html>
-<html lang="en" style="display:  inline-block">
+<html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>RL - Games</title>
     <link rel="icon" href="https://jok.im/static/icons/rl_cg_logo_grey.png">
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-    <link rel="stylesheet" href="https://jok.im/static/standard.css">
     <link rel="stylesheet" href="/rl/static/games.css">
+    <link rel="stylesheet" href="https://matcha.mizu.sh/matcha.css">
+    <link rel="stylesheet" href="https://matcha.mizu.sh/@syntax-highlighting.css">
 </head>
-<body>
-<header>
-    <div class="header_container">
-        <a href="/rl"><img src="https://jok.im/static/icons/rl_cg_logo_grey.png" alt="CG" width="50" height="50"></a>
-        <a id="headline" href="/rl">ROCKET LEAGUE</a>
+
+<body class="layout-simple">
+    <header>
+        <h1>
+            <a class="success" href="/rl" style="text-decoration: none;">
+                <img src="https://jok.im/static/icons/rl_cg_logo_grey.png" height="30" width="30">
+            </a>
+            <a class="accent" href="/rl" style="color:rgb(215, 215, 215);text-decoration: none;">ROCKET LEAGUE</a>
+        </h1>
         <nav>
-            <ul>
+            <menu>
                 <li><a href="/rl">Dashboard</a></li>
                 <li><a href="/rl/records">Records</a></li>
-                <li><a href="/rl/graphs">Graphs</a></li>
                 <li><a class="here" href="/rl/games">Games</a></li>
-            </ul>
+            </menu>
         </nav>
-    </div>
-</header>
-<div class="website-center-setup">
-    <!--<div id="my_dataviz"></div>-->
-    <table>
-        <th>#</th>
-        <th>DATE</th>
-        <th>G</th>
-        <th>A</th>
-        <th>R</th>
-        <th>S</th>
-        <th>G</th>
-        <th>A</th>
-        <th>S</th>
-        <th>S</th>
-        <th>R</th>
-        <th>S</th>
-        <th>G</th>
-        <th>A</th>
-        <th>S</th>
-        <th>S</th>
-        <th>R</th>
-        <th>S</th>
-        <th>G</th>
-        <th>A</th>
-        <th>S</th>
-        <th>S</th>
+    </header>
+    <main>
+        <table>
+            <th>#</th>
+            <th>DATE</th>
+            <th>G</th>
+            <th>A</th>
+            <th>R</th>
+            <th>S</th>
+            <th>G</th>
+            <th>A</th>
+            <th>S</th>
+            <th>S</th>
+            <th>R</th>
+            <th>S</th>
+            <th>G</th>
+            <th>A</th>
+            <th>S</th>
+            <th>S</th>
+            <th>R</th>
+            <th>S</th>
+            <th>G</th>
+            <th>A</th>
+            <th>S</th>
+            <th>S</th>
 
-        {% for row in games %}
+            {% for row in games %}
             <tr>
                 {% for data in row %}
-                    <td {% if loop.index not in [1,2,3,4,5,11,17] %}
-                        style="background-color:{{ cf(last_games_highlighting[loop.index][0],data, last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
+                <td {% if loop.index not in [1,2,3,4,5,11,17] %}
+                    style="background-color:{{ cf(last_games_highlighting[loop.index][0],data, last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
                     {% elif loop.index in [5,11,17] %}
-                        style="background-color:{{ cf(last_games_highlighting[loop.index][0],row[loop.index], last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
-                    {% elif loop.index == 3 or loop.index == 4 %}
-                        {% if row[2] > row[3] and loop.index == 3 %}
-                        style="background-color: rgba(30,133,30,0.4)"
-                        class="result_highlighting_table_cell"
-                        {% elif row[3] > row[2] and loop.index == 4 %}
-                        style="background-color: rgba(133,30,30,0.4)"
-                        class="result_highlighting_table_cell"
-                        {% endif %}
+                    style="background-color:{{ cf(last_games_highlighting[loop.index][0],row[loop.index], last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
+                    {% elif loop.index==3 or loop.index==4 %} {% if row[2]> row[3] and loop.index == 3 %}
+                    style="background-color: rgba(30,133,30,0.4)"
+                    class="result_highlighting_table_cell"
+                    {% elif row[3] > row[2] and loop.index == 4 %}
+                    style="background-color: rgba(133,30,30,0.4)"
+                    class="result_highlighting_table_cell"
                     {% endif %}
-                            {% if row[5] > row[11] and row[5] > row[17] and loop.index == 6 or row[5] < row[11] and row[11] > row[17] and loop.index == 12 or row[17] > row[11] and row[5] < row[17] and loop.index == 18 %}
-                        class="mvp_highlighting_table_cell"
-                            {% endif %}
-                    >
-                        {% if loop.index not in [5,11,17] %}
+                    {% endif %}
+                    {% if row[5] > row[11] and row[5] > row[17] and loop.index == 6 or row[5] < row[11] and row[11]>
+                        row[17] and loop.index == 12 or row[17] > row[11] and row[5] < row[17] and loop.index==18 %}
+                            class="mvp_highlighting_table_cell" {% endif %}>
+                            {% if loop.index not in [5,11,17] %}
                             {{ data }}
-                        {% else %}
-                            <img src="https://jok.im/static/rl/ranks/{{ data.lower() }}.png"
-                                 alt="{{ data }}" width="20" height="20">
-                        {% endif %}
-                    </td>
+                            {% else %}
+                            <img src="https://jok.im/static/rl/ranks/{{ data.lower() }}.png" alt="{{ data }}" width="20"
+                                height="20">
+                            {% endif %}
+                </td>
                 {% endfor %}
             </tr>
-        {% endfor %}
-    </table>
-</div>
+            {% endfor %}
+        </table>
+    </main>
 </body>
+
 </html>

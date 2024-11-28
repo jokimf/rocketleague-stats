@@ -7,10 +7,11 @@ import simplejson as json
 
 from connect import BackendConnection
 
+
 class GraphBuilder:
     def __init__(self) -> None:
         self._graph: dict = {
-            "type": 'bar',
+            "type": "bar",
             "data": {
                 "labels": [],
                 "datasets": [],
@@ -23,7 +24,7 @@ class GraphBuilder:
                 "scales": {
                     "x": dict(),
                     "y": dict(),
-                    #"y1": 
+                    # "y1":
                 }
             }
         }
@@ -39,7 +40,7 @@ class GraphBuilder:
         data_attributes = self._graph.get("data")
         data_attributes |= {"labels": labels}
         return self
-    
+
     def withTitle(self, text: str, align: str = "center", position: str = "top") -> GraphBuilder:
         title_attributes = {
             "text": text,
@@ -50,13 +51,13 @@ class GraphBuilder:
         title_section = self._graph.get("options").get("plugins").get("title")
         title_section |= title_attributes
         return self
-    
+
     def withLegend(self, show: bool) -> GraphBuilder:
         legend_section = self._graph.get("options").get("plugins").get("legend")
         legend_section |= {"display": show}
         return self
-    
-    def withDataset(self, data: list[int|float], label: str, color: DatasetColor|str, border_color, borderWidth: int = 1) -> GraphBuilder:
+
+    def withDataset(self, data: list[int | float], label: str, color: DatasetColor | str, border_color, borderWidth: int = 1) -> GraphBuilder:
         if isinstance(color, DatasetColor):
             color = color.value
         if isinstance(border_color, DatasetColor):
@@ -68,58 +69,59 @@ class GraphBuilder:
             "borderWidth": borderWidth,
             "backgroundColor": color,
             "borderColor": border_color
-            #"fill": True
+            # "fill": True
         }
         data_section: list = self._graph.get("data").get("datasets")
         data_section.append(dataset_attributes)
         return self
-    
-    
-    def withLimits(self, xmin: int|None = None, xmax: int|None = None, ymin: int|None = None, ymax: int|None = None) -> GraphBuilder:
+
+    def withLimits(self, xmin: int | None = None, xmax: int | None = None, ymin: int | None = None, ymax: int | None = None) -> GraphBuilder:
         options_section = self._graph.get("options")
         attributes = {"x_min": xmin, "x_max": xmax, "y_min": ymin, "y_max": ymax}
-        
+
         # Filter parameters that are None
         attributes = {key: value for key, value in attributes.items() if value is not None}
-        
+
         options_section |= attributes
         return self
-    
-    def withGrid(self, x_color: DatasetColor|str = None, y_color: DatasetColor|str = None) -> GraphBuilder:
+
+    def withGrid(self, x_color: DatasetColor | str = None, y_color: DatasetColor | str = None) -> GraphBuilder:
         if x_color is not None:
             if isinstance(x_color, DatasetColor):
                 x_color = x_color.value
             x_section = self._graph.get("options").get("scales").get("x")
             x_section |= {"x": {"grid": {"color": x_color}}}
-        
+
         if y_color is not None:
             if isinstance(y_color, DatasetColor):
                 y_color = y_color.value
             y_section = self._graph.get("options").get("scales").get("y")
             y_section |= {"y": {"grid": {"color": y_color}}}
         return self
-    
+
     def withSecondYAxis(self) -> GraphBuilder:
         raise NotImplementedError
         y1_section = self._graph.get("options").get("scales").get("y1")
         y1_section |= {"display": True, "position": "right"}
-        #TODO: Labels are unrelated to graph
+        # TODO: Labels are unrelated to graph
         return self
-    
+
+
 class DatasetColor(Enum):
     def random_color() -> str:
         r, g, b = random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256)
-        return f'rgba({r},{g},{b},0.6)'
+        return f"rgba({r},{g},{b},0.6)"
 
-    KNUS = 'rgba(47,147,26,0.8)',
-    PUAD = 'rgba(147,26,26,0.8)',  
-    STICKER = 'rgba(26,115,147,0.8)', 
-    CLOWN = 'rgba(40, 40, 40, 0.8)',
-    WIN = 'rgba(3, 58, 3, 0.8)',  
-    LOSS = 'rgba(58, 3, 3, 0.8)',  
-    GAME ='rgba(17, 3, 58, 0.8)',
-    NEUTRAL = 'rgba(128,128,128,0.6)',
-    WHITE = 'rgba(255,255,255,0.6)'
+    KNUS = "rgba(47,147,26,0.8)",
+    PUAD = "rgba(147,26,26,0.8)",
+    STICKER = "rgba(26,115,147,0.8)",
+    CLOWN = "rgba(40, 40, 40, 0.8)",
+    WIN = "rgba(3, 58, 3, 0.8)",
+    LOSS = "rgba(58, 3, 3, 0.8)",
+    GAME = "rgba(17, 3, 58, 0.8)",
+    NEUTRAL = "rgba(128,128,128,0.6)",
+    WHITE = "rgba(255,255,255,0.6)"
+
 
 class GraphQueries(BackendConnection):
     def days_graph(self) -> dict:
@@ -137,7 +139,7 @@ class GraphQueries(BackendConnection):
             .withLabels(labels) \
             .withLegend(False)
         return graph.toJSON()
-    
+
     def weekdays_graph(self) -> dict:
         self.c.execute("""
             SELECT DATE_FORMAT(date,'%w') AS weekday, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0))
@@ -157,7 +159,7 @@ class GraphQueries(BackendConnection):
             .withLabels(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]) \
             .withLegend(False)
         return graph.toJSON()
-    
+
     def month_graph(self) -> dict:
         self.c.execute("""
             SELECT DATE_FORMAT(date,'%m') AS month, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0)) 
@@ -171,7 +173,7 @@ class GraphQueries(BackendConnection):
             .withLabels(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]) \
             .withLegend(False)
         return graph.toJSON()
-    
+
     def year_graph(self) -> dict:
         self.c.execute("""
             SELECT DATE_FORMAT(date,'%Y') AS year, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1,0)) 
@@ -189,7 +191,8 @@ class GraphQueries(BackendConnection):
     def performance_graph(self, total_games_count: int) -> dict:
         data_list = []
         for player_id in [0, 1, 2]:
-            self.c.execute(f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
+            self.c.execute(
+                f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
             data_list.append(list(reversed([x[0] for x in self.c.fetchall()])))
             average = [sum(group) / len(group) for group in zip(*data_list)]
         graph = GraphBuilder() \
@@ -198,10 +201,10 @@ class GraphQueries(BackendConnection):
             .withDataset(data_list[1], "Puad", DatasetColor.PUAD, DatasetColor.PUAD) \
             .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.STICKER) \
             .withDataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL, 3) \
-            .withLabels(list(range(total_games_count - 20,total_games_count))) \
+            .withLabels(list(range(total_games_count - 20, total_games_count))) \
             .withGrid(y_color="rgba(209, 209, 209, 0.1)")
         return graph.toJSON()
-    
+
     def results_table(self):
         self.c.execute("""
             WITH cG AS (SELECT COUNT(*) allG FROM games)
@@ -211,7 +214,7 @@ class GraphQueries(BackendConnection):
             ORDER BY goals ASC;
         """)
         return [{"x": str(g), "y": str(a), "v": v} for g, a, v, _ in self.c.fetchall()]
-    
+
     def score_distribution_graph(self) -> dict:
         datasets = []
         for player_id in [0, 1, 2]:
@@ -235,7 +238,7 @@ class GraphQueries(BackendConnection):
             .withDataset(datasets[2], "Sticker", DatasetColor.STICKER, DatasetColor.NEUTRAL) \
             .withLabels(labels)
         return graph.toJSON()
-    
+
     def seasons_graph(self) -> dict:
         self.c.execute(""" 
             SELECT se.season_name,
@@ -254,41 +257,3 @@ class GraphQueries(BackendConnection):
             .withLabels(labels) \
             .withLegend(False)
         return graph.toJSON()
- 
-# def graph_stat_share(stat: str) -> OldGraph:
-#     if stat not in possible_stats:
-#         raise ValueError(f'{stat} is not in possible stats.')
-#     data = c.execute(f"""
-#         SELECT k.gameID, 
-#         CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) / 
-#         (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
-#         CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
-#         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS K,
-#         CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) / 
-#         (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
-#         CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
-#         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS P,
-#         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT) / 
-#         (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
-#         CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
-#         CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS S
-#         FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
-#     """).fetchall()
-#     return OldGraph(f"{stat.capitalize()} Share", "line", data, [x[0] for x in c.description], None, None, None, None,
-#                  False)
-# def graph_cumulative_stat(stat: str) -> OldGraph:
-#     if stat not in possible_stats:
-#         raise ValueError(f'{stat} is not in possible stats.')
-#     data = c.execute(f"""
-#         SELECT k.gameID, SUM(k.{stat}) OVER (ORDER BY k.gameID) 'Knus', SUM(p.{stat}) OVER (ORDER BY k.gameID) 'Puad', 
-#         SUM(s.{stat}) OVER (ORDER BY k.gameID) 'Sticker' FROM knus k LEFT JOIN puad p ON k.gameID = p.gameID 
-#         LEFT JOIN sticker s ON k.gameID = s.gameID
-#     """).fetchall()
-#     return OldGraph(f"Cumulative {stat.capitalize()}", "line", data, [x[0] for x in c.description], None, None, None, None,
-#                  False)
-# SELECT 
-#     k.gameID, 
-#     (SELECT SUM(k1.saves) FROM knus k1 WHERE k1.gameID <= k.gameID) AS 'Knus', 
-#     (SELECT SUM(p1.saves) FROM puad p1 WHERE p1.gameID <= k.gameID) AS 'Puad', 
-#     (SELECT SUM(s1.saves) FROM sticker s1 WHERE s1.gameID <= k.gameID) AS 'Sticker' 
-# FROM knus k;
