@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" style="display:  inline-block">
+<html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>RL - {{ name }}</title>
@@ -7,63 +8,56 @@
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://jok.im/static/standard.css">
     <link rel="stylesheet" href="/rl/static/profile.css">
+    <link rel="stylesheet" href="https://matcha.mizu.sh/matcha.css">
+    <link rel="stylesheet" href="https://matcha.mizu.sh/@syntax-highlighting.css">
 </head>
-<body>
-<header>
-    <div class="header_container">
-        <a href="/rl"><img src="https://jok.im/static/icons/rl_cg_logo_grey.png" alt="CG" width="50" height="50"></a>
-        <a id="headline" href="/rl">ROCKET LEAGUE</a>
+
+<body class="layout-simple">
+    <header>
+        <h1>
+            <a class="success" href="/rl" style="text-decoration: none;">
+                <img src="https://jok.im/static/icons/rl_cg_logo_grey.png" height="30" width="30">
+            </a>
+            <a class="accent" href="/rl" style="color:rgb(215, 215, 215);text-decoration: none;">ROCKET LEAGUE</a>
+        </h1>
+        <nav>
+            <menu>
+                <li><a class="here" href="/rl">Dashboard</a></li>
+                <li><a href="/rl/records">Records</a></li>
+                <li><a href="/rl/games">Games</a></li>
+            </menu>
+        </nav>
+    </header>
+    <aside>
         <nav>
             <ul>
-                <li><a href="/rl">Dashboard</a></li>
-                <li><a href="/rl/records">Records</a></li>
-                <li><a href="/rl/graphs">Graphs</a></li>
-                <li><a href="/rl/games">Games</a></li>
             </ul>
         </nav>
-    </div>
-</header>
-<div class="website-center-setup">
-<h1 style="text-align: center">{{ name }}</h1>
-    <hr>
-    <div class="box">
+    </aside>
+    <main>
+        <h1>{{ name }}</h1>
         {% for streak in streaks %}
-            <div style="background-color: rgba(80,16,16,0.36);padding: 1em;border-radius: 1em">
-                <h3>{{ streak }}</h3>
-                <table>
-                    <th>#</th>
-                    <th>Value</th>
-                    <th>Start</th>
-                    <th>End</th>
-                    {% for entry in streaks[streak] %}
-                        <tr>
-                            <td
-                                    {% if loop.index in [1,2,3] %}
-                                        style="background-color: {{ rank_highlighting[loop.index - 1] }}"
-                                    {% endif %}>
-                                {{ loop.index }}</td>
-                            {% for data in entry %}
-                                <td
-                                        {% if data == 'Knus' %}
-                                            style="background-color: {{ k }}"
-                                        {% elif data == 'Puad' %}
-                                            style="background-color: {{ p }}"
-                                        {% elif data == 'Sticker' %}
-                                            style="background-color: {{ s }}"
-                                        {% elif data == 'CG' %}
-                                            style="background-color: {{ cg }}"
-                                        {% endif %}
-
-                                >{{ data }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </table>
-            </div>
+        <!--<h3>{{ streak }}</h3>-->
+        <table>
+            <caption>{{ streak }}</caption>
+            <th>#</th>
+            <th>Value</th>
+            <th>Start</th>
+            <th>End</th>
+            {% for entry in streaks[streak] %}
+            <tr>
+                <td {% if loop.index in [1,2,3] %} style="background-color: {{ rank_highlighting[loop.index0] }}" {%
+                    endif %}>
+                    {{ loop.index }}</td>
+                {% for data in entry %}
+                <td>{{ data }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
         {% endfor %}
-    </div>
-</div>
+    </main>
 </body>
+
 </html>

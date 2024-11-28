@@ -1,297 +1,259 @@
+from __future__ import annotations  # for class type hints
+
 import random
-from typing import List, Optional
-import queries as q
+from enum import Enum
 
-possible_stats = ['score', 'goals', 'assists', 'saves', 'shots']
+import simplejson as json
 
-
-def random_color() -> str:
-    r, g, b = random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256)
-    return f'rgba({r},{g},{b},0.8)'
+from connect import BackendConnection
 
 
-# GRAPH QUERIES
-class Graph:
-    def __init__(self, title: str, graph_type: str, data: List, datapoint_labels: List, x_min: Optional[float],
-                 x_max: Optional[float], y_min: Optional[float], y_max: Optional[float], show_legend: bool):
-        self.title = title
-        self.graph_type = graph_type
-        self.data = data
-        self.datapoint_labels = datapoint_labels
-        self.x_min = x_min
-        self.x_max = x_max
-        self.y_min = y_min
-        self.y_max = y_max
-        self.show_legend = show_legend
+class GraphBuilder:
+    def __init__(self) -> None:
+        self._graph: dict = {
+            "type": "bar",
+            "data": {
+                "labels": [],
+                "datasets": [],
+            },
+            "options": {
+                "plugins": {
+                    "legend": dict(),
+                    "title": dict()
+                },
+                "scales": {
+                    "x": dict(),
+                    "y": dict(),
+                    # "y1":
+                }
+            }
+        }
 
-    colors = {
-        'K': 'rgba(47,147,26,0.8)',  # Knus
-        'P': 'rgba(147,26,26,0.8)',  # Puad
-        'S': 'rgba(26,115,147,0.8)',  # Sticker
-        'C': 'rgba(40, 40, 40, 0.8)',  # CG
-        'W': 'rgba(3, 58, 3, 0.8)',  # Wins
-        'L': 'rgba(58, 3, 3, 0.8)',  # Losses
-        'G': 'rgba(17, 3, 58, 0.8)'  # Games
-    }
+    def toJSON(self) -> dict:
+        return json.dumps(self._graph)
 
-    def to_dict(self) -> dict:
-        datasets = []
-        length = len(self.data[0])
-        for x in range(1, length):
-            label: str = None if self.datapoint_labels is None else self.datapoint_labels[x]
-            border_color: str = self.colors[label[0]] if label[0] in self.colors else random_color()
-            data: List = [entry[x] for entry in self.data]
-            datasets.append({'data': data, 'label': label, 'borderColor': border_color, 'borderWidth': 2})
-        graph_ctx: dict = {'type': self.graph_type,
-                           'data': {
-                               'title': self.title,
-                               'labels': [x[0] for x in self.data],
-                               'datasets': datasets
-                           },
-                           'options': {
-                               'x_min': self.x_min,
-                               'x_max': self.x_max,
-                               'y_min': self.y_min,
-                               'y_max': self.y_max,
-                               'show_legend': self.show_legend
-                           }
-                           }
+    def withType(self, graphType: str) -> GraphBuilder:
+        self._graph |= {"type": graphType}
+        return self
 
-        return graph_ctx
+    def withLabels(self, labels: list) -> GraphBuilder:
+        data_attributes = self._graph.get("data")
+        data_attributes |= {"labels": labels}
+        return self
 
-    def symbiose(self, *others):
-        data = [list(x) for x in self.data]
-        for graph in others:
-            for i, entry in enumerate(graph.data):
-                data[i] = data[i] + list(entry[1:])
+    def withTitle(self, text: str, align: str = "center", position: str = "top") -> GraphBuilder:
+        title_attributes = {
+            "text": text,
+            "align": align,
+            "position": position,
+            "display": True
+        }
+        title_section = self._graph.get("options").get("plugins").get("title")
+        title_section |= title_attributes
+        return self
 
-        labels = self.datapoint_labels
-        for graph in others:
-            labels = labels + graph.datapoint_labels[1:]
+    def withLegend(self, show: bool) -> GraphBuilder:
+        legend_section = self._graph.get("options").get("plugins").get("legend")
+        legend_section |= {"display": show}
+        return self
 
-        return Graph(self.title, self.graph_type, data, labels, self.x_min, self.x_max, self.y_min, self.y_max,
-                     self.show_legend)
+    def withDataset(self, data: list[int | float], label: str, color: DatasetColor | str, border_color, borderWidth: int = 1) -> GraphBuilder:
+        if isinstance(color, DatasetColor):
+            color = color.value
+        if isinstance(border_color, DatasetColor):
+            border_color = border_color.value
 
-    def __str__(self):
-        return f'{self.title}+,{self.graph_type},{self.datapoint_labels},{self.data}'
+        dataset_attributes = {
+            "data": data,
+            "label": label,
+            "borderWidth": borderWidth,
+            "backgroundColor": color,
+            "borderColor": border_color
+            # "fill": True
+        }
+        data_section: list = self._graph.get("data").get("datasets")
+        data_section.append(dataset_attributes)
+        return self
 
-    def change_y(self, new_min: Optional[float], new_max: Optional[float]):
-        self.y_min = new_min
-        self.y_max = new_max
+    def withLimits(self, xmin: int | None = None, xmax: int | None = None, ymin: int | None = None, ymax: int | None = None) -> GraphBuilder:
+        options_section = self._graph.get("options")
+        attributes = {"x_min": xmin, "x_max": xmax, "y_min": ymin, "y_max": ymax}
+
+        # Filter parameters that are None
+        attributes = {key: value for key, value in attributes.items() if value is not None}
+
+        options_section |= attributes
+        return self
+
+    def withGrid(self, x_color: DatasetColor | str = None, y_color: DatasetColor | str = None) -> GraphBuilder:
+        if x_color is not None:
+            if isinstance(x_color, DatasetColor):
+                x_color = x_color.value
+            x_section = self._graph.get("options").get("scales").get("x")
+            x_section |= {"x": {"grid": {"color": x_color}}}
+
+        if y_color is not None:
+            if isinstance(y_color, DatasetColor):
+                y_color = y_color.value
+            y_section = self._graph.get("options").get("scales").get("y")
+            y_section |= {"y": {"grid": {"color": y_color}}}
+        return self
+
+    def withSecondYAxis(self) -> GraphBuilder:
+        raise NotImplementedError
+        y1_section = self._graph.get("options").get("scales").get("y1")
+        y1_section |= {"display": True, "position": "right"}
+        # TODO: Labels are unrelated to graph
         return self
 
 
-### D3.js
-def goal_heatmap():
-    return q.results_table()
+class DatasetColor(Enum):
+    def random_color() -> str:
+        r, g, b = random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256)
+        return f"rgba({r},{g},{b},0.6)"
+
+    KNUS = "rgba(47,147,26,0.8)",
+    PUAD = "rgba(147,26,26,0.8)",
+    STICKER = "rgba(26,115,147,0.8)",
+    CLOWN = "rgba(40, 40, 40, 0.8)",
+    WIN = "rgba(3, 58, 3, 0.8)",
+    LOSS = "rgba(58, 3, 3, 0.8)",
+    GAME = "rgba(17, 3, 58, 0.8)",
+    NEUTRAL = "rgba(128,128,128,0.6)",
+    WHITE = "rgba(255,255,255,0.6)"
 
 
-def graph_performance(stat: str) -> Graph:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute(f"""
-        WITH kT AS (SELECT * FROM performance WHERE playerID = 0),
-        pT AS (SELECT * FROM performance WHERE playerID = 1),
-        sT AS (SELECT * FROM performance WHERE playerID = 2)
-        SELECT kT.gameID AS GameID, kT.{stat} AS Knus, pT.{stat} AS Puad, sT.{stat} AS Sticker FROM kT
-        LEFT JOIN pT ON kT.gameID = pT.gameID
-        LEFT JOIN sT ON kT.gameID = sT.gameID
-    """).fetchall()
-    return Graph(f'{stat.capitalize()} performance', 'line', data,
-                 [f'{x[0]}{stat.capitalize()}' for x in c.description], None, None,
-                 None, None, False)
+class GraphQueries(BackendConnection):
+    def days_graph(self) -> dict:
+        self.c.execute("""
+            SELECT DATE_FORMAT(date, '%d') AS day, 
+                SUM(IF(goals > against,1,0)) AS Wins,
+                SUM(IF(goals < against,1,0)) AS Losses 
+            FROM games GROUP BY day ORDER BY day ASC
+        """)
+        raw = self.c.fetchall()
+        labels, wins, losses = zip(*raw)
+        graph = GraphBuilder() \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withLabels(labels) \
+            .withLegend(False)
+        return graph.toJSON()
 
+    def weekdays_graph(self) -> dict:
+        self.c.execute("""
+            SELECT DATE_FORMAT(date,'%w') AS weekday, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0))
+            FROM games GROUP BY weekday ORDER BY weekday ASC
+        """)
+        raw = self.c.fetchall()
+        _, wins, losses = zip(*raw)
+        wins = list(wins)
+        losses = list(losses)
 
-def graph_performance_team(stat: str) -> Graph:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute(f"SELECT gameID AS GameID, AVG({stat}) AS CG FROM performance GROUP BY gameID").fetchall()
-    return Graph(f"Team {stat} performance", "line", data, [x[0] for x in c.description], None, None, None, None, False)
+        # Since Sunday is dayID=0, put it at the back of the list
+        wins.append(wins.pop(0))
+        losses.append(losses.pop(0))
+        graph = GraphBuilder() \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withLabels(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]) \
+            .withLegend(False)
+        return graph.toJSON()
 
+    def month_graph(self) -> dict:
+        self.c.execute("""
+            SELECT DATE_FORMAT(date,'%m') AS month, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0)) 
+            FROM games GROUP BY month ORDER BY month ASC""")
+        raw = self.c.fetchall()
+        _, wins, losses = zip(*raw)
 
-def graph_grief_value() -> Graph:
-    data = c.execute("""
-    WITH 	kT AS (SELECT gameID, score FROM performance WHERE playerID = 0),
-            pT AS (SELECT gameID, score FROM performance WHERE playerID = 1),
-            sT AS (SELECT gameID, score FROM performance WHERE playerID = 2),
-            gAvg AS (SELECT gameID, AVG(performance.score) AS gA FROM performance GROUP BY performance.gameID)
-            SELECT kT.gameID AS GameID, kT.score - gA AS Knus, pT.score - gA AS Puad, sT.score - gA AS Sticker FROM kT
-            LEFT JOIN pT ON kT.gameID = pT.gameID
-            LEFT JOIN sT ON kT.gameID = sT.gameID
-            LEFT JOIN gAvg ON kT.gameID = gAvg.gameID
-    """).fetchall()
-    return Graph(f"Grief Value", "line", data, [x[0] for x in c.description], None, None, None, None, False)
+        graph = GraphBuilder() \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withLabels(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]) \
+            .withLegend(False)
+        return graph.toJSON()
 
+    def year_graph(self) -> dict:
+        self.c.execute("""
+            SELECT DATE_FORMAT(date,'%Y') AS year, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1,0)) 
+            FROM games GROUP BY year""")
+        raw = self.c.fetchall()
+        labels, wins, losses = zip(*raw)
 
-def graph_winrate_last20() -> Graph:
-    data = c.execute("""
-        SELECT gameID as GameID, wr AS CG FROM(
-        SELECT gameID, 
-        CAST(SUM(w) OVER(ORDER BY gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 20 AS wr 
-        FROM(SELECT gameID, IIF(goals > against,1,0) AS w FROM games)) WHERE gameID > 19
-    """).fetchall()
-    return Graph("Winrate Last20", "line", data, [x[0] for x in c.description], 20, None, 0.15, 0.8, False)
+        graph = GraphBuilder() \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withLabels(labels) \
+            .withLegend(False)
+        return graph.toJSON()
 
+    def performance_graph(self, total_games_count: int) -> dict:
+        data_list = []
+        for player_id in [0, 1, 2]:
+            self.c.execute(
+                f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
+            data_list.append(list(reversed([x[0] for x in self.c.fetchall()])))
+            average = [sum(group) / len(group) for group in zip(*data_list)]
+        graph = GraphBuilder() \
+            .withType("line") \
+            .withDataset(data_list[0], "Knus", DatasetColor.KNUS, DatasetColor.KNUS) \
+            .withDataset(data_list[1], "Puad", DatasetColor.PUAD, DatasetColor.PUAD) \
+            .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.STICKER) \
+            .withDataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL, 3) \
+            .withLabels(list(range(total_games_count - 20, total_games_count))) \
+            .withGrid(y_color="rgba(209, 209, 209, 0.1)")
+        return graph.toJSON()
 
-def graph_winrate() -> Graph:
-    data = c.execute("""
-        SELECT gameID AS GameID, CAST(SUM(IIF(goals > against,1,0)) 
-        OVER(ORDER BY gameID) AS FLOAT) / gameID AS CG FROM games
-    """).fetchall()
-    return Graph("Winrate", "line", data, [x[0] for x in c.description], None, None, 0.5, 0.55, False)
+    def results_table(self):
+        self.c.execute("""
+            WITH cG AS (SELECT COUNT(*) allG FROM games)
+            SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / MAX(cG.allG) AS ch  
+            FROM games, cG
+            GROUP BY goals, against
+            ORDER BY goals ASC;
+        """)
+        return [{"x": str(g), "y": str(a), "v": v} for g, a, v, _ in self.c.fetchall()]
 
+    def score_distribution_graph(self) -> dict:
+        datasets = []
+        for player_id in [0, 1, 2]:
+            self.c.execute("""
+                SELECT t1.grouper * 25 AS lower_bound, (t1.grouper + 1) * 25 AS upper_bound, COUNT(t1.grouper) AS score_count
+                FROM (
+                    SELECT score, FLOOR(score/25) AS grouper
+                    FROM scores
+                    WHERE playerID = %s
+                ) t1
+                GROUP BY t1.grouper
+                ORDER BY 1
+            """, (player_id,))
+            raw = self.c.fetchall()
+            datasets.append([x[2] for x in raw])
+            labels = [x[1] for x in raw]
+        graph = GraphBuilder() \
+            .withType("line") \
+            .withDataset(datasets[0], "Knus", DatasetColor.KNUS, DatasetColor.NEUTRAL) \
+            .withDataset(datasets[1], "Puad", DatasetColor.PUAD, DatasetColor.NEUTRAL) \
+            .withDataset(datasets[2], "Sticker", DatasetColor.STICKER, DatasetColor.NEUTRAL) \
+            .withLabels(labels)
+        return graph.toJSON()
 
-def graph_solo_goals() -> Graph:
-    data = c.execute("""
-        SELECT gameID AS GameID, SUM(SUM(goals) - SUM(assists)) OVER(ORDER BY gameID) AS CG FROM scores GROUP BY gameID
-    """).fetchall()
-    return Graph("Solo Goals", "line", data, [x[0] for x in c.description], None, None, None, None, False)
-
-
-def graph_stat_share(stat: str) -> Graph:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute(f"""
-        SELECT k.gameID, 
-        CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) / 
-        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS K,
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) / 
-        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS P,
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT) / 
-        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID) AS FLOAT) + 
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID) AS FLOAT) + 
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID) AS FLOAT)) AS S
-        FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
-    """).fetchall()
-    return Graph(f"{stat.capitalize()} Share", "line", data, [x[0] for x in c.description], None, None, None, None,
-                 False)
-
-
-def graph_performance_stat_share(stat: str) -> Graph:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute(f"""
-        SELECT k.gameID AS GameID, 
-        CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 
-        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS K,
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 
-        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS P,
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) / 
-        (CAST(SUM(k.{stat}) OVER(ORDER BY k.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
-        CAST(SUM(p.{stat}) OVER(ORDER BY p.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT) + 
-        CAST(SUM(s.{stat}) OVER(ORDER BY s.gameID ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS FLOAT)) AS S
-        FROM knus k JOIN puad p ON k.gameID = p.gameID JOIN sticker s ON k.gameID = s.gameID
-    """).fetchall()
-    return Graph(f"{stat.capitalize()} performance share", "line", data, [x[0] for x in c.description], None, None,
-                 None, None,
-                 False)
-
-
-def graph_average_mvp_score_over_time() -> Graph:
-    data = c.execute("""
-        SELECT gameID, AVG(score) OVER (ORDER BY gameID) AS CG FROM scores GROUP BY gameID HAVING MAX(score)
-    """).fetchall()  # Graph gets joined with LVP, so title is MVP/LVP here
-    return Graph("Average MVP/LVP Score", "line", data, [x[0] for x in c.description], None, None, None, None, False)
-
-
-def graph_average_lvp_score_over_time() -> Graph:
-    data = c.execute("""
-        SELECT gameID AS GameID, AVG(score) OVER (ORDER BY gameID) AS CG FROM scores GROUP BY gameID HAVING MIN(score)
-    """).fetchall()
-    return Graph("Average LVP Score", "line", data, [x[0] for x in c.description], None, None, 215, None, False)
-
-
-def graph_cumulative_stat(stat: str) -> Graph:
-    if stat not in possible_stats:
-        raise ValueError(f'{stat} is not in possible stats.')
-    data = c.execute(f"""
-        SELECT k.gameID, SUM(k.{stat}) OVER (ORDER BY k.gameID) 'Knus', SUM(p.{stat}) OVER (ORDER BY k.gameID) 'Puad', 
-        SUM(s.{stat}) OVER (ORDER BY k.gameID) 'Sticker' FROM knus k LEFT JOIN puad p ON k.gameID = p.gameID 
-        LEFT JOIN sticker s ON k.gameID = s.gameID
-    """).fetchall()
-    return Graph(f"Cumulative {stat.capitalize()}", "line", data, [x[0] for x in c.description], None, None, None, None,
-                 False)
-
-
-def weekday_table() -> Graph:
-    c.execute("""
-        SELECT STRFTIME('%w', date) AS weekday, COUNT(date) AS Games, SUM(IIF(goals > against, 1, 0)) AS Wins, 
-        SUM(IIF(goals < against, 1, 0)) AS Losses FROM games GROUP BY weekday
-    """)
-
-    # Substitute dayID with corresponding string
-    days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    new = [list(x) for x in c.fetchall()]
-    for i in range(0, 7):
-        new[i][0] = days[i]
-
-    data = new[1:]  # put Sunday at the back of the list
-    data.append(new[0])
-
-    return Graph("Weekdays", "bar", data, [x[0] for x in c.description], None, None, None, None, False)
-
-
-def month_table() -> Graph:
-    c.execute("""
-        SELECT  STRFTIME('%m', date) AS month, COUNT(date) AS Games, SUM(IIF(goals > against, 1, 0)) AS Wins,
-        SUM(IIF(goals < against, 1, 0)) AS Losses FROM games GROUP BY month""")
-    new = [list(x) for x in c.fetchall()]
-    months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
-              "November", "December"]
-
-    for i in range(0, 12):
-        new[i][0] = months[i]
-    return Graph('Month', 'bar', new, [x[0] for x in c.description], None, None, None, None, False)
-
-
-def year_table() -> Graph:
-    c.execute("""
-        SELECT STRFTIME('%Y', date) AS year, COUNT(date) AS Games, SUM(IIF(goals > against, 1, 0)) AS Wins,
-        SUM(IIF(goals < against, 1,0)) AS Losses FROM games GROUP BY year""")
-    new = [list(x) for x in c.fetchall()]
-    return Graph('Years', 'bar', new, [x[0] for x in c.description], None, None, None, None, False)
-
-
-def dates_table() -> Graph:
-    c.execute("""
-        SELECT STRFTIME('%d', date) AS day, COUNT(date) as Games, SUM(IIF(goals > against,1,0)) AS Wins, 
-        SUM(IIF(goals < against,1,0)) AS Losses FROM games GROUP BY day
-    """)
-    new = [list(x) for x in c.fetchall()]
-    return Graph('Dates', 'bar', new, [x[0] for x in c.description], None, None, None, None, True)
-
-
-graphs = {
-    'performance_score': graph_performance('score').symbiose(graph_performance_team('score')),
-    'performance_goals': graph_performance('goals').symbiose(graph_performance_team('goals')),
-    'performance_assists': graph_performance('assists').symbiose(graph_performance_team('assists')),
-    'performance_saves': graph_performance('saves').symbiose(graph_performance_team('saves')),
-    'performance_shots': graph_performance('shots').symbiose(graph_performance_team('shots')),
-    'performance_share_score': graph_stat_share('score').change_y(0.3, 0.4),
-    'performance_share_goals': graph_stat_share('goals').change_y(0.3, 0.375),
-    'performance_share_assists': graph_stat_share('assists').change_y(0.3, 0.4),
-    'performance_share_saves': graph_stat_share('saves').change_y(0.3, 0.375),
-    'performance_share_shots': graph_stat_share('shots').change_y(0.285, 0.4),
-    'cumulative_stats_score': graph_cumulative_stat('score'),
-    'cumulative_stats_goals': graph_cumulative_stat('goals'),
-    'cumulative_stats_assists': graph_cumulative_stat('assists'),
-    'cumulative_stats_saves': graph_cumulative_stat('saves'),
-    'cumulative_stats_shots': graph_cumulative_stat('shots'),
-    'grief': graph_grief_value(),
-    'wins_last_20': graph_winrate_last20(),
-    'winrate': graph_winrate(),
-    'solo_goals': graph_solo_goals(),
-    'mvp_lvp_score': graph_average_mvp_score_over_time().symbiose(graph_average_lvp_score_over_time()),
-    'datesChart': dates_table(),
-    'monthChart': month_table(),
-    'yearsChart': year_table(),
-    'weekdChart': weekday_table()
-}
+    def seasons_graph(self) -> dict:
+        self.c.execute(""" 
+            SELECT se.season_name,
+            SUM(IF(g.goals > g.against,1,0)) 'wins',
+            SUM(IF(g.goals < g.against,1,0)) 'losses',
+            ROUND(CAST(SUM(IF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT)*100,2) 'wr'
+            FROM games g
+            LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date
+            GROUP BY seasonID
+        """)
+        dataset = self.c.fetchall()
+        labels, wins, losses, _ = zip(*dataset)
+        graph = GraphBuilder() \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withLabels(labels) \
+            .withLegend(False)
+        return graph.toJSON()
