@@ -37,6 +37,7 @@ class Dashboard:
 
         # Main
         self.player_profiles = self.q.build_player_profiles()
+        self.session_details = self.q.session_details()
         self.session_information = self.rf.session_data_by_date(self.session_details.get("latest_session_date"))
         self.session_rank = self.q.session_rank()
         self.random_facts = self.rf.generate_random_facts()
@@ -48,7 +49,6 @@ class Dashboard:
         self.last_games = self.q.last_x_games_stats(len(self.q.games_from_session_date()), False)
         self.profile_streaks = [self.sq.generate_profile_streaks(p) for p in [0, 1, 2]]
         self.last_100_games_stats = self.q.last_x_games_stats(100, True)
-        self.session_details = self.q.session_details()
         self.session_game_amount = len(self.q.games_from_session_date())
         self.session_game_details = self.q.last_x_games_stats(self.session_game_amount, False)
         self.fun_facts = []  # q.generate_fun_facts()
