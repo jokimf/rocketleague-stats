@@ -50,4 +50,4 @@ def test():
 if __name__ == "__main__":
     logger = logging.getLogger("waitress")
     logger.setLevel(logging.INFO)
-    serve(app, host="127.0.0.1", port=7823, url_scheme="https")
+    serve(app, listen="*:7823", url_scheme="https")
