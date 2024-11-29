@@ -257,7 +257,7 @@
 </body>
 <script src="/rl/static/dynamicColor.js"></script>
 <script>
-    new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }});
+    new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }} );
     new Chart(document.getElementById('daysGraph'), {{ days_graph | safe }});
     new Chart(document.getElementById('weekdaysGraph'), {{ weekdays_graph | safe }});
     new Chart(document.getElementById('monthGraph'), {{ month_graph | safe }});
