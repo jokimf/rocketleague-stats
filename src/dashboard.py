@@ -34,32 +34,43 @@ class Dashboard:
                 self.currently_reloading = False
 
     def reload(self) -> None:
-        self.q.set_last_reload(int(time.time()))
+
+        # Main
         self.player_profiles = self.q.build_player_profiles()
+        self.session_information = self.rf.session_data_by_date(self.session_details.get("latest_session_date"))
+        self.session_rank = self.q.session_rank()
         self.random_facts = self.rf.generate_random_facts()
-        self.record_games = self.r.generate_record_games()
-        self.streaks_record = self.sq.generate_streaks_record_page()
-        self.profile_streaks = [self.sq.generate_profile_streaks(p) for p in [0, 1, 2]]
+        self.winrates = self.q.winrates()
+        self.days_since_first = self.q.days_since_first_game()
         self.total_games = self.q.total_games()
+        self.tilt = self.q.tilt()
+        self.average_session_length = self.q.average_session_length()
+        self.last_games = self.q.last_x_games_stats(len(self.q.games_from_session_date()), False)
+        self.profile_streaks = [self.sq.generate_profile_streaks(p) for p in [0, 1, 2]]
         self.last_100_games_stats = self.q.last_x_games_stats(100, True)
         self.session_details = self.q.session_details()
         self.session_game_amount = len(self.q.games_from_session_date())
         self.session_game_details = self.q.last_x_games_stats(self.session_game_amount, False)
-        self.winrates = self.q.winrates()
-        self.days_since_first = self.q.days_since_first_game()
-        self.tilt = self.q.tilt()
-        self.average_session_length = self.q.average_session_length()
-        self.games_from_session_date = self.q.games_from_session_date()
-        self.last_games = self.q.last_x_games_stats(len(self.games_from_session_date), False)
-        self.last_reload = self.q.last_reload()
-        self.session_information = self.rf.session_data_by_date(self.session_details.get("latest_session_date"))
         self.fun_facts = []  # q.generate_fun_facts()
+
+        # Records
+        self.record_games = self.r.generate_record_games()
+        self.streaks_record = self.sq.generate_streaks_record_page()
+
+        # Graphs
+        self.performance_graph = self.g.performance_graph(self.total_games),
+        self.days_graph = self.g.days_graph(),
+        self.weekdays_graph = self.g.weekdays_graph(),
+        self.month_graph = self.g.month_graph(),
+        self.year_graph = self.g.year_graph(),
+        self.score_distribution_graph = self.g.score_distribution_graph(),
+        self.seasons_graph = self.g.seasons_graph(),
 
     def build_dashboard_context(self):
         context = {
             "players": self.player_profiles,
             "session_information": self.session_information,
-            "session_rank": self.q.session_rank(),
+            "session_rank": self.session_rank,
             "random_facts": self.random_facts,
             "winrates": self.winrates,
             "days_since_first": self.days_since_first,
@@ -68,13 +79,13 @@ class Dashboard:
             "average_session_length": self.average_session_length,
             "last_games": self.last_games,
             "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING,
-            "performance_graph": self.g.performance_graph(self.total_games),
-            "days_graph": self.g.days_graph(),
-            "weekdays_graph": self.g.weekdays_graph(),
-            "month_graph": self.g.month_graph(),
-            "year_graph": self.g.year_graph(),
-            "score_distribution_graph": self.g.score_distribution_graph(),
-            "seasons_graph": self.g.seasons_graph(),
+            "performance_graph": self.performance_graph,
+            "days_graph": self.days_graph,
+            "weekdays_graph": self.weekdays_graph,
+            "month_graph": self.month_graph,
+            "year_graph": self.year_graph,
+            "score_distribution_graph": self.score_distribution_graph,
+            "seasons_graph": self.seasons_graph,
             "profile_stat_names": ["Score", "Goals", "Assists", "Saves", "Shots"],
             "players_stat_icons": ["MVP_points_icon", "Goal_points_icon", "Assist_points_icon", "Save_points_icon", "Shot_on_Goal_points_icon"],
             # "fun_facts": self.fun_facts,
