@@ -45,6 +45,6 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: connect and pull
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} " docker pull ghcr.io/jokimf/${{ github.repository }}:release && docker stop rl && docker rm rl && docker run -p 7823:7823 -d -v ${{ secrets.CREDENTIAL_FILE_PATH }}:/c.json -v ${{ RL_CREDENTIALS_PATH }}:/token.json -v ${{ DOCS_CREDENTIALS_PATH }}:/credentials.json --network pfnet --name=rl ghcr.io/jokimf/${{ github.repository }}:release && exit"
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} " docker pull ghcr.io/${{ github.repository }}:release && docker stop rl && docker rm rl && docker run -p 7823:7823 -d -v ${{ secrets.CREDENTIAL_FILE_PATH }}:/c.json -v ${{ RL_CREDENTIALS_PATH }}:/token.json -v ${{ DOCS_CREDENTIALS_PATH }}:/credentials.json --network pfnet --name=rl ghcr.io/jokimf/${{ github.repository }}:release && exit"
     #- name: cleanup
     #  run: rm -rf ~/.ssh
