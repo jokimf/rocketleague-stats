@@ -1,5 +1,3 @@
-import time
-
 import util.data_import as data
 from graphs import GraphQueries
 from queries import RLQueries
@@ -26,12 +24,9 @@ class Dashboard:
             *[["rgba(12,52,145)", 100, 700]]*2, *[["rgba(12,52,145)", 0, 5]]*3, ("rgba(12,52,145)", 0, 10)]
 
     def reload_all_stats(self):
-        if not self.currently_reloading:
-            self.currently_reloading = True
-            if data.is_new_data_available(self.total_games):
-                data.insert_new_data(self)
-                self.reload()
-                self.currently_reloading = False
+        if data.is_new_data_available(self.total_games):
+            data.insert_new_data(self)
+            self.reload()
 
     def reload(self) -> None:
 
@@ -107,10 +102,10 @@ class Dashboard:
                 "MISCELLANEOUS"
             ],
             "rank_highlighting": self.RANK_HIGHLIGHTING,
-            "k": self.q.player_color(0, 0.2),
-            "p": self.q.player_color(1, 0.2),
-            "s": self.q.player_color(2, 0.2),
-            "cg": "rgba(255, 225, 0, 0.2)"
+            "k": "rgba(12,145,30,0.2)",
+            "p": "rgba(151,3,14,0.2)",
+            "s": "rgba(12,52,145,0.2)",
+            "cg": "rgba(255, 225,0, 0.2)"
         }
         return context
 
