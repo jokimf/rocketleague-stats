@@ -1,6 +1,7 @@
 import util.data_import as data
 from graphs import GraphQueries
-from queries import RLQueries
+from profiles import ProfileQueries
+from queries import RLQueries, GeneralQueries
 from randomfacts import RandomFactQueries
 from records import RecordQueries
 from streaks import StreakQueries
@@ -8,14 +9,7 @@ from streaks import StreakQueries
 
 class Dashboard:
     def __init__(self) -> None:
-        self.q = RLQueries()
-        self.rf = RandomFactQueries()
-        self.r = RecordQueries()
-        self.sq = StreakQueries()
-        self.g = GraphQueries()
-        self.currently_reloading = False
         self.reload()
-
         self.RANK_HIGHLIGHTING = ["rgb(201, 176, 55, 0.3)", "rgb(215, 215, 215, 0.3)", "rgb(173, 138, 86, 0.3)"]
         self.LAST_GAMES_HIGHLIGHTING = [
             None, None, None, None,
@@ -23,43 +17,44 @@ class Dashboard:
             *[["rgba(151,3,14)", 100, 700]]*2, *[["rgba(151,3,14)", 0, 5]]*3, ("rgba(151,3,14)", 0, 10),
             *[["rgba(12,52,145)", 100, 700]]*2, *[["rgba(12,52,145)", 0, 5]]*3, ("rgba(12,52,145)", 0, 10)]
 
+    def reload(self):
+        # Reload cache:
+        # Main
+        self.player_profiles = ProfileQueries.build_player_profiles()
+        self.session_details = RLQueries.session_details()
+        z = self.session_details.get("latest_session_date")
+        self.session_information = RandomFactQueries.session_data_by_date(z)
+        self.session_rank = RLQueries.session_rank()
+        self.random_facts = RandomFactQueries.generate_random_facts()
+        self.winrates = RLQueries.winrates()
+        self.days_since_first = GeneralQueries.days_since_first_game()
+        self.total_games = GeneralQueries.total_games()
+        self.tilt = RLQueries.tilt()
+        self.average_session_length = RLQueries.average_session_length()
+        self.last_games = RLQueries.last_x_games_stats(len(RLQueries.games_from_session_date()), False)
+        self.profile_streaks = [StreakQueries.generate_profile_streaks(p) for p in [0, 1, 2]]
+        self.last_100_games_stats = RLQueries.last_x_games_stats(100, True)
+        self.session_game_amount = len(RLQueries.games_from_session_date())
+        self.session_game_details = RLQueries.last_x_games_stats(self.session_game_amount, False)
+        self.fun_facts = []  # RLQueries.generate_fun_facts()
+
+        # Records
+        self.record_games = RecordQueries.generate_record_games()
+        self.streaks_record = StreakQueries.generate_streaks_record_page()
+
+        # Graphs
+        self.performance_graph = GraphQueries.performance_graph(self.total_games)
+        self.days_graph = GraphQueries.days_graph()
+        self.weekdays_graph = GraphQueries.weekdays_graph()
+        self.month_graph = GraphQueries.month_graph()
+        self.year_graph = GraphQueries.year_graph()
+        self.score_distribution_graph = GraphQueries.score_distribution_graph()
+        self.seasons_graph = GraphQueries.seasons_graph()
+
     def reload_all_stats(self):
         if data.is_new_data_available(self.total_games):
             data.insert_new_data(self)
             self.reload()
-
-    def reload(self) -> None:
-
-        # Main
-        self.player_profiles = self.q.build_player_profiles()
-        self.session_details = self.q.session_details()
-        self.session_information = self.rf.session_data_by_date(self.session_details.get("latest_session_date"))
-        self.session_rank = self.q.session_rank()
-        self.random_facts = self.rf.generate_random_facts()
-        self.winrates = self.q.winrates()
-        self.days_since_first = self.q.days_since_first_game()
-        self.total_games = self.q.total_games()
-        self.tilt = self.q.tilt()
-        self.average_session_length = self.q.average_session_length()
-        self.last_games = self.q.last_x_games_stats(len(self.q.games_from_session_date()), False)
-        self.profile_streaks = [self.sq.generate_profile_streaks(p) for p in [0, 1, 2]]
-        self.last_100_games_stats = self.q.last_x_games_stats(100, True)
-        self.session_game_amount = len(self.q.games_from_session_date())
-        self.session_game_details = self.q.last_x_games_stats(self.session_game_amount, False)
-        self.fun_facts = []  # q.generate_fun_facts()
-
-        # Records
-        self.record_games = self.r.generate_record_games()
-        self.streaks_record = self.sq.generate_streaks_record_page()
-
-        # Graphs
-        self.performance_graph = self.g.performance_graph(self.total_games),
-        self.days_graph = self.g.days_graph(),
-        self.weekdays_graph = self.g.weekdays_graph(),
-        self.month_graph = self.g.month_graph(),
-        self.year_graph = self.g.year_graph(),
-        self.score_distribution_graph = self.g.score_distribution_graph(),
-        self.seasons_graph = self.g.seasons_graph(),
 
     def build_dashboard_context(self):
         context = {

@@ -4,8 +4,9 @@ import random
 from enum import Enum
 
 import simplejson as json
+from mysql.connector import MySQLConnection
 
-from connect import BackendConnection
+from connect import DatabaseConnection
 
 
 class GraphBuilder:
@@ -123,15 +124,18 @@ class DatasetColor(Enum):
     WHITE = "rgba(255,255,255,0.6)"
 
 
-class GraphQueries(BackendConnection):
-    def days_graph(self) -> dict:
-        self.c.execute("""
-            SELECT DATE_FORMAT(date, '%d') AS day, 
-                SUM(IF(goals > against,1,0)) AS Wins,
-                SUM(IF(goals < against,1,0)) AS Losses 
-            FROM games GROUP BY day ORDER BY day ASC
-        """)
-        raw = self.c.fetchall()
+class GraphQueries:
+    conn: MySQLConnection = DatabaseConnection().get()
+
+    @staticmethod
+    def days_graph() -> dict:
+        with GraphQueries.conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT DATE_FORMAT(date, '%d') AS day, SUM(IF(goals > against,1,0)) AS Wins, SUM(IF(goals < against,1,0)) AS Losses 
+                FROM games GROUP BY day ORDER BY day ASC
+            """)
+            raw = cursor.fetchall()
+
         labels, wins, losses = zip(*raw)
         graph = GraphBuilder() \
             .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
@@ -140,12 +144,14 @@ class GraphQueries(BackendConnection):
             .withLegend(False)
         return graph.toJSON()
 
-    def weekdays_graph(self) -> dict:
-        self.c.execute("""
-            SELECT DATE_FORMAT(date,'%w') AS weekday, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0))
-            FROM games GROUP BY weekday ORDER BY weekday ASC
-        """)
-        raw = self.c.fetchall()
+    @staticmethod
+    def weekdays_graph() -> dict:
+        with GraphQueries.conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT DATE_FORMAT(date,'%w') AS weekday, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0))
+                FROM games GROUP BY weekday ORDER BY weekday ASC
+            """)
+            raw = cursor.fetchall()
         _, wins, losses = zip(*raw)
         wins = list(wins)
         losses = list(losses)
@@ -153,6 +159,7 @@ class GraphQueries(BackendConnection):
         # Since Sunday is dayID=0, put it at the back of the list
         wins.append(wins.pop(0))
         losses.append(losses.pop(0))
+
         graph = GraphBuilder() \
             .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
             .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
@@ -160,11 +167,13 @@ class GraphQueries(BackendConnection):
             .withLegend(False)
         return graph.toJSON()
 
-    def month_graph(self) -> dict:
-        self.c.execute("""
-            SELECT DATE_FORMAT(date,'%m') AS month, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0)) 
-            FROM games GROUP BY month ORDER BY month ASC""")
-        raw = self.c.fetchall()
+    @staticmethod
+    def month_graph() -> dict:
+        with GraphQueries.conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT DATE_FORMAT(date,'%m') AS month, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0)) 
+                FROM games GROUP BY month ORDER BY month ASC""")
+            raw = cursor.fetchall()
         _, wins, losses = zip(*raw)
 
         graph = GraphBuilder() \
@@ -174,11 +183,12 @@ class GraphQueries(BackendConnection):
             .withLegend(False)
         return graph.toJSON()
 
-    def year_graph(self) -> dict:
-        self.c.execute("""
-            SELECT DATE_FORMAT(date,'%Y') AS year, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1,0)) 
-            FROM games GROUP BY year""")
-        raw = self.c.fetchall()
+    @staticmethod
+    def year_graph() -> dict:
+        with GraphQueries.conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT DATE_FORMAT(date,'%Y') AS year, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1,0)) FROM games GROUP BY year")
+            raw = cursor.fetchall()
         labels, wins, losses = zip(*raw)
 
         graph = GraphBuilder() \
@@ -188,13 +198,16 @@ class GraphQueries(BackendConnection):
             .withLegend(False)
         return graph.toJSON()
 
-    def performance_graph(self, total_games_count: int) -> dict:
+    @staticmethod
+    def performance_graph(total_games_count: int) -> dict:
         data_list = []
-        for player_id in [0, 1, 2]:
-            self.c.execute(
-                f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
-            data_list.append(list(reversed([x[0] for x in self.c.fetchall()])))
+        with GraphQueries.conn.cursor() as cursor:
+            for player_id in [0, 1, 2]:  # TODO: cleanup
+                cursor.execute(
+                    f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
+                data_list.append(list(reversed([x[0] for x in cursor.fetchall()])))
             average = [sum(group) / len(group) for group in zip(*data_list)]
+
         graph = GraphBuilder() \
             .withType("line") \
             .withDataset(data_list[0], "Knus", DatasetColor.KNUS, DatasetColor.KNUS) \
@@ -202,35 +215,41 @@ class GraphQueries(BackendConnection):
             .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.STICKER) \
             .withDataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL, 3) \
             .withLabels(list(range(total_games_count - 20, total_games_count))) \
-            .withGrid(y_color="rgba(209, 209, 209, 0.1)")
+            .withGrid(y_color="rgba(209, 209, 209, 0.1)")  # TODO: label is one off
         return graph.toJSON()
 
-    def results_table(self):
-        self.c.execute("""
-            WITH cG AS (SELECT COUNT(*) allG FROM games)
-            SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / MAX(cG.allG) AS ch  
-            FROM games, cG
-            GROUP BY goals, against
-            ORDER BY goals ASC;
-        """)
-        return [{"x": str(g), "y": str(a), "v": v} for g, a, v, _ in self.c.fetchall()]
+    @staticmethod
+    def results_table():
+        with GraphQueries.conn.cursor() as cursor:
+            cursor.execute("""
+                WITH cG AS (SELECT COUNT(*) allG FROM games)
+                SELECT goals, against, COUNT(*) AS c, CAST(COUNT(*) AS FLOAT) / MAX(cG.allG) AS ch  
+                FROM games, cG
+                GROUP BY goals, against
+                ORDER BY goals ASC;
+            """)
+            graph_data = cursor.fetchall()
+        return [{"x": str(goals), "y": str(against), "v": value} for goals, against, value, _ in graph_data]
 
-    def score_distribution_graph(self) -> dict:
+    @staticmethod
+    def score_distribution_graph() -> dict:
         datasets = []
-        for player_id in [0, 1, 2]:
-            self.c.execute("""
-                SELECT t1.grouper * 25 AS lower_bound, (t1.grouper + 1) * 25 AS upper_bound, COUNT(t1.grouper) AS score_count
-                FROM (
-                    SELECT score, FLOOR(score/25) AS grouper
-                    FROM scores
-                    WHERE playerID = %s
-                ) t1
-                GROUP BY t1.grouper
-                ORDER BY 1
-            """, (player_id,))
-            raw = self.c.fetchall()
-            datasets.append([x[2] for x in raw])
-            labels = [x[1] for x in raw]
+        with GraphQueries.conn.cursor() as cursor:
+            for player_id in [0, 1, 2]:  # TODO: cleanup
+                cursor.execute("""
+                    SELECT t1.grouper * 25 AS lower_bound, (t1.grouper + 1) * 25 AS upper_bound, COUNT(t1.grouper) AS score_count
+                    FROM (
+                        SELECT score, FLOOR(score/25) AS grouper
+                        FROM scores
+                        WHERE playerID = %s
+                    ) t1
+                    GROUP BY t1.grouper
+                    ORDER BY 1
+                """, (player_id,))
+                raw = cursor.fetchall()
+                datasets.append([x[2] for x in raw])
+                labels = [x[1] for x in raw]
+
         graph = GraphBuilder() \
             .withType("line") \
             .withDataset(datasets[0], "Knus", DatasetColor.KNUS, DatasetColor.NEUTRAL) \
@@ -239,17 +258,20 @@ class GraphQueries(BackendConnection):
             .withLabels(labels)
         return graph.toJSON()
 
-    def seasons_graph(self) -> dict:
-        self.c.execute(""" 
-            SELECT se.season_name,
-            SUM(IF(g.goals > g.against,1,0)) 'wins',
-            SUM(IF(g.goals < g.against,1,0)) 'losses',
-            ROUND(CAST(SUM(IF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT)*100,2) 'wr'
-            FROM games g
-            LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date
-            GROUP BY seasonID
-        """)
-        dataset = self.c.fetchall()
+    @staticmethod
+    def seasons_graph() -> dict:
+        with GraphQueries.conn.cursor() as cursor:
+            cursor.execute(""" 
+                SELECT se.season_name,
+                SUM(IF(g.goals > g.against,1,0)) 'wins',
+                SUM(IF(g.goals < g.against,1,0)) 'losses',
+                ROUND(CAST(SUM(IF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT)*100,2) 'wr'
+                FROM games g
+                LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date
+                GROUP BY seasonID
+            """)
+            dataset = cursor.fetchall()
+
         labels, wins, losses, _ = zip(*dataset)
         graph = GraphBuilder() \
             .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \

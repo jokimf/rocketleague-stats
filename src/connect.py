@@ -2,13 +2,23 @@ import json
 
 import mysql.connector as mysql
 
-connections = dict()
 
+class DatabaseConnection:
+    connections: dict[mysql.MySQLConnection] = dict()
 
-def get_cursor(table: str = "rl"):
-    global connections
-    existing_connection = connections.get(table)
-    if not existing_connection:
+    @staticmethod
+    def get(table: str = "rl") -> mysql.MySQLConnection:
+
+        # Check if connection to table exists
+        existing_connection: mysql.MySQLConnection = DatabaseConnection.connections.get(table)
+        if existing_connection is not None and not existing_connection.is_connected():
+            existing_connection.reconnect()
+        else:
+            DatabaseConnection._connect_to_db(table)
+        return DatabaseConnection.connections.get(table)
+
+    @staticmethod
+    def _connect_to_db(table: str) -> None:
         with open("./c.json") as credentials:
             c = json.load(credentials)
             user = c.get("mysqluser")
@@ -21,17 +31,4 @@ def get_cursor(table: str = "rl"):
             host=host,
             database=table,
         )
-        connections[table] = new_connection
-    else:
-        if not existing_connection.is_connected():
-            existing_connection.reconnect()
-            if not existing_connection.is_connected():
-                raise ConnectionError("MySQL tried to reconnect, but could not.")
-    return connections[table], connections[table].cursor()
-
-
-class BackendConnection:
-    def __init__(self) -> None:
-        connection, cursor = get_cursor()
-        self.connection = connection
-        self.c = cursor
+        DatabaseConnection.connections[table] = new_connection

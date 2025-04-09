@@ -2,12 +2,12 @@ import logging
 
 from flask import Flask, redirect, render_template, send_from_directory
 from waitress import serve
+from queries import Utility
 
 import dashboard
-import queries as q
 
 app = Flask(__name__)
-app.jinja_env.globals.update(cf=q.conditional_formatting, fade=q.fade_highlighting)
+app.jinja_env.globals.update(cf=Utility.conditional_formatting, fade=Utility.fade_highlighting)
 d = dashboard.Dashboard()
 
 

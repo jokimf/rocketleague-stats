@@ -1,306 +1,279 @@
 import datetime
 from typing import Any
-
-from connect import BackendConnection
+from mysql.connector import MySQLConnection
+from connect import DatabaseConnection
 
 possible_stats = ["score", "goals", "assists", "saves", "shots"]
 
 
-def conditional_formatting(color: str, value: float, minimum: int, maximum: int) -> str:
-    minimum = int(minimum)
-    maximum = int(maximum)
-    if color is None or (type(value) is not float and type(value) is not int):
-        raise ValueError(
-            f"Color can not be None and value needs to be int or float: color={color}, value={type(value)}")
-    if maximum - minimum == 0:
-        return f"{color[:-1]},0)"
-    opacity = (value - minimum) / (maximum - minimum)
-    rgb_code = f"{color[:-1]},{opacity})"
-    return rgb_code
+class GeneralQueries:
+    conn = DatabaseConnection.get()
 
+    @staticmethod
+    def total_games() -> int:
+        with GeneralQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT MAX(gameID) FROM games")
+            return cursor.fetchone()[0]
 
-def fade_highlighting(game: int, game_range: int):
-    helper = RLQueries()
-    return f"rgba(53, 159, 159,{(game_range - (helper.total_games() - game)) / game_range})"
+    @staticmethod
+    def days_since_first_game() -> int:
+        with GeneralQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT DATEDIFF(CURDATE(), MIN(date)) FROM games")
+            return cursor.fetchone()[0]
 
+    @staticmethod
+    def player_name(player_id: int) -> str:
+        if player_id < 0:
+            raise ValueError(f"PlayerID can not be {player_id}.")
+        with GeneralQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT name FROM players WHERE playerID = %s", (player_id,))
+            return cursor.fetchone()[0]
 
-class RLQueries(BackendConnection):
-    def insert_game_data(self, game: list) -> bool:
-        self.c.execute("INSERT INTO games VALUES (%s,%s,%s,%s)", (game[0], game[1], game[3], game[4]))
-        self.c.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                       (game[0], 0, game[5], game[6], game[7], game[8], game[9], game[10]))
-        self.c.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                       (game[0], 1, game[11], game[12], game[13], game[14], game[15], game[16]))
-        self.c.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                       (game[0], 2, game[17], game[18], game[19], game[20], game[21], game[22]))
-        self.connection.commit()
-        return True
-
-    def last_reload(self):
-        self.c.execute("SELECT last_reload FROM meta")
-        return self.c.fetchone()[0]
-
-    def set_last_reload(self, last_reload: int) -> None:
-        self.c.execute("UPDATE meta SET last_reload=%s", (last_reload,))
-        self.connection.commit()
-
-    def total_games(self) -> int:
-        self.c.execute("SELECT MAX(gameID) FROM games")
-        return self.c.fetchone()[0]
-
-    def days_since_first_game(self) -> int:
-        self.c.execute("SELECT DATEDIFF(CURDATE(), MIN(date)) FROM games")
-        return self.c.fetchone()[0]
-
-    def build_player_profiles(self) -> list[dict]:
-        def build_profile(player_id: int):
-            return {
-                "name": self.player_name(player_id),
-                "rank": self.player_rank(player_id),
-                "stats": self.profile_averages(player_id),
-                "top": self.performance_profile_view(player_id),
-                "color": self.player_color(player_id),
-                "griefing": self.player_average_deviation(player_id),
-                "justout": self.just_out(player_id),
-                "tobeatnext": self.to_beat_next(player_id)
-            }
-        return [build_profile(player_id) for player_id in (0, 1, 2)]
-
-    def player_color(self, player_id: int, transparency: float = 1):
+    @staticmethod
+    def player_color(player_id: int, transparency: float = 1) -> str:
         if player_id < 0:
             raise ValueError(f"PlayerID can not be {player_id}.")
         if transparency < 0 or transparency > 1:
             raise ValueError(f"Transparency must be between 0 and 1, not {transparency}.")
 
-        self.c.execute("SELECT color FROM players WHERE playerID = %s", (player_id,))
-        rgba_color: str = self.c.fetchone()[0]
+        with GeneralQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT color FROM players WHERE playerID = %s", (player_id,))
+            rgba_color: str = cursor.fetchone()[0]
         return rgba_color[:-1] + "," + str(transparency) + rgba_color[-1]
 
-    def player_average_deviation(self, player_id: int) -> int:
-        self.c.execute(f"""WITH av AS (SELECT AVG(p2.score) a FROM (SELECT * FROM performance p ORDER BY p.gameID DESC LIMIT 3) p2)
-                        SELECT p.score - av.a FROM performance p, av WHERE p.playerID = %s ORDER BY p.gameID DESC LIMIT 1""", (player_id,))
-        return self.c.fetchone()[0]
+    @staticmethod
+    def player_rank(player_id: int) -> str:
+        if player_id < 0:
+            raise ValueError(f"PlayerID can not be {player_id}.")
+        with GeneralQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT scores.rank FROM scores WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
+            return cursor.fetchone()[0].lower()
 
-    def last_x_games_stats(self, limit, with_date: bool) -> list[Any]:
-        self.c.execute(f"""
-                SELECT 
-                    games.gameID AS ID, {"games.date," if with_date else ""} games.goals As CG, against AS Enemy,
-                    k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
-                    p.rank, p.score, p.goals, p.assists, p.saves, p.shots,
-                    s.rank, s.score, s.goals, s.assists, s.saves, s.shots
-                FROM games JOIN scores ON games.gameID = scores.gameID JOIN knus k ON games.gameID = k.gameID 
-                    JOIN puad p ON games.gameID = p.gameID JOIN sticker s ON games.gameID = s.gameID
-                GROUP BY {"games.date," if with_date else ""} ID, CG, Enemy, k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
-                    p.rank, p.score, p.goals, p.assists, p.saves, p.shots, s.rank, s.score, s.goals, s.assists, s.saves, s.shots 
-                    ORDER BY ID DESC LIMIT %s
-        """, (limit,))
-        return self.c.fetchall()
 
-    def profile_averages(self, player_id: int):
-        def profile_average_stats(past_games_amount: int) -> list:
-            self.c.execute("""
-                SELECT AVG(h.score), AVG(h.goals), AVG(h.assists), AVG(h.saves), AVG(h.shots)
-                FROM (
-                    SELECT s.score, s.goals, s.assists, s.saves, s.shots
-                    FROM scores s
-                    WHERE s.playerID = %s
-                    ORDER BY s.gameID DESC 
-                    LIMIT %s
-                ) h
-            """, (player_id, past_games_amount))
-            return self.c.fetchall()
+class Utility:
+    @staticmethod
+    def conditional_formatting(color: str, value: float, minimum: int, maximum: int) -> str:
+        minimum = int(minimum)
+        maximum = int(maximum)
+        if color is None or (type(value) is not float and type(value) is not int):
+            raise ValueError(
+                f"Color can not be None and value needs to be int or float: color={color}, value={type(value)}")
+        if maximum - minimum == 0:
+            return f"{color[:-1]},0)"
+        opacity = (value - minimum) / (maximum - minimum)
+        rgb_code = f"{color[:-1]},{opacity})"
+        return rgb_code
 
-        game_counts = [self.current_session_games_played(), 20, self.current_season_games_played(),
-                       500, self.total_games()]
-        return list(zip(*[profile_average_stats(amount)[0] for amount in game_counts]))  # Transpose results
+    @staticmethod
+    def fade_highlighting(game: int, game_range: int):
+        return f"rgba(53, 159, 159,{(game_range - (RLQueries.total_games() - game)) / game_range})"
 
-    def wins_in_range(self, start, end) -> int:
-        self.c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= %s AND gameID <= %s",
-                       (start, end))
-        return self.c.fetchone()[0]
 
-    def losses_in_range(self, start, end) -> int:
-        self.c.execute("SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= %s AND gameID <= %s",
-                       (start, end))
-        return self.c.fetchone()[0]
+class RLQueries:
+    conn: MySQLConnection = DatabaseConnection.get()
 
-    def current_session_games_played(self) -> int:
-        self.c.execute("SELECT COUNT(*) FROM games g GROUP BY g.`date` ORDER BY date DESC LIMIT 1")
-        return self.c.fetchone()[0]
+    @staticmethod
+    def insert_game_data(game: list) -> bool:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("INSERT INTO games VALUES (%s,%s,%s,%s)", (game[0], game[1], game[3], game[4]))
+            cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                           (game[0], 0, game[5], game[6], game[7], game[8], game[9], game[10]))
+            cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                           (game[0], 1, game[11], game[12], game[13], game[14], game[15], game[16]))
+            cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                           (game[0], 2, game[17], game[18], game[19], game[20], game[21], game[22]))
+            RLQueries.conn.commit()
+        return True
 
-    def current_season_games_played(self) -> int:
-        self.c.execute("""
-            SELECT COUNT(*) FROM games g
-            LEFT JOIN seasons s ON g.date BETWEEN s.start_date AND s.end_date 
-            GROUP BY s.seasonID ORDER BY s.seasonID DESC LIMIT 1
-        """)
-        return self.c.fetchone()[0]
+    @staticmethod
+    def last_reload() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT last_reload FROM meta")
+            return cursor.fetchone()[0]
 
-    def tilt(self) -> float:  # TODO: Write tilt-o-meter
+    @staticmethod
+    def set_last_reload(last_reload: int) -> None:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("UPDATE meta SET last_reload=%s", (last_reload,))
+            RLQueries.connection.commit()
+
+    @staticmethod
+    def last_x_games_stats(limit, with_date: bool) -> list[Any]:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute(f"""
+                    SELECT 
+                        games.gameID AS ID, {"games.date," if with_date else ""} games.goals As CG, against AS Enemy,
+                        k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
+                        p.rank, p.score, p.goals, p.assists, p.saves, p.shots,
+                        s.rank, s.score, s.goals, s.assists, s.saves, s.shots
+                    FROM games JOIN scores ON games.gameID = scores.gameID JOIN knus k ON games.gameID = k.gameID 
+                        JOIN puad p ON games.gameID = p.gameID JOIN sticker s ON games.gameID = s.gameID
+                    GROUP BY {"games.date," if with_date else ""} ID, CG, Enemy, k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
+                        p.rank, p.score, p.goals, p.assists, p.saves, p.shots, s.rank, s.score, s.goals, s.assists, s.saves, s.shots 
+                        ORDER BY ID DESC LIMIT %s
+            """, (limit,))
+            return cursor.fetchall()
+
+    @staticmethod
+    def wins_in_range(start, end) -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= %s AND gameID <= %s",
+                           (start, end))
+            return cursor.fetchone()[0]
+
+    @staticmethod
+    def losses_in_range(start, end) -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= %s AND gameID <= %s", (start, end))
+            return cursor.fetchone()[0]
+
+    @staticmethod
+    def current_session_games_played() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM games g GROUP BY g.`date` ORDER BY date DESC LIMIT 1")
+            return cursor.fetchone()[0]
+
+    @staticmethod
+    def current_season_games_played() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) FROM games g
+                LEFT JOIN seasons s ON g.date BETWEEN s.start_date AND s.end_date 
+                GROUP BY s.seasonID ORDER BY s.seasonID DESC LIMIT 1
+            """)
+            return cursor.fetchone()[0]
+
+    @staticmethod
+    def tilt() -> float:  # TODO: Write tilt-o-meter
         date14ago = (datetime.datetime.now() - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
-        self.c.execute("SELECT IFNULL(SUM(against),0) FROM games WHERE date > %s;", (date14ago,))
-        enemy_goals = float(self.c.fetchone()[0])
-        self.c.execute("SELECT COUNT(1) FROM losses WHERE date > %s;", (date14ago,))
-        losses = self.c.fetchone()[0]
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT IFNULL(SUM(against),0) FROM games WHERE date > %s;", (date14ago,))
+            enemy_goals = float(cursor.fetchone()[0])
+            cursor.execute("SELECT COUNT(1) FROM losses WHERE date > %s;", (date14ago,))
+            losses = cursor.fetchone()[0]
         return enemy_goals * 0.8 + losses * 0.2
 
-    def average_session_length(self) -> int:
-        self.c.execute("SELECT AVG(wins+losses) FROM sessions")
-        return self.c.fetchone()[0]
+    @staticmethod
+    def average_session_length() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT AVG(wins+losses) FROM sessions")
+            return cursor.fetchone()[0]
 
-    def performance_profile_view(self, p_id: int):
-        def performance_rank(stat: str, player_id: int) -> int:
-            self.c.execute(f"""
-            SELECT n 
-            FROM 
-                (SELECT row_number() OVER (ORDER BY {stat} DESC) AS n, gameID, %s 
-                FROM performance WHERE playerID = %s) AS why 
-                WHERE gameID = %s
-        """, (stat, player_id, self.total_games()))
-            return self.c.fetchone()[0]
+    @staticmethod
+    def latest_session_main_data() -> list[Any]:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT sessionID, date, wins, losses, Goals, Against, quality FROM sessions ORDER BY SessionID desc LIMIT 1")
+            return cursor.fetchone()
 
-        def color(value: float) -> str:
-            if value <= 2:
-                return "Orange;font-weight:bolder"
-            elif value <= 10:
-                return "SteelBlue;font-weight:bolder"
-            elif value <= 25:
-                return "ForestGreen"
-            elif value <= 50:
-                return "LightSlateGrey"
-            elif value <= 75:
-                return "#B6B6B4"
-            else:
-                return "IndianRed"
-
-        self.c.execute("SELECT * FROM performance WHERE playerID = %s AND gameID = %s", (p_id, self.total_games()))
-        values = self.c.fetchone()[2:]
-        top = [round(performance_rank("score", p_id) / self.total_games() * 100, 1),
-               round(performance_rank("goals", p_id) / self.total_games() * 100, 1),
-               round(performance_rank("assists", p_id) / self.total_games() * 100, 1),
-               round(performance_rank("saves", p_id) / self.total_games() * 100, 1),
-               round(performance_rank("shots", p_id) / self.total_games() * 100, 1)]
-        return list(zip(values, top, [color(x) for x in top]))
-
-    def player_name(self, player_id: int) -> str:
-        if player_id < 0:
-            raise ValueError(f"PlayerID can not be {player_id}.")
-        self.c.execute("SELECT name FROM players WHERE playerID = %s", (player_id,))
-        return self.c.fetchone()[0]
-
-    def latest_session_main_data(self) -> list[Any]:
-        self.c.execute(
-            "SELECT sessionID, date, wins, losses, Goals, Against, quality FROM sessions ORDER BY SessionID desc LIMIT 1")
-        return self.c.fetchone()
-
-    def games_from_session_date(self, session_date: str = None) -> list[Any]:
+    @staticmethod
+    def games_from_session_date(session_date: str = None) -> list[Any]:  # TODO: rewrite
         if session_date is None:
-            session_date = self.latest_session_main_data()[1]
-        self.c.execute("SELECT * FROM games WHERE date >= %s", (session_date,))
-        return self.c.fetchall()
+            session_date = RLQueries.latest_session_main_data()[1]
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM games WHERE date >= %s", (session_date,))
+            return cursor.fetchall()
 
-    def session_count(self) -> int:
-        self.c.execute("SELECT COUNT(1) FROM sessions")
-        return self.c.fetchone()[0]
+    @staticmethod
+    def session_count() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(1) FROM sessions")
+            return cursor.fetchone()[0]
 
-    def player_rank(self, player_id: int) -> str:
-        if player_id < 0:
-            raise ValueError(f"PlayerID can not be {player_id}.")
-        self.c.execute("SELECT scores.rank FROM scores WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
-        return self.c.fetchone()[0].lower()
+    @staticmethod
+    def season_start_id() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("""SELECT g.gameID FROM games g JOIN (
+                        SELECT se.seasonID, MIN(g2.gameID) AS min_gameID FROM games g2
+                        LEFT JOIN seasons se ON g2.date BETWEEN se.start_date AND se.end_date
+                        GROUP BY se.seasonID) min_games ON g.gameID = min_games.min_gameID ORDER BY g.gameID DESC LIMIT 1;""")
+            return cursor.fetchone()[0]
 
-    def season_start_id(self) -> int:
-        self.c.execute("""SELECT g.gameID FROM games g JOIN (
-                       SELECT se.seasonID, MIN(g2.gameID) AS min_gameID FROM games g2
-                       LEFT JOIN seasons se ON g2.date BETWEEN se.start_date AND se.end_date
-                       GROUP BY se.seasonID) min_games ON g.gameID = min_games.min_gameID ORDER BY g.gameID DESC LIMIT 1;""")
-        return self.c.fetchone()[0]
+    @staticmethod
+    def session_start_id() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1")
+            return cursor.fetchone()[0]
 
-    def session_start_id(self) -> int:
-        self.c.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1")
-        return self.c.fetchone()[0]
-
-    def winrates(self) -> list:
-        latest_game_id = self.total_games()
-        season_start = self.season_start_id()
-        last_session = self.latest_session_main_data()
+    @staticmethod
+    def winrates() -> list:
+        latest_game_id = GeneralQueries.total_games()
+        season_start = RLQueries.season_start_id()
+        last_session = RLQueries.latest_session_main_data()
         games_last_session = last_session[2] + last_session[3]
-        winrates_list = [self.total_wins() / latest_game_id * 100,
-                         self.wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
-                         float(self.wins_in_range(latest_game_id - 99, latest_game_id)),
-                         self.wins_in_range(latest_game_id - 19, latest_game_id) / 20 * 100,
-                         last_session[2] / games_last_session * 100
-                         ]
+
+        winrates_list = [
+            RLQueries.total_wins() / latest_game_id * 100,
+            RLQueries.wins_in_range(season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
+            float(RLQueries.wins_in_range(latest_game_id - 99, latest_game_id)),
+            RLQueries.wins_in_range(latest_game_id - 19, latest_game_id) / 20 * 100,
+            last_session[2] / games_last_session * 100
+        ]
         return winrates_list
 
-    def seasons_dashboard_short(self):
-        self.c.execute("""SELECT se.season_name,
-        SUM(IF(g.goals > g.against,1,0)) 'wins',
-        SUM(IF(g.goals < g.against,1,0)) 'losses',
-        ROUND(CAST(SUM(IF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT)*100,2) 'wr'
-        FROM games g
-        LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date
-        GROUP BY seasonID""")
-        return self.c.fetchall()
+    @staticmethod
+    def seasons_dashboard_short():
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("""SELECT se.season_name,
+            SUM(IF(g.goals > g.against,1,0)) 'wins',
+            SUM(IF(g.goals < g.against,1,0)) 'losses',
+            ROUND(CAST(SUM(IF(g.goals > g.against,1,0)) AS FLOAT) / CAST(COUNT(g.gameID) AS FLOAT)*100,2) 'wr'
+            FROM games g
+            LEFT JOIN seasons se ON g.date BETWEEN se.start_date AND se.end_date
+            GROUP BY seasonID""")
+            return cursor.fetchall()
 
-    def just_out(self, player_id: int) -> tuple[int]:
-        self.c.execute("""
-                        WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
-                        SELECT scores.score FROM scores, maxId
-                        WHERE (gameID = maxId.mId - 20 OR gameID = maxId.mId) AND playerID = %s
-                        ORDER BY playerID
-                        """, (player_id,))
-        points_out, points_in = self.c.fetchall()
-        return points_out[0], points_in[0]
+    @staticmethod
+    def total_wins() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(gameID) FROM games WHERE goals > against")
+            return cursor.fetchone()[0]
 
-    def to_beat_next(self, player_id: int) -> int:
-        self.c.execute("""WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
-                          SELECT scores.score FROM scores, maxId WHERE gameID = maxId.mId - 19 AND playerID = %s""", (player_id,))
-        return self.c.fetchone()[0]
-
-    def total_wins(self) -> int:
-        self.c.execute("SELECT COUNT(gameID) FROM games WHERE goals > against")
-        return self.c.fetchone()[0]
-
-    def total_losses(self) -> int:
-        self.c.execute("SELECT COUNT(gameID) FROM games WHERE goals < against")
-        return self.c.fetchone()[0]
+    @staticmethod
+    def total_losses() -> int:
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(gameID) FROM games WHERE goals < against")
+            return cursor.fetchone()[0]
 
     # Session Details W/L
-    def session_details(self):
+    @staticmethod
+    def session_details():
         details = dict()
-        _, s_date, s_wins, s_losses, _, _, _ = self.latest_session_main_data()
+        _, s_date, s_wins, s_losses, _, _, _ = RLQueries.latest_session_main_data()  # TODO: rewrite
         s_games = s_wins + s_losses
         details["session_game_count"] = s_games
         details["latest_session_date"] = s_date
-        details["w_and_l"] = ["W" if game[2] > game[3] else "L" for game in self.games_from_session_date(s_date)]
+        details["w_and_l"] = ["W" if game[2] > game[3] else "L" for game in RLQueries.games_from_session_date(s_date)]
         return details
 
     # Session rank is determined by the delta of wins and losses, goals and against, and finally sum of player scores.
-    def session_rank(self, session_id: int = None) -> dict:
+    @staticmethod
+    def session_rank(session_id: int = None) -> dict:
         if session_id is None:
-            session_id = self.latest_session_main_data()[0]
+            session_id = RLQueries.latest_session_main_data()[0]  # TODO: rewrite
 
-        self.c.execute("""
-            SELECT t1.session_rank 
-            FROM (
-                SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, wins - losses, goals - against, KnusScore + PuadScore + StickerScore
-                FROM sessions 
-                ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
-            ) t1
-            WHERE t1.sessionId = %s
-        """, (session_id,))
-        session_ranking = self.c.fetchone()[0]
-        self.c.execute("""
-            SELECT * 
-            FROM (
-                SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, CONCAT(wins,"-",losses), CONCAT(goals,"-",against), KnusScore + PuadScore + StickerScore
-                FROM sessions 
-                ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
-            ) t1
-            WHERE t1.session_rank BETWEEN %s-3 AND %s+3
-        """, (session_ranking, session_ranking))
-        neighbours = self.c.fetchall()  # three sessions above and three sessions below
+        with RLQueries.conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT t1.session_rank 
+                FROM (
+                    SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, wins - losses, goals - against, KnusScore + PuadScore + StickerScore
+                    FROM sessions 
+                    ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
+                ) t1
+                WHERE t1.sessionId = %s
+            """, (session_id,))
+            session_ranking = cursor.fetchone()[0]
+            cursor.execute("""
+                SELECT * 
+                FROM (
+                    SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, CONCAT(wins,"-",losses), CONCAT(goals,"-",against), KnusScore + PuadScore + StickerScore
+                    FROM sessions 
+                    ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
+                ) t1
+                WHERE t1.session_rank BETWEEN %s-3 AND %s+3
+            """, (session_ranking, session_ranking))
+            neighbours = cursor.fetchall()  # three sessions above and three sessions below
         return neighbours
 
 
