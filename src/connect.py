@@ -30,5 +30,6 @@ class DatabaseConnection:
             password=password,
             host=host,
             database=table,
+            buffered=True
         )
         DatabaseConnection.connections[table] = new_connection

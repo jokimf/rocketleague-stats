@@ -95,7 +95,8 @@ class ProfileQueries:
                             WHERE (gameID = maxId.mId - 20 OR gameID = maxId.mId) AND playerID = %s
                             ORDER BY playerID
                             """, (player_id,))
-            points_out, points_in = cursor.fetchall()
+            print(cursor.fetchall())
+            # points_out, points_in = cursor.fetchall()
             return points_out[0], points_in[0]
 
     @staticmethod

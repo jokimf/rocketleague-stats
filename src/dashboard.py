@@ -53,11 +53,12 @@ class Dashboard:
 
     def reload_all_stats(self):
         if data.is_new_data_available(self.total_games):
-            data.insert_new_data(self)
+            data.insert_new_data()
             self.reload()
 
     def build_dashboard_context(self):
-        context = {
+        print(self.total_games)
+        return {
             "players": self.player_profiles,
             "session_information": self.session_information,
             "session_rank": self.session_rank,
@@ -69,18 +70,17 @@ class Dashboard:
             "average_session_length": self.average_session_length,
             "last_games": self.last_games,
             "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING,
-            "performance_graph": self.performance_graph[0],
-            "days_graph": self.days_graph[0],
-            "weekdays_graph": self.weekdays_graph[0],
-            "month_graph": self.month_graph[0],
-            "year_graph": self.year_graph[0],
-            "score_distribution_graph": self.score_distribution_graph[0],
-            "seasons_graph": self.seasons_graph[0],
+            "performance_graph": self.performance_graph,
+            "days_graph": self.days_graph,
+            "weekdays_graph": self.weekdays_graph,
+            "month_graph": self.month_graph,
+            "year_graph": self.year_graph,
+            "score_distribution_graph": self.score_distribution_graph,
+            "seasons_graph": self.seasons_graph,
             "profile_stat_names": ["Score", "Goals", "Assists", "Saves", "Shots"],
             "players_stat_icons": ["MVP_points_icon", "Goal_points_icon", "Assist_points_icon", "Save_points_icon", "Shot_on_Goal_points_icon"],
             # "fun_facts": self.fun_facts,
         }
-        return context
 
     def build_record_context(self):
         context = {

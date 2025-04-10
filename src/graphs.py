@@ -3,7 +3,7 @@ from __future__ import annotations  # for class type hints
 import random
 from enum import Enum
 
-import simplejson as json
+import simplejson as json  # To be able to serialize object of type Decimal
 from mysql.connector import MySQLConnection
 
 from connect import DatabaseConnection
