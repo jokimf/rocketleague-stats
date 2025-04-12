@@ -2,13 +2,13 @@ import logging
 
 from flask import Flask, redirect, render_template, send_from_directory
 from waitress import serve
-from queries import Utility
-
+#import init
 import dashboard
 
 app = Flask(__name__)
-app.jinja_env.globals.update(cf=Utility.conditional_formatting, fade=Utility.fade_highlighting)
+#init.init()
 d = dashboard.Dashboard()
+#app.jinja_env.globals.update(cf=util.conditional_formatting, fade=util.fade_highlighting) TODO
 
 
 @app.route("/rl", methods=["GET"])

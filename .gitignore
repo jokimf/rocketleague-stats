@@ -10,3 +10,5 @@ resources
 .venv
 *.json
 oldrequirements.txt
+desktop.ini
+!init.json

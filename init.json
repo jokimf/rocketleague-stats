@@ -1,0 +1,17 @@
+{
+    "players": [
+        {
+            "name": "Player1",
+            "color": "rgb(129, 174, 157)"
+        },
+        {
+            "name": "Player2",
+            "color": "rgb(86, 99, 138)"
+        },
+        {
+            "name": "Player3",
+            "color": "rgb(212, 150, 167)"
+        }
+    ],
+    "google_sheets": true
+}

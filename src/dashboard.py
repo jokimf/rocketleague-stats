@@ -1,7 +1,7 @@
 import util.data_import as data
 from graphs import GraphQueries
 from profiles import ProfileQueries
-from queries import RLQueries, GeneralQueries
+from queries import GeneralQueries, RLQueries
 from randomfacts import RandomFactQueries
 from records import RecordQueries
 from streaks import StreakQueries
@@ -9,6 +9,7 @@ from streaks import StreakQueries
 
 class Dashboard:
     def __init__(self) -> None:
+        
         self.reload()
         self.RANK_HIGHLIGHTING = ["rgb(201, 176, 55, 0.3)", "rgb(215, 215, 215, 0.3)", "rgb(173, 138, 86, 0.3)"]
         self.LAST_GAMES_HIGHLIGHTING = [
