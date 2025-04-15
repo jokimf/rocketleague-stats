@@ -42,6 +42,7 @@ def init():
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS `games` (
             `gameID` int NOT NULL,
+            `sessionID` int NOT NULL,
             `date` text NOT NULL,
             `goals` int NOT NULL,
             `against` int NOT NULL,
@@ -60,6 +61,7 @@ def init():
             `playerID` int NOT NULL AUTO_INCREMENT,
             `name` text NOT NULL,
             `color` varchar(100) NOT NULL,
+            `active` tinyint(1) NOT NULL DEFAULT '1',
             PRIMARY KEY (`playerID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
@@ -86,7 +88,7 @@ def init():
         CREATE TABLE IF NOT EXISTS `scores` (
             `gameID` int NOT NULL,
             `playerID` int NOT NULL,
-            `rank` text NOT NULL,
+            `rankID` int NOT NULL,
             `score` int NOT NULL,
             `goals` int NOT NULL,
             `assists` int NOT NULL,
@@ -95,7 +97,8 @@ def init():
             PRIMARY KEY (`gameID`,`playerID`),
             KEY `scores_players_FK` (`playerID`),
             CONSTRAINT `scores_games_FK` FOREIGN KEY (`gameID`) REFERENCES `games` (`gameID`),
-            CONSTRAINT `scores_players_FK` FOREIGN KEY (`playerID`) REFERENCES `players` (`playerID`)
+            CONSTRAINT `scores_players_FK` FOREIGN KEY (`playerID`) REFERENCES `players` (`playerID`),
+            CONSTRAINT `scores_ranks_FK` FOREIGN KEY (`rankID`) REFERENCES `ranks` (`rankID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
                        
@@ -215,32 +218,46 @@ def init():
                        
         cursor.execute("""          
         INSERT IGNORE INTO `ranks` VALUES 
-            (1,'Bronze 1','b1'),
-            (2,'Bronze 2','b2'),
-            (3,'Bronze 3','b3'),
-            (4,'Silver 1','s1'),
-            (5,'Silver 2','s2'),
-            (6,'Silver 3','s3'),
-            (7,'Gold 1','g1'),
-            (8,'Gold 2','g2'),
-            (9,'Gold 3','g3'),
-            (10,'Platinum 1','p1'),
-            (11,'Platinum 2','p2'),
-            (12,'Platinum 3','p3'),
-            (13,'Diamond 1','d1'),
-            (14,'Diamond 2','d2'),
-            (15,'Diamond 3','d3'),
-            (16,'Champion 1','c1'),
-            (17,'Champion 2','c2'),
-            (18,'Champion 3','c3'),
-            (19,'Grand Champion 1','gc1'),
-            (20,'Grand Champion 2','gc2'),
-            (21,'Grand Champion 3','gc3'),
-            (22,
-            'Supersonic Legend','ssl');
+            (1 ,'Unranked','u'),
+            (2 ,'Bronze 1','b1'),
+            (3 ,'Bronze 2','b2'),
+            (4 ,'Bronze 3','b3'),
+            (5 ,'Silver 1','s1'),
+            (6 ,'Silver 2','s2'),
+            (7 ,'Silver 3','s3'),
+            (8 ,'Gold 1','g1'),
+            (9 ,'Gold 2','g2'),
+            (10,'Gold 3','g3'),
+            (11,'Platinum 1','p1'),
+            (12,'Platinum 2','p2'),
+            (13,'Platinum 3','p3'),
+            (14,'Diamond 1','d1'),
+            (15,'Diamond 2','d2'),
+            (16,'Diamond 3','d3'),
+            (17,'Champion 1','c1'),
+            (18,'Champion 2','c2'),
+            (19,'Champion 3','c3'),
+            (20,'Grand Champion 1','gc1'),
+            (21,'Grand Champion 2','gc2'),
+            (22,'Grand Champion 3','gc3'),
+            (23,'Supersonic Legend','ssl');
         """)
 
-        cursor.executemany("INSERT INTO players VALUES (NULL, %s, %s)", [(player["name"], player["color"]) for player in players])
+        cursor.executemany("INSERT INTO players VALUES (NULL, %s, %s, 1)", [(player["name"], player["color"]) for player in players])
+
+        # testing data
+
+        cursor.execute("""          
+        INSERT IGNORE INTO `games` VALUES 
+            (1, 1, '2025-04-15', 3, 0),
+        """)
+
+        cursor.execute("""          
+        INSERT IGNORE INTO `scores` VALUES 
+            (1, 1, 10, 500, 1, 2, 3, 5),
+            (1, 2, 9, 560, 2, 0, 4, 5),
+            (1, 3, 10, 200, 0, 1, 0, 2);
+        """)
     new_connection.commit()
 
 if __name__ == "__main__":

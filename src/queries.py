@@ -13,7 +13,8 @@ class GeneralQueries:
     def total_games() -> int:
         with GeneralQueries.conn.cursor() as cursor:
             cursor.execute("SELECT MAX(gameID) FROM games")
-            return cursor.fetchone()[0]
+            data = cursor.fetchone()[0]
+            return data if data else 0
 
     @staticmethod
     def days_since_first_game() -> int:
@@ -23,7 +24,7 @@ class GeneralQueries:
 
     @staticmethod
     def player_name(player_id: int) -> str:
-        if player_id < 0:
+        if player_id < 1:
             raise ValueError(f"PlayerID can not be {player_id}.")
         with GeneralQueries.conn.cursor() as cursor:
             cursor.execute("SELECT name FROM players WHERE playerID = %s", (player_id,))
@@ -31,7 +32,7 @@ class GeneralQueries:
 
     @staticmethod
     def player_color(player_id: int, transparency: float = 1) -> str:
-        if player_id < 0:
+        if player_id < 1:
             raise ValueError(f"PlayerID can not be {player_id}.")
         if transparency < 0 or transparency > 1:
             raise ValueError(f"Transparency must be between 0 and 1, not {transparency}.")
@@ -43,11 +44,21 @@ class GeneralQueries:
 
     @staticmethod
     def player_rank(player_id: int) -> str:
-        if player_id < 0:
+        if player_id < 1:
             raise ValueError(f"PlayerID can not be {player_id}.")
         with GeneralQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT scores.rank FROM scores WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
-            return cursor.fetchone()[0].lower()
+            cursor.execute("SELECT r.abbr FROM scores s NATURAL JOIN ranks r WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
+            data = cursor.fetchone()
+            return data[0] if data else "u" #TODO find better way than hardcoding unranked
+        
+    @staticmethod
+    def get_active_players() -> list[int]:
+        with GeneralQueries.conn.cursor() as cursor:
+            cursor.execute("SELECT playerID FROM players WHERE active = 1")
+            player_ids = cursor.fetchall()
+            if not player_ids:
+                return None
+            return [player_id[0] for player_id in player_ids]
 
 class RLQueries:
     conn: MySQLConnection = DatabaseConnection.get()
@@ -112,7 +123,8 @@ class RLQueries:
     def current_session_games_played() -> int:
         with RLQueries.conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM games g GROUP BY g.`date` ORDER BY date DESC LIMIT 1")
-            return cursor.fetchone()[0]
+            data = cursor.fetchone()
+            return data[0] if data else 0
 
     @staticmethod
     def current_season_games_played() -> int:
@@ -122,7 +134,8 @@ class RLQueries:
                 LEFT JOIN seasons s ON g.date BETWEEN s.start_date AND s.end_date 
                 GROUP BY s.seasonID ORDER BY s.seasonID DESC LIMIT 1
             """)
-            return cursor.fetchone()[0]
+            data = cursor.fetchone()
+            return data[0] if data else 0
 
     @staticmethod
     def tilt() -> float:  # TODO: Write tilt-o-meter
@@ -144,7 +157,7 @@ class RLQueries:
     def latest_session_main_data() -> list[Any]:
         with RLQueries.conn.cursor() as cursor:
             cursor.execute(
-                "SELECT sessionID, date, wins, losses, Goals, Against, quality FROM sessions ORDER BY SessionID desc LIMIT 1")
+                "SELECT sessionID, date, wins, losses, Goals, Against FROM sessions ORDER BY SessionID desc LIMIT 1")
             return cursor.fetchone()
 
     @staticmethod
@@ -220,7 +233,10 @@ class RLQueries:
     @staticmethod
     def session_details():
         details = dict()
-        _, s_date, s_wins, s_losses, _, _, _ = RLQueries.latest_session_main_data()  # TODO: rewrite
+        latest_session_details =  RLQueries.latest_session_main_data()
+        if not latest_session_details:
+            return {}
+        _, s_date, s_wins, s_losses, _, _ = latest_session_details  # TODO: rewrite
         s_games = s_wins + s_losses
         details["session_game_count"] = s_games
         details["latest_session_date"] = s_date
@@ -230,8 +246,11 @@ class RLQueries:
     # Session rank is determined by the delta of wins and losses, goals and against, and finally sum of player scores.
     @staticmethod
     def session_rank(session_id: int = None) -> dict:
+        latest_session_details = RLQueries.latest_session_main_data()
         if session_id is None:
-            session_id = RLQueries.latest_session_main_data()[0]  # TODO: rewrite
+            if not latest_session_details:
+                return 0
+            session_id = latest_session_details[0]  # TODO: rewrite
 
         with RLQueries.conn.cursor() as cursor:
             cursor.execute("""
@@ -346,7 +365,7 @@ class RLQueries:
         # "FUN" FACTS # TODO: Also provide +/- if winrate changed from last game.
         # p1 > p2+p3
 #     def ff_solo_carry(player_id: int) -> tuple:
-#         if player_id < 0 or player_id > 2:
+#         if player_id < 1 or player_id > 2:
 #             raise ValueError('No player_id higher than 2 or less than 0 permitted.')
 #         return self.c.execute("""
 #         SELECT CAST(SUM(IIF(playerID = %s AND sc = 1, 1, 0)) AS FLOAT) / CAST(COUNT(gameID) AS FLOAT) AS oc,

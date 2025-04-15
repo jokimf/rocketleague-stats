@@ -20,6 +20,10 @@ class Dashboard:
 
     def reload(self):
         # Reload cache:
+        if GeneralQueries.total_games() == 0:
+            self.total_games = 0
+            return
+
         # Main
         self.player_profiles = ProfileQueries.build_player_profiles()
         self.session_details = RLQueries.session_details()
@@ -58,7 +62,10 @@ class Dashboard:
             self.reload()
 
     def build_dashboard_context(self):
-        print(self.total_games)
+        if self.total_games == 0:
+            return {
+                "empty": True
+            }
         return {
             "players": self.player_profiles,
             "session_information": self.session_information,

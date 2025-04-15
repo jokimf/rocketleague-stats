@@ -39,8 +39,11 @@ class RandomFactQueries:
     @staticmethod
     def last_session_facts() -> list[RandomFact]:
         facts = []
-        session_id, _, _, _, _, _, _ = RLQueries.latest_session_main_data()  # TODO: wtf
-
+        latest_session_data = RLQueries.latest_session_main_data() # TODO: fix overhead
+        if not latest_session_data:
+            return []
+        
+        session_id = latest_session_data[0]
         # Session ID milestone
         if session_id % 50 == 0:
             facts.append((f"This session is the {session_id}th session!", 4))
@@ -102,7 +105,11 @@ class RandomFactQueries:
     @staticmethod
     def result_facts() -> list[RandomFact]:  # Unusual result  # TODO: Slow, rework
         facts = []
+
         results = RandomFactQueries.results_table()
+        if not results: # No games played yet 
+            return []
+        
         goals, against = RandomFactQueries.last_result()
         for single_result in results:
             if single_result[0] == goals and single_result[1] == against:
@@ -140,6 +147,10 @@ class RandomFactQueries:
 
         # Record games
         last_id = GeneralQueries.total_games()
+
+        if last_id == 0:
+            return 0
+        
         limit = 100  # round(last_id / 100) # TODO: find better metric, some crash for total_games, rework slow mess
         record_data = [
             (RecordQueries.highest_stat_value_one_game("score", limit).data,
@@ -321,7 +332,8 @@ class RandomFactQueries:
             raise ValueError(f"{stat} is not in possible stats.")
         with RandomFactQueries.conn.cursor() as cursor:
             cursor.execute(f"SELECT SUM({stat}) FROM scores WHERE playerID = %s", (player_id,))
-            return cursor.fetchone()[0]
+            data = cursor.fetchone()[0] # (None,) if no scores in db
+            return data if data else 0
 
     @staticmethod
     def player_stat_of_last_game(player_id: int, stat: str) -> int:
@@ -329,7 +341,8 @@ class RandomFactQueries:
             raise ValueError(f"{stat} is not in possible stats.")
         with RandomFactQueries.conn.cursor() as cursor:
             cursor.execute(f"SELECT {stat} FROM scores WHERE playerID = %s ORDER BY gameID DESC LIMIT 1", (player_id,))
-            return cursor.fetchone()[0]
+            data = cursor.fetchone()
+            return data if data else 0
 
     @staticmethod
     def record_games_per_session(limit: int = 1) -> list[tuple[int, int]]:

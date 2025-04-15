@@ -15,6 +15,19 @@
 </head>
 
 <body class="layout-simple">
+    {% if empty %}
+    <header>
+        <h1>
+            <a class="success" href="/rl" style="text-decoration: none;">
+                <img src="https://jok.im/static/icons/rl_cg_logo_grey.png" height="30" width="30">
+            </a>
+            <a class="accent" href="/rl" style="color:rgb(215, 215, 215);text-decoration: none;">ROCKET LEAGUE</a>
+        </h1>
+    </header>
+    <main>
+        <p>No games have been played yet. 🍌</p>
+    </main>
+    {% else %}
     <header>
         <h1>
             <a class="success" href="/rl" style="text-decoration: none;">
@@ -31,6 +44,7 @@
             </menu>
         </nav>
     </header>
+
     <aside>
         <nav>
             <ul>
@@ -56,6 +70,7 @@
             </ul>
         </nav>
     </aside>
+
     <main>
         <section class="flex">
             {% for player in players %}
@@ -253,11 +268,11 @@
             <canvas id="scoreDistribution"></canvas>
         </section>
     </main>
-
+    {% endif %}
 </body>
 <script src="/rl/static/dynamicColor.js"></script>
 <script>
-    new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }} );
+    new Chart(document.getElementById('performanceGraph'), {{ performance_graph | safe }});
     new Chart(document.getElementById('daysGraph'), {{ days_graph | safe }});
     new Chart(document.getElementById('weekdaysGraph'), {{ weekdays_graph | safe }});
     new Chart(document.getElementById('monthGraph'), {{ month_graph | safe }});

@@ -18,7 +18,7 @@ class ProfileQueries:
                 "justout": ProfileQueries.just_out(player_id),
                 "tobeatnext": ProfileQueries.to_beat_next(player_id)
             }
-        return [_build_profile(player_id) for player_id in (0, 1, 2)]
+        return [_build_profile(player_id) for player_id in GeneralQueries.get_active_players()]
 
     @staticmethod
     def profile_averages(player_id: int):
@@ -69,7 +69,10 @@ class ProfileQueries:
         with ProfileQueries.conn.cursor() as cursor:
             cursor.execute("SELECT * FROM performance WHERE playerID = %s AND gameID = %s",
                            (p_id, GeneralQueries.total_games()))
-            values = cursor.fetchone()[2:]
+            data = cursor.fetchone()
+            if data is None:
+                return []
+            values = data[2:]
         top = (
             round(_performance_rank("score", p_id) / GeneralQueries.total_games() * 100, 1),
             round(_performance_rank("goals", p_id) / GeneralQueries.total_games() * 100, 1),
@@ -84,24 +87,30 @@ class ProfileQueries:
         with ProfileQueries.conn.cursor() as cursor:
             cursor.execute(f"""WITH av AS (SELECT AVG(p2.score) a FROM (SELECT * FROM performance p ORDER BY p.gameID DESC LIMIT 3) p2)
                             SELECT p.score - av.a FROM performance p, av WHERE p.playerID = %s ORDER BY p.gameID DESC LIMIT 1""", (player_id,))
-            return cursor.fetchone()[0]
+            data = cursor.fetchone()
+            return data[0] if data else 0
 
     @staticmethod
     def just_out(player_id: int) -> tuple[int]:
+        max_id = GeneralQueries.total_games()
+        if max_id < 21:
+            return (0,0)
         with ProfileQueries.conn.cursor() as cursor:
             cursor.execute("""
-                            WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
-                            SELECT scores.score FROM scores, maxId
-                            WHERE (gameID = maxId.mId - 20 OR gameID = maxId.mId) AND playerID = %s
-                            ORDER BY playerID
-                            """, (player_id,))
-            print(cursor.fetchall())
-            # points_out, points_in = cursor.fetchall()
-            return points_out[0], points_in[0]
+                SELECT scores.score 
+                FROM scores
+                WHERE (gameID = %s - 20 OR gameID = %s) AND playerID = %s
+                ORDER BY playerID
+                """, (max_id, max_id, player_id))
+            data = cursor.fetchall()
+            if not data:
+                return (0,0)
+            return data[0][0], data[1][0]
 
     @staticmethod
     def to_beat_next(player_id: int) -> int:
         with ProfileQueries.conn.cursor() as cursor:
             cursor.execute("""WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
                             SELECT scores.score FROM scores, maxId WHERE gameID = maxId.mId - 19 AND playerID = %s""", (player_id,))
-            return cursor.fetchone()[0]
+            data = cursor.fetchone()
+            return data[0] if data else 0
