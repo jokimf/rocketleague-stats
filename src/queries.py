@@ -256,9 +256,9 @@ class RLQueries:
             cursor.execute("""
                 SELECT t1.session_rank 
                 FROM (
-                    SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, wins - losses, goals - against, KnusScore + PuadScore + StickerScore
-                    FROM sessions 
-                    ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
+                    SELECT ROW_NUMBER() OVER (ORDER BY  s.wins - s.losses DESC, s.goals - s.against DESC, s.date ASC) AS session_rank, s.sessionID, s.date, s.wins - s.losses, goals - against
+                    FROM sessions s
+                    ORDER BY s.wins - s.losses DESC, s.goals - s.against DESC, s.date ASC 
                 ) t1
                 WHERE t1.sessionId = %s
             """, (session_id,))
@@ -266,9 +266,9 @@ class RLQueries:
             cursor.execute("""
                 SELECT * 
                 FROM (
-                    SELECT ROW_NUMBER() OVER (ORDER BY  wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC) AS session_rank, sessionID, date, CONCAT(wins,"-",losses), CONCAT(goals,"-",against), KnusScore + PuadScore + StickerScore
-                    FROM sessions 
-                    ORDER BY wins - losses DESC, goals - against DESC, KnusScore + PuadScore + StickerScore DESC 
+                    SELECT ROW_NUMBER() OVER (ORDER BY  s.wins - s.losses DESC, s.goals - s.against DESC, s.date DESC) AS session_rank, s.sessionID, s.date, CONCAT(s.wins,"-",s.losses), CONCAT(s.goals,"-",s.against)
+                    FROM sessions s
+                    ORDER BY s.wins - s.losses DESC, s.goals - s.against DESC, s.date ASC
                 ) t1
                 WHERE t1.session_rank BETWEEN %s-3 AND %s+3
             """, (session_ranking, session_ranking))

@@ -42,7 +42,6 @@ def init():
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS `games` (
             `gameID` int NOT NULL,
-            `sessionID` int NOT NULL,
             `date` text NOT NULL,
             `goals` int NOT NULL,
             `against` int NOT NULL,
@@ -168,16 +167,24 @@ def init():
                        
         cursor.execute("""  
         CREATE OR REPLACE
-        ALGORITHM = UNDEFINED VIEW `rl`.`sessions` AS 
+        ALGORITHM = UNDEFINED VIEW `rl`.`sessions` AS
+        WITH gamePlayerIDs AS (
+            SELECT s.gameID,
+                GROUP_CONCAT(s.plyaerID SEPARATOR ';') AS 'playerIDs'
+            FROM scores s
+            GROUP BY s.gameID
+        )
         SELECT
             ROW_NUMBER() OVER (ORDER BY `g`.`date` ) AS `sessionID`,
+            gp.playerIDs,
             `g`.`date` AS `date`,
             SUM((CASE WHEN (`g`.`goals` > `g`.`against`) THEN 1 ELSE 0 END)) AS `wins`,
             SUM((CASE WHEN (`g`.`goals` < `g`.`against`) then 1 ELSE 0 END)) AS `losses`,
             SUM(`g`.`goals`) AS `Goals`,
             SUM(`g`.`against`) AS `Against`
         FROM `rl`.`games` `g`
-        GROUP BY `g`.`date`
+        NATURAL JOIN gamePlayerIDs gp
+        GROUP BY `g`.`date`, gp.playerIDs
         """)
 
         cursor.execute("""
@@ -249,14 +256,18 @@ def init():
 
         cursor.execute("""          
         INSERT IGNORE INTO `games` VALUES 
-            (1, 1, '2025-04-15', 3, 0),
+            (1, '2025-04-15', 3, 0),
+            (1, '2025-04-20', 2, 0)
         """)
 
         cursor.execute("""          
         INSERT IGNORE INTO `scores` VALUES 
             (1, 1, 10, 500, 1, 2, 3, 5),
             (1, 2, 9, 560, 2, 0, 4, 5),
-            (1, 3, 10, 200, 0, 1, 0, 2);
+            (1, 3, 10, 200, 0, 1, 0, 2),
+            (1, 1, 10, 380, 1, 1, 1, 4),
+            (1, 3, 10, 200, 0, 0, 1, 2),
+            (1, 4, 11, 420, 1, 1, 2, 5);
         """)
     new_connection.commit()
 

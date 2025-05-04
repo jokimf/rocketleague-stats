@@ -11,6 +11,10 @@
         {
             "name": "Player3",
             "color": "rgb(212, 150, 167)"
+        },
+        {
+            "name": "Player4",
+            "color": "rgb(31, 221, 127)"
         }
     ],
     "google_sheets": true
