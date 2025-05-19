@@ -2,6 +2,7 @@ import mysql.connector as mysql
 import json
 from dataclasses import dataclass
 
+
 @dataclass
 class Config:
     players: list[dict]
@@ -36,7 +37,7 @@ def init():
         host=host,
         buffered=True,
         database="rl"
-    )        
+    )
 
     with new_connection.cursor() as cursor:
         cursor.execute("""
@@ -48,13 +49,13 @@ def init():
             PRIMARY KEY (`gameID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
-                       
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS `meta` (
             `last_reload` int NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
-                       
+
         cursor.execute("""                    
         CREATE TABLE IF NOT EXISTS `players` (
             `playerID` int NOT NULL AUTO_INCREMENT,
@@ -64,7 +65,7 @@ def init():
             PRIMARY KEY (`playerID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
-                       
+
         cursor.execute("""                    
         CREATE TABLE IF NOT EXISTS `ranks` (
             `rankID` int NOT NULL AUTO_INCREMENT,
@@ -73,7 +74,7 @@ def init():
             PRIMARY KEY (`rankID`)
         ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
-                       
+
         cursor.execute("""CREATE TABLE IF NOT EXISTS `seasons` (
             `seasonID` int NOT NULL,
             `start_date` text NOT NULL,
@@ -82,7 +83,7 @@ def init():
             PRIMARY KEY (`seasonID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
-                       
+
         cursor.execute("""                    
         CREATE TABLE IF NOT EXISTS `scores` (
             `gameID` int NOT NULL,
@@ -100,7 +101,7 @@ def init():
             CONSTRAINT `scores_ranks_FK` FOREIGN KEY (`rankID`) REFERENCES `ranks` (`rankID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """)
-                       
+
         cursor.execute("""
         CREATE OR REPLACE
         ALGORITHM = UNDEFINED VIEW `rl`.`performance` AS
@@ -125,7 +126,7 @@ def init():
             ORDER BY `rl`.`scores`.`gameID`) `rf`
         WHERE `rf`.`gameID` >= 20;
         """)
-                       
+
         cursor.execute("""
         CREATE OR REPLACE
         ALGORITHM = UNDEFINED VIEW `rl`.`mvplvp` AS 
@@ -164,13 +165,13 @@ def init():
         FROM (`mvp`
         JOIN `lvp` on ((`mvp`.`gameID` = `lvp`.`gameID`)));
         """)
-                       
+
         cursor.execute("""  
         CREATE OR REPLACE
         ALGORITHM = UNDEFINED VIEW `rl`.`sessions` AS
         WITH gamePlayerIDs AS (
             SELECT s.gameID,
-                GROUP_CONCAT(s.plyaerID SEPARATOR ';') AS 'playerIDs'
+                GROUP_CONCAT(s.playerID SEPARATOR ';') AS 'playerIDs'
             FROM scores s
             GROUP BY s.gameID
         )
@@ -220,9 +221,10 @@ def init():
             (29,'2024-06-06','2024-09-04','15'),
             (30,'2024-09-05','2024-12-04','16'),
             (31,'2024-12-05','2025-03-14','17'),
-            (32,'2025-03-15','2029-12-31','18');
+            (32,'2025-03-15','2029-06-18','18'),
+            (33,'2025-06-19','2025-12-31','19');
         """)
-                       
+
         cursor.execute("""          
         INSERT IGNORE INTO `ranks` VALUES 
             (1 ,'Unranked','u'),
@@ -250,7 +252,8 @@ def init():
             (23,'Supersonic Legend','ssl');
         """)
 
-        cursor.executemany("INSERT INTO players VALUES (NULL, %s, %s, 1)", [(player["name"], player["color"]) for player in players])
+        cursor.executemany("INSERT INTO players VALUES (NULL, %s, %s, 1)", [
+                           (player["name"], player["color"]) for player in players])
 
         # testing data
 
@@ -270,6 +273,7 @@ def init():
             (1, 4, 11, 420, 1, 1, 2, 5);
         """)
     new_connection.commit()
+
 
 if __name__ == "__main__":
     init()
