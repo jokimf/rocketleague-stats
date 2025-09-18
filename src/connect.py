@@ -3,33 +3,24 @@ import json
 import mysql.connector as mysql
 
 
-class DatabaseConnection:
-    connections: dict[mysql.MySQLConnection] = dict()
+class Database:
+    credentials = dict()
 
     @staticmethod
-    def get(table: str = "rl") -> mysql.MySQLConnection:
+    def get_connection(database="rl"):
+        if not Database.credentials:
+            with open("./c.json") as credentials:
+                c = json.load(credentials)
+                Database.credentials["user"] = c.get("mysqluser")
+                Database.credentials["password"] = c.get("mysqlpw")
+                Database.credentials["host"] = c.get("mysqlhost")
 
-        # Check if connection to table exists
-        existing_connection: mysql.MySQLConnection = DatabaseConnection.connections.get(table)
-        if existing_connection is not None and not existing_connection.is_connected():
-            existing_connection.reconnect()
-        else:
-            DatabaseConnection._connect_to_db(table)
-        return DatabaseConnection.connections.get(table)
-
-    @staticmethod
-    def _connect_to_db(table: str) -> None:
-        with open("./c.json") as credentials:
-            c = json.load(credentials)
-            user = c.get("mysqluser")
-            password = c.get("mysqlpw")
-            host = c.get("mysqlhost")
-
-        new_connection = mysql.connect(
-            user=user,
-            password=password,
-            host=host,
-            database=table,
-            buffered=True
+        connection = mysql.connect(
+            **Database.credentials,
+            database=database,
+            pool_name=database,
+            pool_size=32
         )
-        DatabaseConnection.connections[table] = new_connection
+        # TODO connection may fail?
+
+        return connection

@@ -12,3 +12,4 @@ resources
 oldrequirements.txt
 desktop.ini
 !init.json
+.venv-1

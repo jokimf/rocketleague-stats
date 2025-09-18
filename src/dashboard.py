@@ -1,4 +1,4 @@
-import util.data_import as data
+import google_import as data
 from graphs import GraphQueries
 from profiles import ProfileQueries
 from queries import GeneralQueries, RLQueries
@@ -9,7 +9,7 @@ from streaks import StreakQueries
 
 class Dashboard:
     def __init__(self) -> None:
-        
+
         self.reload()
         self.RANK_HIGHLIGHTING = ["rgb(201, 176, 55, 0.3)", "rgb(215, 215, 215, 0.3)", "rgb(173, 138, 86, 0.3)"]
         self.LAST_GAMES_HIGHLIGHTING = [
@@ -30,7 +30,7 @@ class Dashboard:
         z = self.session_details.get("latest_session_date")
         self.session_information = RandomFactQueries.session_data_by_date(z)
         self.session_rank = RLQueries.session_rank()
-        self.random_facts = RandomFactQueries.generate_random_facts()
+        self.random_facts = []  # RandomFactQueries.generate_random_facts()
         self.winrates = RLQueries.winrates()
         self.days_since_first = GeneralQueries.days_since_first_game()
         self.total_games = GeneralQueries.total_games()

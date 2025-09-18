@@ -122,7 +122,7 @@
                     <td {% if data=='Knus' %} style="background-color: {{ k }}" {% elif data=='Puad' %}
                         style="background-color: {{ p }}" {% elif data=='Sticker' %} style="background-color: {{ s }}"
                         {% elif data=='CG' %} style="background-color: {{ cg }}" {% elif loop.index==3 and latest - 100
-                        < data %} style="background-color: {{ fade(data, 100) }}" {% endif %}>
+                        < data %} style="background-color: rgb(28, 156, 230)" {% endif %}>
                         {% if data is number %}
                         {{ data | round(2) }}
                         {% else %}

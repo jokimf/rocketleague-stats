@@ -4,9 +4,8 @@ from datetime import datetime, timedelta
 from typing import Final
 
 from dateutil.relativedelta import relativedelta
-from mysql.connector import MySQLConnection
 
-from connect import DatabaseConnection
+from connect import Database
 from queries import GeneralQueries, RLQueries
 from records import RecordQueries
 
@@ -19,7 +18,6 @@ class RandomFact:
 
 class RandomFactQueries:
     POSSIBLE_STATS: Final[tuple[str]] = ("score", "goals", "assists", "saves", "shots")
-    conn: MySQLConnection = DatabaseConnection().get()
 
     def generate_random_facts() -> list:
         all_facts: list[RandomFact] = \
@@ -39,10 +37,10 @@ class RandomFactQueries:
     @staticmethod
     def last_session_facts() -> list[RandomFact]:
         facts = []
-        latest_session_data = RLQueries.latest_session_main_data() # TODO: fix overhead
+        latest_session_data = RLQueries.latest_session_main_data()  # TODO: fix overhead
         if not latest_session_data:
             return []
-        
+
         session_id = latest_session_data[0]
         # Session ID milestone
         if session_id % 50 == 0:
@@ -107,9 +105,9 @@ class RandomFactQueries:
         facts = []
 
         results = RandomFactQueries.results_table()
-        if not results: # No games played yet 
+        if not results:  # No games played yet
             return []
-        
+
         goals, against = RandomFactQueries.last_result()
         for single_result in results:
             if single_result[0] == goals and single_result[1] == against:
@@ -150,7 +148,7 @@ class RandomFactQueries:
 
         if last_id == 0:
             return 0
-        
+
         limit = 100  # round(last_id / 100) # TODO: find better metric, some crash for total_games, rework slow mess
         record_data = [
             (RecordQueries.highest_stat_value_one_game("score", limit).data,
@@ -292,66 +290,82 @@ class RandomFactQueries:
 
     @staticmethod
     def game_amount_this_month() -> int:
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT COUNT(*) FROM games WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE())")
-            return cursor.fetchone()[0]
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM games WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE())")
+                return cursor.fetchone()[0]
 
     @staticmethod
-    def last_two_sessions_dates() -> list[str]:
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT date FROM sessions ORDER BY SessionID DESC LIMIT 2")
-            return cursor.fetchall()
+    def last_two_sessions_dates() -> tuple[str]:
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT date FROM sessions ORDER BY SessionID DESC LIMIT 2")
+                return cursor.fetchall()
 
     @staticmethod
     def game_amount_this_year() -> int:
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT COUNT(*) FROM games WHERE YEAR(date) = YEAR(CURDATE())")
-            return cursor.fetchone()[0]
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM games WHERE YEAR(date) = YEAR(CURDATE())")
+                return cursor.fetchone()[0]
 
     @staticmethod
-    def unique_months_game_count() -> list[str, int]:
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT DATE_FORMAT(date, '%m-%Y') as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC")
-            return cursor.fetchall()
+    def unique_months_game_count() -> tuple[str, int]:
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT DATE_FORMAT(date, '%m-%Y') as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC")
+                return cursor.fetchall()
 
     @staticmethod
-    def results_table() -> list[int, int, int]:
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT goals, against, COUNT(g.gameID) AS c FROM games g GROUP BY goals, against ORDER BY 1, 2")
-            return cursor.fetchall()
+    def results_table() -> tuple[int, int, int]:
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT goals, against, COUNT(g.gameID) AS c FROM games g GROUP BY goals, against ORDER BY 1, 2")
+                return cursor.fetchall()
 
     @staticmethod
     def last_result() -> tuple[int, int]:
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT goals, against FROM games ORDER BY gameID DESC LIMIT 1")
-            return cursor.fetchone()
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT goals, against FROM games ORDER BY gameID DESC LIMIT 1")
+                return cursor.fetchone()
 
     @staticmethod
     def player_total_of_stat(player_id: int, stat: str) -> int:
         if stat not in RandomFactQueries.POSSIBLE_STATS:
             raise ValueError(f"{stat} is not in possible stats.")
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute(f"SELECT SUM({stat}) FROM scores WHERE playerID = %s", (player_id,))
-            data = cursor.fetchone()[0] # (None,) if no scores in db
-            return data if data else 0
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(f"SELECT SUM({stat}) FROM scores WHERE playerID = %s", (player_id,))
+                data = cursor.fetchone()[0]  # (None,) if no scores in db
+                return data if data else 0
 
     @staticmethod
     def player_stat_of_last_game(player_id: int, stat: str) -> int:
         if stat not in RandomFactQueries.POSSIBLE_STATS:
             raise ValueError(f"{stat} is not in possible stats.")
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute(f"SELECT {stat} FROM scores WHERE playerID = %s ORDER BY gameID DESC LIMIT 1", (player_id,))
-            data = cursor.fetchone()
-            return data if data else 0
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"SELECT {stat} FROM scores WHERE playerID = %s ORDER BY gameID DESC LIMIT 1", (player_id,))
+                data = cursor.fetchone()
+                if data and data[0]:
+                    return data[0]
+                else:
+                    return 0
 
     @staticmethod
     def record_games_per_session(limit: int = 1) -> list[tuple[int, int]]:
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT sessionID, wins+losses FROM sessions ORDER BY wins+losses DESC LIMIT %s", (limit,))
-            return cursor.fetchall()
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT sessionID, wins+losses FROM sessions ORDER BY wins+losses DESC LIMIT %s", (limit,))
+                return cursor.fetchall()
 
     @staticmethod
     def session_data_by_date(date: str):
-        with RandomFactQueries.conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM sessions WHERE date=%s", (date,))
-            return cursor.fetchone()
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM sessions WHERE date=%s", (date,))
+                return cursor.fetchone()

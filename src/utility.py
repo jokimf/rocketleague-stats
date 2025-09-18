@@ -1,3 +1,5 @@
+from queries import GeneralQueries
+
 
 def conditional_formatting(color: str, value: float, minimum: int, maximum: int) -> str:
     minimum = int(minimum)
@@ -11,5 +13,6 @@ def conditional_formatting(color: str, value: float, minimum: int, maximum: int)
     rgb_code = f"{color[:-1]},{opacity})"
     return rgb_code
 
+
 def fade_highlighting(game: int, game_range: int):
-    return f"rgba(53, 159, 159,{(game_range - (RLQueries.total_games() - game)) / game_range})"
+    return f"rgba(53, 159, 159,{(game_range - (GeneralQueries.total_games() - game)) / game_range})"
