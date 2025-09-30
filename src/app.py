@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import FileResponse
 
 # import init
 import dashboard
@@ -38,6 +39,10 @@ async def streaks(request: Request, player_id: int):
 async def reload_stats(request: Request):
     d.reload_all_stats()
     return templates.TemplateResponse(request, "index.html", d.build_dashboard_context())
+
+@app.get("/rl/replay/{replay_id}")
+async def replay_download(request: Request, replay_id: int):
+    return FileResponse(f"./replays/{replay_id}")
 
 if __name__ == "__main__":
     config = uvicorn.Config("main:app", host="0.0.0.0", port=7823, log_level="warning")
