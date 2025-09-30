@@ -143,6 +143,7 @@
                     <th colspan="6" class="knus">Knus</th>
                     <th colspan="6" class="puad">Puad</th>
                     <th colspan="6" class="sticker">Sticker</th>
+                    <th colspan="3" class="table-general">Replay</th>
                 </tr>
                 {% for row in last_games %}
                 <tr>
@@ -159,8 +160,14 @@
                         {% endif %}{% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10]>
                             row[16] and loop.index == 11 or row[16] > row[10] and row[4] < row[16] and loop.index==17 %}
                                 mvp_highlighting_table_cell{% endif %}">
-                        {% if loop.index not in [4,10,16] %}
+                        {% if loop.index not in [4,10,16,22] %}
                         {{ data }}
+                        {% elif loop.index == 22 %}
+                        {% if data %}
+                        <a href="/rl/replay/{{row[0]}}">▶️</a>
+                        {% else %}
+                        <p style="text-align: center;">❌</p>
+                        {% endif %}
                         {% else %}
                         <img src="https://jok.im/static/rl/ranks/{{ data.lower() }}.png" alt="{{ data }}">
                         {% endif %}

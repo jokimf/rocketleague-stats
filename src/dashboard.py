@@ -5,6 +5,7 @@ from queries import GeneralQueries, RLQueries
 from randomfacts import RandomFactQueries
 from records import RecordQueries
 from streaks import StreakQueries
+import utility
 
 
 class Dashboard:
@@ -16,7 +17,7 @@ class Dashboard:
             None, None, None, None,
             *[["rgba(12,145,30)", 100, 700]]*3, *[["rgba(12,145,30)", 0, 5]]*3, ("rgba(12,145,30)", 0, 10),
             *[["rgba(151,3,14)", 100, 700]]*2, *[["rgba(151,3,14)", 0, 5]]*3, ("rgba(151,3,14)", 0, 10),
-            *[["rgba(12,52,145)", 100, 700]]*2, *[["rgba(12,52,145)", 0, 5]]*3, ("rgba(12,52,145)", 0, 10)]
+            *[["rgba(12,52,145)", 100, 700]]*2, *[["rgba(12,52,145)", 0, 5]]*3, ("rgba(12,52,145)", 0, 10), None]
 
     def reload(self):
         # Reload cache:
@@ -38,7 +39,6 @@ class Dashboard:
         self.average_session_length = RLQueries.average_session_length()
         self.last_games = RLQueries.last_x_games_stats(len(RLQueries.games_from_session_date()), False)
         self.profile_streaks = [StreakQueries.generate_profile_streaks(p) for p in [0, 1, 2]]
-        self.last_100_games_stats = RLQueries.last_x_games_stats(100, True)
         self.session_game_amount = len(RLQueries.games_from_session_date())
         self.session_game_details = RLQueries.last_x_games_stats(self.session_game_amount, False)
         self.fun_facts = []  # RLQueries.generate_fun_facts()
@@ -55,6 +55,9 @@ class Dashboard:
         self.year_graph = GraphQueries.year_graph()
         self.score_distribution_graph = GraphQueries.score_distribution_graph()
         self.seasons_graph = GraphQueries.seasons_graph()
+
+        # Games
+        self.last_100_games_stats = RLQueries.last_x_games_stats(100, True)
 
     def reload_all_stats(self):
         if data.is_new_data_available(self.total_games):
@@ -122,5 +125,6 @@ class Dashboard:
     def build_games_context(self):
         return {
             "games": self.last_100_games_stats,
-            "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING
+            "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING,
+            "cf": utility.conditional_formatting
         }

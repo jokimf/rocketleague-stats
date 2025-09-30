@@ -70,7 +70,7 @@ class RLQueries:
     def insert_game_data(game: list) -> bool:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("INSERT INTO games VALUES (%s,%s,%s,%s)", (game[0], game[1], game[3], game[4]))
+                cursor.execute("INSERT INTO games VALUES (%s,%s,%s,%s,NULL)", (game[0], game[1], game[3], game[4]))
                 cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
                                (game[0], 0, game[5], game[6], game[7], game[8], game[9], game[10]))
                 cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
@@ -95,21 +95,21 @@ class RLQueries:
             conn.commit()
 
     @staticmethod
-    def last_x_games_stats(limit, with_date: bool) -> list[Any]:
-        return []  # TODO: Views not available anymore -> more dynamic
+    def last_x_games_stats(limit: int, with_date: bool) -> list[Any]:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
-                        SELECT 
-                            games.gameID AS ID, {"games.date," if with_date else ""} games.goals As CG, against AS Enemy,
-                            k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
-                            p.rank, p.score, p.goals, p.assists, p.saves, p.shots,
-                            s.rank, s.score, s.goals, s.assists, s.saves, s.shots
-                        FROM games JOIN scores ON games.gameID = scores.gameID JOIN knus k ON games.gameID = k.gameID 
-                            JOIN puad p ON games.gameID = p.gameID JOIN sticker s ON games.gameID = s.gameID
-                        GROUP BY {"games.date," if with_date else ""} ID, CG, Enemy, k.rank, k.score, k.goals, k.assists, k.saves, k.shots,
-                            p.rank, p.score, p.goals, p.assists, p.saves, p.shots, s.rank, s.score, s.goals, s.assists, s.saves, s.shots 
-                            ORDER BY ID DESC LIMIT %s
+                    SELECT 
+                        g.gameID AS ID, {"g.date," if with_date else ""} g.goals As CG, against AS Enemy,
+                        p1.rank, p1.score, p1.goals, p1.assists, p1.saves, p1.shots,
+                        p2.rank, p2.score, p2.goals, p2.assists, p2.saves, p2.shots,
+                        p3.rank, p3.score, p3.goals, p3.assists, p3.saves, p3.shots,
+                        IF(replay IS NOT NULL, 1, 0)
+                    FROM games g
+                    LEFT JOIN scores p1 ON g.gameID = p1.gameID AND p1.playerID = 0
+                    LEFT JOIN scores p2 ON g.gameID = p2.gameID AND p2.playerID = 1
+                    LEFT JOIN scores p3 ON g.gameID = p3.gameID AND p3.playerID = 2
+                    ORDER BY ID DESC LIMIT %s
                 """, (limit,))
                 return cursor.fetchall()
 

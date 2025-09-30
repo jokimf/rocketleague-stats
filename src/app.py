@@ -12,8 +12,6 @@ templates = Jinja2Templates(directory="./src/templates")
 
 # init.init()
 d = dashboard.Dashboard()
-#app.jinja_env.globals.update(cf=util.conditional_formatting, fade=util.fade_highlighting) TODO
-
 
 @app.get("/")
 @app.get("/rl")
