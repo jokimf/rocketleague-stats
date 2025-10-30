@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>RL - Games</title>
+    <link rel="icon" href="https://jok.im/static/icons/rl_cg_logo_grey.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link rel="stylesheet" href="/rl/static/games.css">
+    <link rel="stylesheet" href="https://matcha.mizu.sh/matcha.css">
+    <link rel="stylesheet" href="https://matcha.mizu.sh/@syntax-highlighting.css">
+</head>
+
+<body class="layout-simple">
+    <header>
+        <h1>
+            <a class="success" href="/rl" style="text-decoration: none;">
+                <img src="https://jok.im/static/icons/rl_cg_logo_grey.png" height="30" width="30">
+            </a>
+            <a class="accent" href="/rl" style="color:rgb(215, 215, 215);text-decoration: none;">ROCKET LEAGUE</a>
+        </h1>
+        <nav>
+            <menu>
+                <li><a href="/rl">Dashboard</a></li>
+                <li><a href="/rl/records">Records</a></li>
+                <li><a href="/rl/games">Games</a></li>
+                <li><a class="here" href="/rl/upload">Upload</a></li>
+            </menu>
+        </nav>
+    </header>
+    <main>
+        <h3>Upload replay files</h3>
+        <input id="fileInput" type="file" multiple style="width: auto;" accept=".replay">
+        <button id="uploadBtn">Upload</button>
+        <div id="result"></div>
+    </main>
+</body>
+<script src="/rl/static/upload.js"></script>
+
+</html>
