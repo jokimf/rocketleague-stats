@@ -1,12 +1,14 @@
 import uvicorn
-import replays
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, status, Depends
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import FileResponse
+from uvicorn.config import LOGGING_CONFIG
 
 # import init
 import dashboard
+import replays
+import utility
 
 app = FastAPI()
 app.mount("/rl/static", StaticFiles(directory="./src/static"), name="static")
@@ -34,35 +36,29 @@ async def games(request: Request):
 
 @app.get("/rl/upload")
 async def upload(request: Request):
+    user: utility.User | None = utility.extract_user_info(request)
+
+    if not (user and user.check_credentials() and user.is_premium()):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     return templates.TemplateResponse(request, "upload.html")
 
 
-@app.post("/rl/uploadreplay")
-async def upload_file(request: Request, files: list[UploadFile]):
-    # todo auth
-    print(files)
-    invalid_files = []
-    for replay_file in files:
-        if not replay_file.filename.endswith(".replay"):
-            invalid_files.append(replay_file.filename)
-            continue
-        try:
-            content = await replay_file.read()
-            print(content)
-            replays.analyze_replay(content)
-        except Exception:
-            invalid_files.append(replay_file.filename)
+@app.post("/rl/uploadreplay", dependencies=[Depends(utility.enforce_max_size)])
+async def upload_replay(request: Request, file: UploadFile):
+    user: utility.User | None = utility.extract_user_info(request)
 
-    valid = len(invalid_files) == 0
-    return {
-        "valid": valid,
-        "invalid": invalid_files
-    }
+    if not (user and user.check_credentials() and user.is_premium()):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    # Exceptions are handled by exception endpoint
+    replay: int = replays.handle_upload(file)
+
+    return {"replay_id": replay}
 
 
 @app.get("/rl/profile/{player_id}")
-async def streaks(request: Request, player_id: int):
-    return templates.TemplateResponse(request, "profile.html", d.build_profile_context(int(player_id)))
+async def streaks(request: Request, player_id: str):
+    return templates.TemplateResponse(request, "profile.html", d.build_profile_context(player_id))
 
 
 @app.get("/rl/reload")
@@ -80,7 +76,16 @@ async def replay_download(request: Request, replay_id: int):
             filename=f"Replay_gameid_{replay_id}.replay"
         )
 
+
+@app.exception_handler(replays.ReplayError)
+async def replay_error_handler(request: Request, exception: replays.ReplayError):
+    return JSONResponse(
+        status_code=400,
+        content={"reason": exception.reason},
+    )
+
 if __name__ == "__main__":
+    LOGGING_CONFIG["formatters"]["default"]["fmt"] = "%(asctime)s [%(name)s] %(levelprefix)s %(message)s"
     config = uvicorn.Config("main:app", host="0.0.0.0", port=7823, log_level="warning")
     server = uvicorn.Server(config)
     server.run()

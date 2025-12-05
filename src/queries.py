@@ -1,8 +1,7 @@
 import datetime
 from typing import Any
-from connect import Database
 
-possible_stats = ["score", "goals", "assists", "saves", "shots"]
+from connect import Database
 
 
 class GeneralQueries:
@@ -22,47 +21,79 @@ class GeneralQueries:
                 return cursor.fetchone()[0]
 
     @staticmethod
-    def player_name(player_id: int) -> str:
-        if player_id < 0:
-            raise ValueError(f"PlayerID can not be {player_id}.")
+    def player_name(player_id: str) -> str:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT name FROM players WHERE playerID = %s", (player_id,))
                 return cursor.fetchone()[0]
 
     @staticmethod
-    def player_color(player_id: int, transparency: float = 1) -> str:
-        if player_id < 0:
-            raise ValueError(f"PlayerID can not be {player_id}.")
+    def player_color(player_id: str, transparency: float = 1) -> str:
         if transparency < 0 or transparency > 1:
             raise ValueError(f"Transparency must be between 0 and 1, not {transparency}.")
 
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT color FROM players WHERE playerID = %s", (player_id,))
-                rgba_color: str = cursor.fetchone()[0]
-        return rgba_color[:-1] + "," + str(transparency) + rgba_color[-1]
+                color: str = cursor.fetchone()[0]
+        return color  # [:-1] + "," + str(transparency) + rgba_color[-1]
 
     @staticmethod
-    def player_rank(player_id: int) -> str:
-        if player_id < 0:
-            raise ValueError(f"PlayerID can not be {player_id}.")
+    def player_rank(player_id: str) -> str:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "SELECT r.abbr FROM scores s NATURAL JOIN ranks r WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
+                    "SELECT r.abbr FROM scores s JOIN ranks r ON s.rank = r.abbr WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
                 data = cursor.fetchone()
                 return data[0] if data else "u"  # TODO find better way than hardcoding unranked
 
     @staticmethod
-    def get_active_players() -> list[int]:
+    def get_active_player_ids() -> list[str]:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT playerID FROM players WHERE active = 1")
+                cursor.execute("SELECT playerID FROM players WHERE active = 1 ORDER BY `order` ASC")
                 player_ids = cursor.fetchall()
                 if not player_ids:
                     return None
                 return [player_id[0] for player_id in player_ids]
+
+    @staticmethod
+    def get_players_ids():
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT playerID FROM players")
+                return (player_id[0] for player_id in cursor.fetchall())
+
+    @staticmethod
+    def get_player_info(player_id: str):
+        with Database.get_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM players WHERE playerID = %s", (player_id,))
+                return cursor.fetchone()
+
+    @staticmethod
+    def game_id_has_replay(game_id: int) -> bool:
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT replayAvailable FROM games WHERE gameID = %s", (game_id,))
+                return bool(cursor.fetchone()[0])
+
+    @staticmethod
+    def save_replay_stats(game_id: int, analysis) -> None:
+        with Database.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("UPDATE games SET secondsPlayed = %s, mapName = %s, replayAvailable = TRUE WHERE gameID = %s",
+                               (analysis.total_seconds_played, analysis.map_name, game_id))
+                for player in analysis.players:
+                    cursor.execute("INSERT IGNORE INTO players (playerID, name) VALUES (%s,%s)",
+                                   (player.online_id, player.name))
+                    cursor.execute("INSERT IGNORE INTO scores VALUES (%s,%s,NULL,%s,%s,%s,%s,%s)",
+                                   (game_id, player.online_id, player.score, player.goals, player.assists, player.saves, player.shots))
+
+                for goal in analysis.goals:
+                    scorer = [p for p in analysis.players if p.name == goal.player_name][0]
+                    cursor.execute("INSERT INTO goals VALUES (NULL,%s,%s,%s)", (game_id, scorer.online_id, goal.frame))
+            conn.commit()
 
 
 class RLQueries:
@@ -70,32 +101,19 @@ class RLQueries:
     def insert_game_data(game: list) -> bool:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("INSERT INTO games VALUES (%s,%s,%s,%s,NULL)", (game[0], game[1], game[3], game[4]))
+                cursor.execute("INSERT INTO games VALUES (%s,%s,%s,%s,NULL,NULL,NULL,NULL)",
+                               (game[0], game[1], game[3], game[4]))
                 cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                               (game[0], 0, game[5], game[6], game[7], game[8], game[9], game[10]))
+                               (game[0], "76561198057132199", game[5], game[6], game[7], game[8], game[9], game[10]))
                 cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                               (game[0], 1, game[11], game[12], game[13], game[14], game[15], game[16]))
+                               (game[0], "76561198037207475", game[11], game[12], game[13], game[14], game[15], game[16]))
                 cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                               (game[0], 2, game[17], game[18], game[19], game[20], game[21], game[22]))
+                               (game[0], "76561198057982808", game[17], game[18], game[19], game[20], game[21], game[22]))
                 conn.commit()
         return True
 
     @staticmethod
-    def get_last_reload() -> int:
-        with Database.get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT last_reload FROM meta")
-                return cursor.fetchone()[0]
-
-    @staticmethod
-    def set_last_reload(last_reload: int) -> None:
-        with Database.get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("UPDATE meta SET last_reload=%s", (last_reload,))
-            conn.commit()
-
-    @staticmethod
-    def last_x_games_stats(limit: int, with_date: bool) -> list[Any]:
+    def last_x_games_stats(active_player_ids: list[str], limit: int, with_date: bool) -> list[Any]:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
@@ -104,13 +122,13 @@ class RLQueries:
                         p1.rank, p1.score, p1.goals, p1.assists, p1.saves, p1.shots,
                         p2.rank, p2.score, p2.goals, p2.assists, p2.saves, p2.shots,
                         p3.rank, p3.score, p3.goals, p3.assists, p3.saves, p3.shots,
-                        IF(replay IS NOT NULL, 1, 0)
+                        replayAvailable
                     FROM games g
-                    LEFT JOIN scores p1 ON g.gameID = p1.gameID AND p1.playerID = 0
-                    LEFT JOIN scores p2 ON g.gameID = p2.gameID AND p2.playerID = 1
-                    LEFT JOIN scores p3 ON g.gameID = p3.gameID AND p3.playerID = 2
+                    LEFT JOIN scores p1 ON g.gameID = p1.gameID AND p1.playerID = %s
+                    LEFT JOIN scores p2 ON g.gameID = p2.gameID AND p2.playerID = %s
+                    LEFT JOIN scores p3 ON g.gameID = p3.gameID AND p3.playerID = %s
                     ORDER BY ID DESC LIMIT %s
-                """, (limit,))
+                """, (*active_player_ids, limit,))
                 return cursor.fetchall()
 
     @staticmethod
@@ -256,11 +274,8 @@ class RLQueries:
     def session_details():
         details = dict()
         latest_session_details = RLQueries.latest_session_main_data()
-        if not latest_session_details:
-            return {}
         _, s_date, s_wins, s_losses, _, _ = latest_session_details  # TODO: rewrite
-        s_games = s_wins + s_losses
-        details["session_game_count"] = s_games
+        details["session_game_count"] = s_wins + s_losses
         details["latest_session_date"] = s_date
         details["w_and_l"] = ["W" if game[2] > game[3] else "L" for game in RLQueries.games_from_session_date(s_date)]
         return details
@@ -297,6 +312,24 @@ class RLQueries:
                 """, (session_ranking, session_ranking))
                 neighbours = cursor.fetchall()  # three sessions above and three sessions below
                 return neighbours
+
+    @staticmethod
+    def games_by_date(date: str, adjancent_days: int = 1) -> list:
+        yesterday = (datetime.date.fromisoformat(date) - datetime.timedelta(days=adjancent_days)).strftime("%Y-%m-%d")
+        tomorrow = (datetime.date.fromisoformat(date) + datetime.timedelta(days=adjancent_days)).strftime("%Y-%m-%d")
+        with Database.get_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM games WHERE date >= %s AND date <= %s;", (yesterday, tomorrow))
+                games = cursor.fetchall()
+        return games
+
+    @staticmethod
+    def player_stats_by_gameid(game_id: int, player_id: str):
+        with Database.get_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM scores WHERE gameID = %s AND playerID = %s", (game_id, player_id))
+                scores = cursor.fetchall()
+        return scores
 
 
 # TODO: Use unused queries
@@ -474,7 +507,7 @@ class RLQueries:
 #         CAST(SUM(IIF(st.stSc <= at.avgS,1,0)) AS FLOAT) AS wr FROM st, at
 #     """, (player_id,)).fetchone()
 
-#     # TODO: rework next to queries into own table
+#     # TODO: rework next two queries into own table
 #     def ff_team_scores_x_times(x: int) -> tuple:
 #         return self.c.execute("""
 #     SELECT CAST(SUM(IIF(gGoals = %s,1,0)) AS FLOAT) / COUNT(gID) AS oc,

@@ -2,6 +2,7 @@ from __future__ import annotations  # for class type hints
 
 import random
 from enum import Enum
+from queries import GeneralQueries
 
 import simplejson as json  # To be able to serialize object of type Decimal
 
@@ -111,14 +112,11 @@ class DatasetColor(Enum):
         r, g, b = random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256)
         return f"rgba({r},{g},{b},0.6)"
 
-    KNUS = "rgba(47,147,26,0.8)",
-    PUAD = "rgba(147,26,26,0.8)",
-    STICKER = "rgba(26,115,147,0.8)",
-    CLOWN = "rgba(40, 40, 40, 0.8)",
-    WIN = "rgba(3, 58, 3, 0.8)",
-    LOSS = "rgba(58, 3, 3, 0.8)",
+    TEAM = "rgba(40, 40, 40, 0.8)",
+    WIN = "rgba(13, 70, 13, 0.8)",
+    LOSS = "rgba(135, 4, 4, 0.8)",
     GAME = "rgba(17, 3, 58, 0.8)",
-    NEUTRAL = "rgba(128,128,128,0.6)",
+    NEUTRAL_GREY = "rgba(128,128,128,0.6)",
     WHITE = "rgba(255,255,255,0.6)"
 
 
@@ -136,8 +134,8 @@ class GraphQueries:
 
         labels, wins, losses = zip(*raw)
         graph = GraphBuilder() \
-            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
-            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.TEAM) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.TEAM) \
             .withLabels(labels) \
             .withLegend(False)
         return graph.toJSON()
@@ -160,8 +158,8 @@ class GraphQueries:
         losses.append(losses.pop(0))
 
         graph = GraphBuilder() \
-            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
-            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.TEAM) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.TEAM) \
             .withLabels(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]) \
             .withLegend(False)
         return graph.toJSON()
@@ -177,8 +175,8 @@ class GraphQueries:
         _, wins, losses = zip(*raw)
 
         graph = GraphBuilder() \
-            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
-            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.TEAM) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.TEAM) \
             .withLabels(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]) \
             .withLegend(False)
         return graph.toJSON()
@@ -193,18 +191,18 @@ class GraphQueries:
         labels, wins, losses = zip(*raw)
 
         graph = GraphBuilder() \
-            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
-            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.TEAM) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.TEAM) \
             .withLabels(labels) \
             .withLegend(False)
         return graph.toJSON()
 
     @staticmethod
-    def performance_graph(total_games_count: int) -> dict:
+    def performance_graph(total_games_count: int, active_players: list[str]) -> dict:
         data_list = []
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
-                for player_id in [0, 1, 2]:  # TODO: cleanup
+                for player_id in active_players:
                     cursor.execute(
                         f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
                     data_list.append(list(reversed([x[0] for x in cursor.fetchall()])))
@@ -212,12 +210,14 @@ class GraphQueries:
 
         graph = GraphBuilder() \
             .withType("line") \
-            .withDataset(data_list[0], "Knus", DatasetColor.KNUS, DatasetColor.KNUS) \
-            .withDataset(data_list[1], "Puad", DatasetColor.PUAD, DatasetColor.PUAD) \
-            .withDataset(data_list[2], "Sticker", DatasetColor.STICKER, DatasetColor.STICKER) \
-            .withDataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL, 3) \
-            .withLabels(list(range(total_games_count - 20, total_games_count))) \
-            .withGrid(y_color="rgba(209, 209, 209, 0.1)")  # TODO: label is one off
+            .withDataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL_GREY, 3) \
+            .withLabels(list(range(total_games_count - 19, total_games_count + 1))) \
+            .withGrid(y_color="rgba(209, 209, 209, 0.1)")
+
+        for i, player_id in enumerate(active_players):
+            player_info = GeneralQueries.get_player_info(player_id)
+            graph = graph.withDataset(data_list[i], player_info.get(
+                "name"), player_info.get("color"), DatasetColor.NEUTRAL_GREY)
         return graph.toJSON()
 
     @staticmethod
@@ -235,11 +235,11 @@ class GraphQueries:
         return [{"x": str(goals), "y": str(against), "v": value} for goals, against, value, _ in graph_data]
 
     @staticmethod
-    def score_distribution_graph() -> dict:
+    def score_distribution_graph(active_players: list[str]) -> dict:
         datasets = []
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
-                for player_id in [0, 1, 2]:  # TODO: cleanup
+                for player_id in active_players:
                     cursor.execute("""
                         SELECT t1.grouper * 25 AS lower_bound, (t1.grouper + 1) * 25 AS upper_bound, COUNT(t1.grouper) AS score_count
                         FROM (
@@ -256,10 +256,12 @@ class GraphQueries:
 
         graph = GraphBuilder() \
             .withType("line") \
-            .withDataset(datasets[0], "Knus", DatasetColor.KNUS, DatasetColor.NEUTRAL) \
-            .withDataset(datasets[1], "Puad", DatasetColor.PUAD, DatasetColor.NEUTRAL) \
-            .withDataset(datasets[2], "Sticker", DatasetColor.STICKER, DatasetColor.NEUTRAL) \
             .withLabels(labels)
+
+        for i, player_id in enumerate(active_players):
+            player_info = GeneralQueries.get_player_info(player_id)
+            graph = graph.withDataset(datasets[i], player_info.get(
+                "name"), player_info.get("color"), DatasetColor.NEUTRAL_GREY)
         return graph.toJSON()
 
     @staticmethod
@@ -279,8 +281,8 @@ class GraphQueries:
 
         labels, wins, losses, _ = zip(*dataset)
         graph = GraphBuilder() \
-            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.CLOWN) \
-            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.CLOWN) \
+            .withDataset(wins, "Wins", DatasetColor.WIN, DatasetColor.TEAM) \
+            .withDataset(losses, "Losses", DatasetColor.LOSS, DatasetColor.TEAM) \
             .withLabels(labels) \
             .withLegend(False)
         return graph.toJSON()

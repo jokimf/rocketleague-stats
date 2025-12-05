@@ -3,13 +3,13 @@ h3 {
     scroll-margin-top: 3.5rem;
 }
 
-h1 > img {
+h1>img {
     width: 40px;
     height: 40px;
     vertical-align: top;
 }
 
-td > img {
+td>img {
     width: 25px;
     height: 25px;
     vertical-align: top;
@@ -65,4 +65,8 @@ article>footer {
 
 .cols>* {
     flex-basis: 100%;
+}
+
+.no-decoration {
+    text-decoration: none;
 }

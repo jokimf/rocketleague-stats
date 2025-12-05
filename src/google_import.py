@@ -30,9 +30,12 @@ def fetch_credits():
 
 scope = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 RL_DOC = '1zjW4_TEsyd4yDSsVuZsrUritfwHgHZQ3e0t9GnWXrKA'
-creds = fetch_credits()
-service = build("sheets", "v4", credentials=creds)
 
+try:
+    creds = fetch_credits()
+    service = build("sheets", "v4", credentials=creds)
+except Exception:
+    print("Offline Mode")
 
 def is_new_data_available(latest_game_id_excel: int) -> bool:
     result = service.spreadsheets().values().get(

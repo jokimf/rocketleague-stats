@@ -1,3 +1,10 @@
+from dataclasses import dataclass
+from typing import Optional
+
+from fastapi import Depends, Header, HTTPException, status
+from fastapi.requests import Request
+
+from connect import Database
 from queries import GeneralQueries
 
 
@@ -16,3 +23,54 @@ def conditional_formatting(color: str, value: float, minimum: int, maximum: int)
 
 def fade_highlighting(game: int, game_range: int):
     return f"rgba(53, 159, 159,{(game_range - (GeneralQueries.total_games() - game)) / game_range})"
+
+
+@dataclass
+class User:
+    username: str
+    identifier: str
+    userid: int
+
+    def has_valid_values(self) -> bool:
+        return bool(self.username and self.identifier and self.userid)
+
+    def is_premium(self) -> bool:
+        with Database.get_connection("jok.im") as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT premium FROM users WHERE username=%s AND identifier=%s AND userID=%s",
+                               (self.username, self.identifier, self.userid))
+                premium = cursor.fetchone()[0]
+                return bool(premium)
+
+    def check_credentials(self) -> bool:
+        with Database.get_connection("jok.im") as conn:
+            with conn.cursor() as cursor:
+                if not self.has_valid_values():
+                    return False
+                cursor.execute("SELECT 1 FROM users WHERE username=%s AND identifier=%s AND userid=%s",
+                               (self.username, self.identifier, self.userid))
+                user_found = cursor.fetchone()
+        return user_found and bool(user_found[0])
+
+
+def extract_user_info(request: Request) -> Optional[User]:
+    username = request.cookies.get('username')
+    identifier = request.cookies.get('identifier')
+    userid = request.cookies.get('userid')
+    user = User(username, identifier, int(userid))
+    return user
+
+
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+def enforce_max_size(content_length: int = Header(None)):
+    if content_length is None:
+        raise HTTPException(
+            status_code=411, detail="Missing Content-Length header"
+        )
+    if content_length > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File too large"
+        )

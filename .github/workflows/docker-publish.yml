@@ -1,8 +1,8 @@
 name: Create docker image and deploy
 on:
-    push:
-        branches:
-            - release
+  push:
+    branches:
+      - release
 
 env:
     REGISTRY: ghcr.io

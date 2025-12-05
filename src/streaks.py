@@ -34,7 +34,7 @@ class StreakQueries:
 
     # Table of [streak, startGameID, endGameID]
     @staticmethod
-    def mvp_streak(player_id: int, limit: int = 16) -> list[Any]:
+    def mvp_streak(player_id: str, limit: int = 16) -> list[Any]:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
@@ -47,7 +47,7 @@ class StreakQueries:
 
     # Table of [streak, startGameID, endGameID]
     @staticmethod
-    def not_mvp_streak(player_id: int, limit: int = 16) -> list[Any]:
+    def not_mvp_streak(player_id: str, limit: int = 16) -> list[Any]:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
@@ -60,7 +60,7 @@ class StreakQueries:
 
     # Table of [streak, startGameID, endGameID]
     @staticmethod
-    def not_lvp_streak(player_id: int, limit: int = 16) -> list[Any]:
+    def not_lvp_streak(player_id: str, limit: int = 16) -> list[Any]:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
@@ -73,7 +73,7 @@ class StreakQueries:
 
     # Table of [streak, startGameID, endGameID]
     @staticmethod
-    def lvp_streak(player_id: int, limit: int = 16) -> list[Any]:
+    def lvp_streak(player_id: str, limit: int = 16) -> list[Any]:
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
@@ -85,7 +85,7 @@ class StreakQueries:
                 return cursor.fetchall()
 
     @staticmethod
-    def streak_stat_is_zero(player_id: int, stat: str, comparison: str, value: int) -> list[Any]:
+    def streak_stat_is_zero(player_id: str, stat: str, comparison: str, value: int) -> list[Any]: # TODO unused
         if stat not in ["goals", "assists", "saves", "shots"]:
             return []
         if comparison not in [">", "<", "="]:
@@ -103,7 +103,7 @@ class StreakQueries:
                 return cursor.fetchall()
 
     @staticmethod
-    def streak_win_or_loss_by_one(win: bool):  # todo unused?
+    def streak_win_or_loss_by_one(win: bool):  # TODO unused
         with Database.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
@@ -136,7 +136,7 @@ class StreakQueries:
         return streaks
 
     @staticmethod
-    def generate_profile_streaks(player_id: int):
+    def generate_profile_streaks(player_id: str):
         streaks = {
             "MVP Streak": StreakQueries.mvp_streak(player_id),
             "LVP Streak": StreakQueries.lvp_streak(player_id),

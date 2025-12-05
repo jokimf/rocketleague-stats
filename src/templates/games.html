@@ -57,11 +57,11 @@
             {% for row in games %}
             <tr>
                 {% for data in row %}
-                <td {% if loop.index not in [1,2,3,4,5,11,17,23] %}
-                    style="background-color:{{ cf(last_games_highlighting[loop.index][0],data, last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
-                    {% elif loop.index in [5,11,17] %}
-                    style="background-color:{{ cf(last_games_highlighting[loop.index][0],row[loop.index], last_games_highlighting[loop.index][1], last_games_highlighting[loop.index][2]) }};"
-                    {% elif loop.index in [3,4] %} {% if row[2]> row[3] and loop.index == 3 %}
+                <td {% if loop.index0 not in [1,2,3,4,5,11,17,23] %}
+                    style="background-color:{{ cf(last_games_highlighting[loop.index0][0],data, last_games_highlighting[loop.index0][1], last_games_highlighting[loop.index0][2]) }};"
+                    {% elif loop.index0 in [5,11,17] %}
+                    style="background-color:{{ cf(last_games_highlighting[loop.index0][0],row[loop.index0], last_games_highlighting[loop.index0][1], last_games_highlighting[loop.index0][2]) }};"
+                    {% elif loop.index0 in [3,4] %} {% if row[2]> row[3] and loop.index == 3 %}
                     style="background-color: rgba(30,133,30,0.4)"
                     class="result_highlighting_table_cell"
                     {% elif row[3] > row[2] and loop.index == 4 %}

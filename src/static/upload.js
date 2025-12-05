@@ -1,14 +1,11 @@
 document.getElementById("uploadBtn").addEventListener("click", async () => {
     const input = document.getElementById("fileInput");
-    const resultDiv = document.getElementById("result");
-    resultDiv.innerHTML = "Uploading...";
+    const resultTable = document.getElementById("result");
 
-    const formData = new FormData();
     for (const file of input.files) {
-        formData.append("files", file);
-    }
+        let formData = new FormData();
+        formData.append("file", file);
 
-    try {
         const response = await fetch("/rl/uploadreplay", {
             method: "POST",
             body: formData,
@@ -16,12 +13,21 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
 
         const data = await response.json();
 
-        if (data.valid) {
-            resultDiv.innerHTML = `<p style="color: green;">✅ All files valid!</p>`;
+        let div = document.createElement("div");
+        if (data.replay_id) {
+            div.innerHTML = `✅ Saved with gameID: ${data.replay_id}`;
         } else {
-            resultDiv.innerHTML = `<p style="color: red;">❌ Some files invalid:</p><ul>${data.invalid.map(f => `<li>${f}</li>`).join("")}</ul>`;
+            if (response.status == 413) {
+                div.innerHTML = `❌ Too large to be a replay`
+            } else {
+                div.innerHTML = `❌ ${data.reason}`;
+            }
         }
-    } catch (error) {
-        resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        let row = resultTable.insertRow();
+        let cell = row.insertCell();
+        cell.textContent = file.name;
+        let cell2 = row.insertCell();
+        cell2.textContent = div.textContent;
+
     }
 });

@@ -18,10 +18,10 @@
     {% if empty %}
     <header>
         <h1>
-            <a class="success" href="/rl" style="text-decoration: none;">
+            <a class="success no-decoration" href="/rl">
                 <img src="https://jok.im/static/icons/rl_cg_logo_grey.png" height="30" width="30">
             </a>
-            <a class="accent" href="/rl" style="color:rgb(215, 215, 215);text-decoration: none;">ROCKET LEAGUE</a>
+            <a class="accent no-decoration" href="/rl" style="color:rgb(215, 215, 215)">ROCKET LEAGUE</a>
         </h1>
     </header>
     <main>
@@ -80,7 +80,7 @@
                     <h1>
                         <img alt={{ player.rank }} class="mr-.125 border-box"
                             src="https://jok.im/static/rl/ranks/{{ player.rank }}.png">
-                        <a href="/rl/profile/{{ loop.index0 }}" style="color:{{ player.color }};">{{ player.name }}</a>
+                        <a href="/rl/profile/{{ player.player_id }}" style="color:{{ player.color }};">{{ player.name }}</a>
                     </h1>
                 </header>
                 <p class="bg-subtle pbox flex centered cols" style="font-size: x-small;">
@@ -149,9 +149,9 @@
                 {% for row in last_games %}
                 <tr>
                     {% for data in row %}
-                    <td value="{{ data }}" col="{{ loop.index }}" min="{{ last_games_highlighting[loop.index][1] }}"
-                        color="{{ last_games_highlighting[loop.index][0] }}"
-                        max="{{ last_games_highlighting[loop.index][2] }}" class="highlight_td 
+                    <td value="{{ data }}" col="{{ loop.index }}" min="{{ last_games_highlighting[loop.index0][1] }}"
+                        color="{{ last_games_highlighting[loop.index0][0] }}"
+                        max="{{ last_games_highlighting[loop.index0][2] }}" class="highlight_td 
                         {% if loop.index==2 or loop.index==3 %} 
                             {% if row[1] > row[2] and loop.index == 2 %}
                                 win 

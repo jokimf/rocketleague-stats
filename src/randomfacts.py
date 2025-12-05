@@ -19,10 +19,11 @@ class RandomFact:
 class RandomFactQueries:
     POSSIBLE_STATS: Final[tuple[str]] = ("score", "goals", "assists", "saves", "shots")
 
-    def generate_random_facts() -> list:
+    @staticmethod
+    def generate_random_facts(active_player_ids: list[str]) -> list:
         all_facts: list[RandomFact] = \
             RandomFactQueries.record_session() + \
-            RandomFactQueries.milestone_facts() + \
+            RandomFactQueries.milestone_facts(active_player_ids) + \
             RandomFactQueries.last_session_facts() + \
             RandomFactQueries.last_month_summary() + \
             RandomFactQueries.result_facts() + \
@@ -128,10 +129,10 @@ class RandomFactQueries:
         return facts
 
     @staticmethod
-    def milestone_facts() -> list[RandomFact]:  # Player reaches milestone in stat y
+    def milestone_facts(active_player_ids: list[str]) -> list[RandomFact]:  # Player reaches milestone in stat y
         facts = []
         for stat in RandomFactQueries.POSSIBLE_STATS:
-            for player_id in range(3):
+            for player_id in active_player_ids:
                 milestone_val = 50000 if stat == "score" else 500 if stat == "shots" else 250
                 total = RandomFactQueries.player_total_of_stat(player_id, stat)
                 overshoot = total % milestone_val
@@ -333,7 +334,7 @@ class RandomFactQueries:
                 return cursor.fetchone()
 
     @staticmethod
-    def player_total_of_stat(player_id: int, stat: str) -> int:
+    def player_total_of_stat(player_id: str, stat: str) -> int:
         if stat not in RandomFactQueries.POSSIBLE_STATS:
             raise ValueError(f"{stat} is not in possible stats.")
         with Database.get_connection() as conn:
@@ -343,7 +344,7 @@ class RandomFactQueries:
                 return data if data else 0
 
     @staticmethod
-    def player_stat_of_last_game(player_id: int, stat: str) -> int:
+    def player_stat_of_last_game(player_id: str, stat: str) -> int:
         if stat not in RandomFactQueries.POSSIBLE_STATS:
             raise ValueError(f"{stat} is not in possible stats.")
         with Database.get_connection() as conn:

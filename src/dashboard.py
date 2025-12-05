@@ -1,11 +1,14 @@
+from dataclasses import dataclass
+
 import google_import as data
+import utility
 from graphs import GraphQueries
 from profiles import ProfileQueries
 from queries import GeneralQueries, RLQueries
 from randomfacts import RandomFactQueries
 from records import RecordQueries
+from typing import Any
 from streaks import StreakQueries
-import utility
 
 
 class Dashboard:
@@ -13,11 +16,13 @@ class Dashboard:
 
         self.reload()
         self.RANK_HIGHLIGHTING = ["rgb(201, 176, 55, 0.3)", "rgb(215, 215, 215, 0.3)", "rgb(173, 138, 86, 0.3)"]
-        self.LAST_GAMES_HIGHLIGHTING = [
-            None, None, None, None,
-            *[["rgba(12,145,30)", 100, 700]]*3, *[["rgba(12,145,30)", 0, 5]]*3, ("rgba(12,145,30)", 0, 10),
-            *[["rgba(151,3,14)", 100, 700]]*2, *[["rgba(151,3,14)", 0, 5]]*3, ("rgba(151,3,14)", 0, 10),
-            *[["rgba(12,52,145)", 100, 700]]*2, *[["rgba(12,52,145)", 0, 5]]*3, ("rgba(12,52,145)", 0, 10), None]
+        self.LAST_GAMES_HIGHLIGHTING = [  # TODO: use player colors
+            None, None, None,  # gameID, G, GA
+            None, ["rgba(12,145,30)", 100, 700], *[["rgba(12,145,30)", 0, 5]]*3, ("rgba(12,145,30)", 0, 10),
+            None, ["rgba(151,3,14)", 100, 700], *[["rgba(151,3,14)", 0, 5]]*3, ("rgba(151,3,14)", 0, 10),
+            None, ["rgba(12,52,145)", 100, 700], *[["rgba(12,52,145)", 0, 5]]*3, ("rgba(12,52,145)", 0, 10),
+            None
+        ]
 
     def reload(self):
         # Reload cache:
@@ -25,11 +30,13 @@ class Dashboard:
             self.total_games = 0
             return
 
+        active_player_ids = GeneralQueries.get_active_player_ids()
+
         # Main
-        self.player_profiles = ProfileQueries.build_player_profiles()
+        self.player_profiles = ProfileQueries.build_player_profiles(active_player_ids)
         self.session_details = RLQueries.session_details()
-        z = self.session_details.get("latest_session_date")
-        self.session_information = RandomFactQueries.session_data_by_date(z)
+        self.session_information = RandomFactQueries.session_data_by_date(
+            self.session_details.get("latest_session_date"))
         self.session_rank = RLQueries.session_rank()
         self.random_facts = []  # RandomFactQueries.generate_random_facts()
         self.winrates = RLQueries.winrates()
@@ -37,27 +44,27 @@ class Dashboard:
         self.total_games = GeneralQueries.total_games()
         self.tilt = RLQueries.tilt()
         self.average_session_length = RLQueries.average_session_length()
-        self.last_games = RLQueries.last_x_games_stats(len(RLQueries.games_from_session_date()), False)
-        self.profile_streaks = [StreakQueries.generate_profile_streaks(p) for p in [0, 1, 2]]
+        self.last_games = RLQueries.last_x_games_stats(
+            active_player_ids, len(RLQueries.games_from_session_date()), False)
         self.session_game_amount = len(RLQueries.games_from_session_date())
-        self.session_game_details = RLQueries.last_x_games_stats(self.session_game_amount, False)
-        self.fun_facts = []  # RLQueries.generate_fun_facts()
+        self.session_game_details = RLQueries.last_x_games_stats(active_player_ids, self.session_game_amount, False)
+        self.fun_facts = []  # RLQueries.generate_fun_facts(active_player_ids)
 
         # Records
         self.record_games = RecordQueries.generate_record_games()
         self.streaks_record = StreakQueries.generate_streaks_record_page()
 
         # Graphs
-        self.performance_graph = GraphQueries.performance_graph(self.total_games)
+        self.performance_graph = GraphQueries.performance_graph(self.total_games, active_player_ids)
+        self.score_distribution_graph = GraphQueries.score_distribution_graph(active_player_ids)
         self.days_graph = GraphQueries.days_graph()
         self.weekdays_graph = GraphQueries.weekdays_graph()
         self.month_graph = GraphQueries.month_graph()
         self.year_graph = GraphQueries.year_graph()
-        self.score_distribution_graph = GraphQueries.score_distribution_graph()
         self.seasons_graph = GraphQueries.seasons_graph()
 
         # Games
-        self.last_100_games_stats = RLQueries.last_x_games_stats(100, True)
+        self.last_100_games_stats = RLQueries.last_x_games_stats(active_player_ids, 100, True)
 
     def reload_all_stats(self):
         if data.is_new_data_available(self.total_games):
@@ -107,7 +114,7 @@ class Dashboard:
                 "POINTS STATS",
                 "MISCELLANEOUS"
             ],
-            "rank_highlighting": self.RANK_HIGHLIGHTING,
+            "rank_highlighting": self.RANK_HIGHLIGHTING,  # TODO Use player color
             "k": "rgba(12,145,30,0.2)",
             "p": "rgba(151,3,14,0.2)",
             "s": "rgba(12,52,145,0.2)",
@@ -115,10 +122,10 @@ class Dashboard:
         }
         return context
 
-    def build_profile_context(self, player_id):
+    def build_profile_context(self, player_id: str):
         return {
-            "name": ["Knus", "Puad", "Sticker"][player_id],
-            "streaks": self.profile_streaks[player_id],
+            "name": GeneralQueries.player_name(player_id),  # ["Knus", "Puad", "Sticker"][player_id],
+            "streaks": StreakQueries.generate_profile_streaks(player_id),
             "rank_highlighting": self.RANK_HIGHLIGHTING,
         }
 
@@ -128,3 +135,10 @@ class Dashboard:
             "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING,
             "cf": utility.conditional_formatting
         }
+
+
+@dataclass
+class LatestSession:
+    info_panels: list[tuple[str, Any, str]]  # key, value, color
+    table_data: list[list[Any]]
+    color: list[list[str]] # same shape like table_data
