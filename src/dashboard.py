@@ -31,12 +31,14 @@ class Dashboard:
             return
 
         active_player_ids = GeneralQueries.get_active_player_ids()
+        stats = Stats()
 
         # Main
         self.player_profiles = ProfileQueries.build_player_profiles(active_player_ids)
         self.session_details = RLQueries.session_details()
         self.session_information = RandomFactQueries.session_data_by_date(
-            self.session_details.get("latest_session_date"))
+            self.session_details.get("latest_session_date")
+        )
         self.session_rank = RLQueries.session_rank()
         self.random_facts = []  # RandomFactQueries.generate_random_facts()
         self.winrates = RLQueries.winrates()
@@ -45,7 +47,9 @@ class Dashboard:
         self.tilt = RLQueries.tilt()
         self.average_session_length = RLQueries.average_session_length()
         self.last_games = RLQueries.last_x_games_stats(
-            active_player_ids, len(RLQueries.games_from_session_date()), False)
+            active_player_ids, len(RLQueries.games_from_session_date()), False
+        )
+        self.latest_session = stats.latest_session(active_player_ids)
         self.session_game_amount = len(RLQueries.games_from_session_date())
         self.session_game_details = RLQueries.last_x_games_stats(active_player_ids, self.session_game_amount, False)
         self.fun_facts = []  # RLQueries.generate_fun_facts(active_player_ids)
@@ -137,8 +141,22 @@ class Dashboard:
         }
 
 
-@dataclass
-class LatestSession:
-    info_panels: list[tuple[str, Any, str]]  # key, value, color
-    table_data: list[list[Any]]
-    color: list[list[str]] # same shape like table_data
+class Stats:
+
+    def __init__(self) -> None:
+        self.total_games = GeneralQueries.total_games()
+        self.active_player_ids = GeneralQueries.get_active_player_ids()
+
+    def latest_session(self, active_player_ids):
+        info_panels = {
+            "date": 0,
+            "win_loss": (0, 0)
+        }
+
+        table_data = RLQueries.last_x_games_stats(active_player_ids, 5, False)
+
+        return {
+            "info_panels": info_panels,
+            "table_data": table_data,
+            "player_colors": [GeneralQueries.player_color(player_id) for player_id in active_player_ids]
+        }
