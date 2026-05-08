@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Header, HTTPException, status
 from fastapi.requests import Request
 
-from connect import Database
+import db
 from queries import GeneralQueries
 
 
@@ -35,7 +35,7 @@ class User:
         return bool(self.username and self.identifier and self.userid)
 
     def is_premium(self) -> bool:
-        with Database.get_connection("jok.im") as conn:
+        with db.get_db_connection("jok.im") as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT premium FROM users WHERE username=%s AND identifier=%s AND userID=%s",
                                (self.username, self.identifier, self.userid))
@@ -43,7 +43,7 @@ class User:
                 return bool(premium)
 
     def check_credentials(self) -> bool:
-        with Database.get_connection("jok.im") as conn:
+        with db.get_db_connection("jok.im") as conn:
             with conn.cursor() as cursor:
                 if not self.has_valid_values():
                     return False

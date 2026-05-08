@@ -1,5 +1,6 @@
 from collections import namedtuple
-from connect import Database
+
+import db
 
 Record = namedtuple("Record", ["title", "id", "data"])
 
@@ -12,7 +13,7 @@ class RecordQueries:
         if stat == "goals":
             stat = "scores.goals"
 
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
                         SELECT name, {stat}, games.gameID, date 
@@ -30,7 +31,7 @@ class RecordQueries:
             raise ValueError(f"{stat} is not in possible stats.")
         if stat == "goals":
             stat = "scores.goals"
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
                         SELECT "CG", SUM({stat}) AS stat, games.gameID, date 
@@ -49,7 +50,7 @@ class RecordQueries:
             raise ValueError(f"{stat} is not in possible stats or {minmax} is not MIN or MAX")
         if stat == "goals":
             stat = "performance.goals"
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
                     SELECT name, {minmax}({stat}) AS s, games.gameID, date 
@@ -62,7 +63,7 @@ class RecordQueries:
 
     @staticmethod
     def most_against(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT 'CG', against, gameID, date FROM games ORDER BY against DESC, gameID ASC LIMIT %s", (limit,))
@@ -70,7 +71,7 @@ class RecordQueries:
 
     @staticmethod
     def most_against_and_won(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT 'CG', against, gameID, date FROM games WHERE goals > against ORDER BY against DESC, gameID ASC LIMIT %s", (limit,))
@@ -78,7 +79,7 @@ class RecordQueries:
 
     @staticmethod
     def most_goals_and_lost(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT 'CG', goals, gameID, date FROM games WHERE goals < against ORDER BY goals DESC, gameID ASC LIMIT %s",
@@ -87,15 +88,15 @@ class RecordQueries:
 
     @staticmethod
     def most_total_goals(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT 'CG',goals+against, gameID, date FROM games ORDER BY goals + against DESC, gameID ASC LIMIT %s",
-                            (limit,))
+                               (limit,))
                 return Record(f"Most total goals in one game", "mosttotalgoals", cursor.fetchall())
 
     @staticmethod
     def highest_points_nothing_else(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""SELECT players.name, MAX(scores.score) AS p, games.gameID, games.date     
                         FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
@@ -105,7 +106,7 @@ class RecordQueries:
 
     @staticmethod
     def most_points_without_goal_or_assist(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""SELECT players.name, MAX(scores.score) as p, games.gameID, games.date 
                         FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
@@ -115,7 +116,7 @@ class RecordQueries:
 
     @staticmethod
     def most_points_without_goal(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""SELECT name, score, games.gameID, date FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
                     WHERE scores.goals = 0 ORDER BY score DESC, games.gameID ASC LIMIT %s""", (limit,))
@@ -123,7 +124,7 @@ class RecordQueries:
 
     @staticmethod
     def least_points_at_least_1(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""SELECT name, MIN(score) as p, games.gameID, date 
                         FROM scores JOIN games ON games.gameID = scores.gameID NATURAL JOIN players
@@ -133,7 +134,7 @@ class RecordQueries:
 
     @staticmethod
     def least_points_with_goals(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""SELECT name, score, games.gameID, date FROM games JOIN scores ON games.gameID = scores.gameID NATURAL JOIN players
                     WHERE scores.goals > 0 ORDER BY score ASC, games.gameID ASC LIMIT %s""", (limit,))
@@ -144,7 +145,7 @@ class RecordQueries:
     def diff_mvp_lvp(order: str, limit: int = 3) -> Record:
         if order not in ["ASC", "DESC"]:
             raise ValueError("Order is not DESC or ASC.")
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
                     SELECT p.name, msc.score - lsc.score AS diff, ml.gameID, g.date
@@ -158,7 +159,7 @@ class RecordQueries:
 
     @staticmethod
     def most_solo_goals(limit: int = 3) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                         SELECT "CG", games.goals - SUM(assists) AS ja, games.gameID, date FROM games 

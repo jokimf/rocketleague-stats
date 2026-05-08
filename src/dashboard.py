@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 import google_import as data
 import utility
 from graphs import GraphQueries
@@ -7,7 +5,6 @@ from profiles import ProfileQueries
 from queries import GeneralQueries, RLQueries
 from randomfacts import RandomFactQueries
 from records import RecordQueries
-from typing import Any
 from streaks import StreakQueries
 
 
@@ -15,14 +12,19 @@ class Dashboard:
     def __init__(self) -> None:
 
         self.reload()
-        self.RANK_HIGHLIGHTING = ["rgb(201, 176, 55, 0.3)", "rgb(215, 215, 215, 0.3)", "rgb(173, 138, 86, 0.3)"]
-        self.LAST_GAMES_HIGHLIGHTING = [  # TODO: use player colors
-            None, None, None,  # gameID, G, GA
-            None, ["rgba(12,145,30)", 100, 700], *[["rgba(12,145,30)", 0, 5]]*3, ("rgba(12,145,30)", 0, 10),
-            None, ["rgba(151,3,14)", 100, 700], *[["rgba(151,3,14)", 0, 5]]*3, ("rgba(151,3,14)", 0, 10),
-            None, ["rgba(12,52,145)", 100, 700], *[["rgba(12,52,145)", 0, 5]]*3, ("rgba(12,52,145)", 0, 10),
-            None
-        ]
+        self.RANK_HIGHLIGHTING = ["rgb(201, 176, 55, 0.3)", "rgb(215, 215, 215, 0.3)",
+                                  "rgb(173, 138, 86, 0.3)"]  # gold silver bronze
+        self.LAST_GAMES_HIGHLIGHTING =  self.generate_last_games_highlighting(self.player_profiles)
+        # [
+        #     None, None, None,  # gameID, G, GA
+        #     None, [self.player_profiles[0]["color"], 100, 700],
+        #     *[[self.player_profiles[0]["color"], 0, 5]]*3, (self.player_profiles[0]["color"], 0, 10),
+        #     None, [self.player_profiles[1]["color"], 100, 700],
+        #     *[[self.player_profiles[1]["color"], 0, 5]]*3, (self.player_profiles[1]["color"], 0, 10),
+        #     None, [self.player_profiles[2]["color"], 100, 700],
+        #     *[[self.player_profiles[2]["color"], 0, 5]]*3, (self.player_profiles[2]["color"], 0, 10),
+        #     None
+        # ]
 
     def reload(self):
         # Reload cache:
@@ -128,7 +130,7 @@ class Dashboard:
 
     def build_profile_context(self, player_id: str):
         return {
-            "name": GeneralQueries.player_name(player_id),  # ["Knus", "Puad", "Sticker"][player_id],
+            "name": GeneralQueries.player_name(player_id),
             "streaks": StreakQueries.generate_profile_streaks(player_id),
             "rank_highlighting": self.RANK_HIGHLIGHTING,
         }
@@ -139,6 +141,26 @@ class Dashboard:
             "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING,
             "cf": utility.conditional_formatting
         }
+    
+    def generate_last_games_highlighting(self, active_players):
+        # 1. Start with the fixed leading None values (gameID, G, GA)
+        highlighting = [None, None, None]
+
+        # 2. Iterate through each player profile and append their specific pattern
+        for player in active_players:
+            color = player["color"]
+            player_pattern = [
+                None, #rank                   
+                [color, 100, 700], # score       
+                *[ [color, 0, 5] ] * 3, # goals, assists, saves
+                (color, 0, 10)  # shots
+            ]
+            highlighting.extend(player_pattern)
+
+        # 3. Add the trailing None for replays
+        highlighting.append(None)
+        
+        return highlighting
 
 
 class Stats:

@@ -57,11 +57,24 @@
             {% for row in games %}
             <tr>
                 {% for data in row %}
-                <td {% if loop.index0 not in [1,2,3,4,5,11,17,23] %}
-                    style="background-color:{{ cf(last_games_highlighting[loop.index0][0],data, last_games_highlighting[loop.index0][1], last_games_highlighting[loop.index0][2]) }};"
-                    {% elif loop.index0 in [5,11,17] %}
-                    style="background-color:{{ cf(last_games_highlighting[loop.index0][0],row[loop.index0], last_games_highlighting[loop.index0][1], last_games_highlighting[loop.index0][2]) }};"
-                    {% elif loop.index0 in [3,4] %} {% if row[2]> row[3] and loop.index == 3 %}
+                
+                <td 
+                {% if loop.index0 not in [0,1,2,3,4,5,11,17,22] %} 
+                value="{{ data }}" 
+                col="{{ loop.index }}" 
+                min="{{ last_games_highlighting[loop.index0][1] }}" 
+                color="{{ last_games_highlighting[loop.index0][0] }}"
+                max="{{ last_games_highlighting[loop.index0][2] }}" 
+                class="highlight_td {% if loop.index==2 or loop.index==3 %} 
+                            {% if row[1] > row[2] and loop.index == 2 %}
+                                win 
+                            {% elif row[2] > row[1] and loop.index == 3 %}
+                                loss 
+                            {% endif %}
+                        {% endif %}{% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10]>
+                            row[16] and loop.index == 11 or row[16] > row[10] and row[4] < row[16] and loop.index==17 %}
+                                mvp_highlighting_table_cell{% endif %}" 
+                {% if row[2]> row[3] and loop.index == 3 %}
                     style="background-color: rgba(30,133,30,0.4)"
                     class="result_highlighting_table_cell"
                     {% elif row[3] > row[2] and loop.index == 4 %}
@@ -92,5 +105,6 @@
         </table>
     </main>
 </body>
+<script src="/rl/static/dynamicColor.js"></script>
 
 </html>

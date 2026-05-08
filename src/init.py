@@ -1,12 +1,5 @@
 import mysql.connector as mysql
 import json
-from dataclasses import dataclass
-
-
-@dataclass
-class Config:
-    players: list[dict]
-    google_sheets: bool
 
 
 def init():

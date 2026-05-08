@@ -25,7 +25,7 @@
         </h1>
     </header>
     <main>
-        <p>No games have been played yet. 🍌</p>
+        <p>No games have been played yet.</p>
     </main>
     {% else %}
     <header>
@@ -80,37 +80,34 @@
                     <h1>
                         <img alt={{ player.rank }} class="mr-.125 border-box"
                             src="https://jok.im/static/rl/ranks/{{ player.rank }}.png">
-                        <a href="/rl/profile/{{ player.player_id }}" style="color:{{ player.color }};">{{ player.name }}</a>
+                        <a href="/rl/profile/{{ player.player_id }}" style="color:{{ player.color }};">{{ player.name
+                            }}</a>
                     </h1>
                 </header>
-                <p class="bg-subtle pbox flex centered cols" style="font-size: x-small;">
-                    <span>Stat</span>
-                    <span>Session</span>
-                    <span>20</span>
-                    <span>Season</span>
-                    <span>500</span>
-                    <span>All</span>
-                </p>
-                {% for stat in player.stats %}
-                {% if loop.index == 1 %}
-                {% set rounding = 1 %}
-                {% else %}
-                {% set rounding = 2 %}
-                {% endif %}
-                <p class="bg-muted pbox flex centered cols modern" value="{{ player.top[loop.index0][1] }}"
-                    style="font-size: small;justify-content: space-between;">
-                    <span>{{ profile_stat_names[loop.index0] }}</span>
-                    <span>{{ stat[0] | round(rounding) }}</span>
-                    <span>{{ stat[1] | round(rounding) }}</span>
-                    <span>{{ stat[2] | round(rounding) }}</span>
-                    <span>{{ stat[3] | round(rounding) }}</span>
-                    <span>{{ stat[4] | round(rounding) }}</span>
-                    <!--<span class="top_color" value="{{ stat[1] }}">
-                            Top {{ stat[1] }}%
-                        </span>-->
-                </p>
-                {% endfor %}
-                </p>
+
+                <table class="basicstats">
+                    <tr>
+                        <th></th>
+                        <th>Session</th>
+                        <th>20</th>
+                        <th>Season</th>
+                        <th>500</th>
+                        <th>All</th>
+                    </tr>
+                    {% for stats in player.stats %}
+                    {% if loop.index == 1 %}
+                    {% set rounding = 1 %}
+                    {% else %}
+                    {% set rounding = 2 %}
+                    {% endif %}
+                    <tr>
+                        <td>{{ profile_stat_names[loop.index0] }}</td>
+                        {% for value in stats %}
+                        <td top="{{player.top[loop.index0]}}">{{ value | round(rounding) }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
                 <p>
                     <output class="bg-active">
                         <span class="bold">JUST OUT:</span>
@@ -134,16 +131,16 @@
             <h3 id="sessionoverview">Overview</h3>
             <p>
                 <output class="bg-variant"><span class="bold">Session ID:</span> {{ session_information[0] }}</output>
-                <output class="bg-active"><span class="bold">Date:</span> {{ session_information[1] }}</output>
-                <output class="bg-muted"><span class="bold">W/L:</span> {{ session_information[2] }} - {{
-                    session_information[3] }}</output>
+                <output class="bg-active"><span class="bold">Date:</span> {{ session_information[2] }}</output>
+                <output class="bg-muted"><span class="bold">W/L:</span> {{ session_information[3] }} - {{
+                    session_information[4] }}</output>
             </p>
             <table>
                 <tr>
                     <th colspan="3" class="table-general">General</th>
-                    <th colspan="6" class="knus">Knus</th>
-                    <th colspan="6" class="puad">Puad</th>
-                    <th colspan="6" class="sticker">Sticker</th>
+                    {% for player in players %}
+                    <th colspan="6" style="background-color: {{player.color}};opacity:0.5;">{{ player.name }}</th>
+                    {% endfor %}
                     <th colspan="3" class="table-general">Replay</th>
                 </tr>
                 {% for row in last_games %}

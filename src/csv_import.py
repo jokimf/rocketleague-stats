@@ -1,7 +1,7 @@
-from connect import Database
+import db
 
 name = 'newest.csv'
-conn = Database.get_connection()
+conn = db.get_db_connection()
 c = conn.cursor()
 
 # Drop tables

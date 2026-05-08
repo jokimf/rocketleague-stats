@@ -1,6 +1,6 @@
 from typing import Any
 
-from connect import Database
+import db
 from records import Record
 
 
@@ -9,7 +9,7 @@ class StreakQueries:
     # Generates table of the longest winning streaks [streak, gameStartID, gameEndID]
     @staticmethod
     def longest_winning_streak(limit: int = 16) -> Record:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -22,7 +22,7 @@ class StreakQueries:
     # Generate table of the longest losing streaks [steak, gameStartID, gameEndID]
     @staticmethod
     def longest_losing_streak(limit: int = 16) -> list[Any]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -35,7 +35,7 @@ class StreakQueries:
     # Table of [streak, startGameID, endGameID]
     @staticmethod
     def mvp_streak(player_id: str, limit: int = 16) -> list[Any]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -48,7 +48,7 @@ class StreakQueries:
     # Table of [streak, startGameID, endGameID]
     @staticmethod
     def not_mvp_streak(player_id: str, limit: int = 16) -> list[Any]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -61,7 +61,7 @@ class StreakQueries:
     # Table of [streak, startGameID, endGameID]
     @staticmethod
     def not_lvp_streak(player_id: str, limit: int = 16) -> list[Any]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -74,7 +74,7 @@ class StreakQueries:
     # Table of [streak, startGameID, endGameID]
     @staticmethod
     def lvp_streak(player_id: str, limit: int = 16) -> list[Any]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH MVPs AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -85,14 +85,14 @@ class StreakQueries:
                 return cursor.fetchall()
 
     @staticmethod
-    def streak_stat_is_zero(player_id: str, stat: str, comparison: str, value: int) -> list[Any]: # TODO unused
+    def streak_stat_is_zero(player_id: str, stat: str, comparison: str, value: int) -> list[Any]:  # TODO unused
         if stat not in ["goals", "assists", "saves", "shots"]:
             return []
         if comparison not in [">", "<", "="]:
             return []
         if value < 0:
             return []
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
                 WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',
@@ -104,7 +104,7 @@ class StreakQueries:
 
     @staticmethod
     def streak_win_or_loss_by_one(win: bool):  # TODO unused
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH Streaks AS (SELECT row_number() OVER (Order BY gameID) AS 'RowNr',

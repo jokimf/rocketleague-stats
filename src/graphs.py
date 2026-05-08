@@ -1,12 +1,25 @@
-from __future__ import annotations  # for class type hints
+from __future__ import annotations
 
 import random
-from enum import Enum
-from queries import GeneralQueries
+from enum import Enum  # for class type hints
 
 import simplejson as json  # To be able to serialize object of type Decimal
 
-from connect import Database
+import db
+from queries import GeneralQueries
+
+
+class DatasetColor(Enum):
+    def random_color() -> str:
+        r, g, b = random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256)
+        return f"rgba({r},{g},{b},0.6)"
+
+    TEAM = "rgba(40, 40, 40, 0.8)",
+    WIN = "rgba(13, 70, 13, 0.8)",
+    LOSS = "rgba(135, 4, 4, 0.8)",
+    GAME = "rgba(17, 3, 58, 0.8)",
+    NEUTRAL_GREY = "rgba(128,128,128,0.6)",
+    WHITE = "rgba(255,255,255,0.6)"
 
 
 class GraphBuilder:
@@ -107,24 +120,11 @@ class GraphBuilder:
         return self
 
 
-class DatasetColor(Enum):
-    def random_color() -> str:
-        r, g, b = random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256)
-        return f"rgba({r},{g},{b},0.6)"
-
-    TEAM = "rgba(40, 40, 40, 0.8)",
-    WIN = "rgba(13, 70, 13, 0.8)",
-    LOSS = "rgba(135, 4, 4, 0.8)",
-    GAME = "rgba(17, 3, 58, 0.8)",
-    NEUTRAL_GREY = "rgba(128,128,128,0.6)",
-    WHITE = "rgba(255,255,255,0.6)"
-
-
 class GraphQueries:
 
     @staticmethod
     def days_graph() -> dict:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT DATE_FORMAT(date, '%d') AS day, SUM(IF(goals > against,1,0)) AS Wins, SUM(IF(goals < against,1,0)) AS Losses 
@@ -142,7 +142,7 @@ class GraphQueries:
 
     @staticmethod
     def weekdays_graph() -> dict:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT DATE_FORMAT(date,'%w') AS weekday, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0))
@@ -166,7 +166,7 @@ class GraphQueries:
 
     @staticmethod
     def month_graph() -> dict:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT DATE_FORMAT(date,'%m') AS month, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1, 0)) 
@@ -183,7 +183,7 @@ class GraphQueries:
 
     @staticmethod
     def year_graph() -> dict:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT DATE_FORMAT(date,'%Y') AS year, SUM(IF(goals > against, 1, 0)), SUM(IF(goals < against, 1,0)) FROM games GROUP BY year")
@@ -200,7 +200,7 @@ class GraphQueries:
     @staticmethod
     def performance_graph(total_games_count: int, active_players: list[str]) -> dict:
         data_list = []
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 for player_id in active_players:
                     cursor.execute(
@@ -222,7 +222,7 @@ class GraphQueries:
 
     @staticmethod
     def results_table():
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     WITH cG AS (SELECT COUNT(*) allG FROM games)
@@ -237,7 +237,7 @@ class GraphQueries:
     @staticmethod
     def score_distribution_graph(active_players: list[str]) -> dict:
         datasets = []
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 for player_id in active_players:
                     cursor.execute("""
@@ -266,7 +266,7 @@ class GraphQueries:
 
     @staticmethod
     def seasons_graph() -> dict:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(""" 
                     SELECT se.season_name,

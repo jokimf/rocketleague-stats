@@ -1,13 +1,14 @@
 import datetime
 from typing import Any
 
-from connect import Database
+import db
+from structs import ReplayError
 
 
 class GeneralQueries:
     @staticmethod
     def total_games() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT MAX(gameID) FROM games")
                 data = cursor.fetchone()[0]
@@ -15,14 +16,14 @@ class GeneralQueries:
 
     @staticmethod
     def days_since_first_game() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT DATEDIFF(CURDATE(), MIN(date)) FROM games")
                 return cursor.fetchone()[0]
 
     @staticmethod
     def player_name(player_id: str) -> str:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT name FROM players WHERE playerID = %s", (player_id,))
                 return cursor.fetchone()[0]
@@ -32,7 +33,7 @@ class GeneralQueries:
         if transparency < 0 or transparency > 1:
             raise ValueError(f"Transparency must be between 0 and 1, not {transparency}.")
 
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT color FROM players WHERE playerID = %s", (player_id,))
                 color: str = cursor.fetchone()[0]
@@ -40,7 +41,7 @@ class GeneralQueries:
 
     @staticmethod
     def player_rank(player_id: str) -> str:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT r.abbr FROM scores s JOIN ranks r ON s.rank = r.abbr WHERE playerID = %s ORDER BY gameID desc LIMIT 1", (player_id,))
@@ -49,7 +50,7 @@ class GeneralQueries:
 
     @staticmethod
     def get_active_player_ids() -> list[str]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT playerID FROM players WHERE active = 1 ORDER BY `order` ASC")
                 player_ids = cursor.fetchall()
@@ -58,29 +59,39 @@ class GeneralQueries:
                 return [player_id[0] for player_id in player_ids]
 
     @staticmethod
-    def get_players_ids():
-        with Database.get_connection() as conn:
+    def get_team_player_ids():
+        with db.get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT playerID FROM players WHERE team = 1 ORDER BY `order` ASC")
+                player_ids = cursor.fetchall()
+                if not player_ids:
+                    return None
+                return [player_id[0] for player_id in player_ids]
+
+    @staticmethod
+    def get_player_ids():
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT playerID FROM players")
                 return (player_id[0] for player_id in cursor.fetchall())
 
     @staticmethod
     def get_player_info(player_id: str):
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("SELECT * FROM players WHERE playerID = %s", (player_id,))
                 return cursor.fetchone()
 
     @staticmethod
     def game_id_has_replay(game_id: int) -> bool:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT replayAvailable FROM games WHERE gameID = %s", (game_id,))
                 return bool(cursor.fetchone()[0])
 
     @staticmethod
     def save_replay_stats(game_id: int, analysis) -> None:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("UPDATE games SET secondsPlayed = %s, mapName = %s, replayAvailable = TRUE WHERE gameID = %s",
                                (analysis.total_seconds_played, analysis.map_name, game_id))
@@ -90,18 +101,25 @@ class GeneralQueries:
                     cursor.execute("INSERT IGNORE INTO scores VALUES (%s,%s,NULL,%s,%s,%s,%s,%s)",
                                    (game_id, player.online_id, player.score, player.goals, player.assists, player.saves, player.shots))
 
+                print(analysis.goals)
+                print(analysis.players)
                 for goal in analysis.goals:
-                    scorer = [p for p in analysis.players if p.name == goal.player_name][0]
-                    cursor.execute("INSERT INTO goals VALUES (NULL,%s,%s,%s)", (game_id, scorer.online_id, goal.frame))
+                    scorer = [p for p in analysis.players if p.name == goal.player_name]
+                    if scorer := scorer[0] if scorer else None:  # Sometimes, players are not part of players but scored...?
+                        cursor.execute("INSERT INTO goals VALUES (NULL,%s,%s,%s)",
+                                       (game_id, scorer.online_id, goal.frame))
+                    else:
+                        raise ReplayError("A Player not in players scored.")
+
             conn.commit()
 
 
 class RLQueries:
     @staticmethod
     def insert_game_data(game: list) -> bool:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("INSERT INTO games VALUES (%s,%s,%s,%s,NULL,NULL,NULL,NULL)",
+                cursor.execute("INSERT INTO games VALUES (%s,%s,%s,%s,NULL,NULL,NULL,0)",
                                (game[0], game[1], game[3], game[4]))
                 cursor.execute("INSERT INTO scores VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
                                (game[0], "76561198057132199", game[5], game[6], game[7], game[8], game[9], game[10]))
@@ -113,8 +131,19 @@ class RLQueries:
         return True
 
     @staticmethod
+    def get_player_scores_by_gameid(game_id: int):
+        with db.get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("""
+                    SELECT p.playerID, s.score, s.goals, s.assists, s.saves, s.shots
+                    FROM games g JOIN scores s ON g.gameID = s.gameID JOIN players p on s.playerID = p.playerID 
+                    WHERE g.gameID = %s AND p.team = TRUE;
+                """, (game_id,))
+                return cursor.fetchall()
+
+    @staticmethod
     def last_x_games_stats(active_player_ids: list[str], limit: int, with_date: bool) -> list[Any]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""
                     SELECT 
@@ -133,7 +162,7 @@ class RLQueries:
 
     @staticmethod
     def wins_in_range(start, end) -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT COUNT(gameID) FROM games WHERE goals > against AND gameID >= %s AND gameID <= %s",
                                (start, end))
@@ -141,7 +170,7 @@ class RLQueries:
 
     @staticmethod
     def losses_in_range(start, end) -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT COUNT(gameID) FROM games WHERE against > goals AND gameID >= %s AND gameID <= %s", (start, end))
@@ -149,7 +178,7 @@ class RLQueries:
 
     @staticmethod
     def current_session_games_played() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT COUNT(*) FROM games g GROUP BY g.`date` ORDER BY date DESC LIMIT 1")
                 data = cursor.fetchone()
@@ -157,7 +186,7 @@ class RLQueries:
 
     @staticmethod
     def current_season_games_played() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT COUNT(*) FROM games g
@@ -170,7 +199,7 @@ class RLQueries:
     @staticmethod
     def tilt() -> float:  # TODO: Write tilt-o-meter
         date14ago = (datetime.datetime.now() - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT IFNULL(SUM(against),0) FROM games WHERE date > %s;", (date14ago,))
                 enemy_goals = float(cursor.fetchone()[0])
@@ -180,14 +209,14 @@ class RLQueries:
 
     @staticmethod
     def average_session_length() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT AVG(wins+losses) FROM sessions")
                 return cursor.fetchone()[0]
 
     @staticmethod
     def latest_session_main_data() -> list[Any]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT sessionID, date, wins, losses, Goals, Against FROM sessions ORDER BY SessionID desc LIMIT 1")
@@ -197,21 +226,21 @@ class RLQueries:
     def games_from_session_date(session_date: str = None) -> list[Any]:  # TODO: rewrite
         if session_date is None:
             session_date = RLQueries.latest_session_main_data()[1]
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT * FROM games WHERE date >= %s", (session_date,))
                 return cursor.fetchall()
 
     @staticmethod
     def session_count() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT COUNT(1) FROM sessions")
                 return cursor.fetchone()[0]
 
     @staticmethod
     def season_start_id() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""SELECT g.gameID FROM games g JOIN (
                             SELECT se.seasonID, MIN(g2.gameID) AS min_gameID FROM games g2
@@ -221,7 +250,7 @@ class RLQueries:
 
     @staticmethod
     def session_start_id() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT MIN(gameID) from games GROUP BY date ORDER BY date DESC LIMIT 1")
                 return cursor.fetchone()[0]
@@ -244,7 +273,7 @@ class RLQueries:
 
     @staticmethod
     def seasons_dashboard_short():
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""SELECT se.season_name,
                 SUM(IF(g.goals > g.against,1,0)) 'wins',
@@ -257,14 +286,14 @@ class RLQueries:
 
     @staticmethod
     def total_wins() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT COUNT(gameID) FROM games WHERE goals > against")
                 return cursor.fetchone()[0]
 
     @staticmethod
     def total_losses() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT COUNT(gameID) FROM games WHERE goals < against")
                 return cursor.fetchone()[0]
@@ -289,7 +318,7 @@ class RLQueries:
                 return 0
             session_id = latest_session_details[0]  # TODO: rewrite
 
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT t1.session_rank 
@@ -304,11 +333,11 @@ class RLQueries:
                 cursor.execute("""
                     SELECT * 
                     FROM (
-                        SELECT ROW_NUMBER() OVER (ORDER BY  s.wins - s.losses DESC, s.goals - s.against DESC, s.date DESC) AS session_rank, s.sessionID, s.date, CONCAT(s.wins,"-",s.losses), CONCAT(s.goals,"-",s.against)
+                        SELECT ROW_NUMBER() OVER (ORDER BY  s.wins - s.losses DESC, s.goals - s.against DESC, s.date ASC) AS session_rank, s.sessionID, s.date, CONCAT(s.wins,"-",s.losses), CONCAT(s.goals,"-",s.against)
                         FROM sessions s
                         ORDER BY s.wins - s.losses DESC, s.goals - s.against DESC, s.date ASC
                     ) t1
-                    WHERE t1.session_rank BETWEEN %s-3 AND %s+3
+                    WHERE t1.session_rank BETWEEN %s-3 AND %s+3 ORDER BY session_rank
                 """, (session_ranking, session_ranking))
                 neighbours = cursor.fetchall()  # three sessions above and three sessions below
                 return neighbours
@@ -317,7 +346,7 @@ class RLQueries:
     def games_by_date(date: str, adjancent_days: int = 1) -> list:
         yesterday = (datetime.date.fromisoformat(date) - datetime.timedelta(days=adjancent_days)).strftime("%Y-%m-%d")
         tomorrow = (datetime.date.fromisoformat(date) + datetime.timedelta(days=adjancent_days)).strftime("%Y-%m-%d")
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("SELECT * FROM games WHERE date >= %s AND date <= %s;", (yesterday, tomorrow))
                 games = cursor.fetchall()
@@ -325,7 +354,7 @@ class RLQueries:
 
     @staticmethod
     def player_stats_by_gameid(game_id: int, player_id: str):
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("SELECT * FROM scores WHERE gameID = %s AND playerID = %s", (game_id, player_id))
                 scores = cursor.fetchall()

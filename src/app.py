@@ -1,19 +1,24 @@
-import uvicorn
-from fastapi import FastAPI, HTTPException, Request, UploadFile, status, Depends
+import logging
+import os
+
+from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from uvicorn.config import LOGGING_CONFIG
 
 # import init
 import dashboard
-import replays
 import utility
+from replays import handle_upload
+from structs import ReplayError
 
-app = FastAPI()
+app = FastAPI()  # Startup: uvicorn app:app --reload --app-dir src
 app.mount("/rl/static", StaticFiles(directory="./src/static"), name="static")
 templates = Jinja2Templates(directory="./src/templates")
-
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 # init.init()
 d = dashboard.Dashboard()
 
@@ -51,7 +56,7 @@ async def upload_replay(request: Request, file: UploadFile):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     # Exceptions are handled by exception endpoint
-    replay: int = replays.handle_upload(file)
+    replay: int = handle_upload(file)
 
     return {"replay_id": replay}
 
@@ -69,23 +74,28 @@ async def reload_stats(request: Request):
 
 @app.get("/rl/replay/{replay_id}")
 async def replay_download(request: Request, replay_id: int):
-    if isinstance(replay_id, int):
-        return FileResponse(
-            path=f"./replays/{replay_id}.replay",
-            media_type="application/octet-stream",
-            filename=f"Replay_gameid_{replay_id}.replay"
-        )
+    if not os.path.exists(f"./replays/{replay_id}.replay"):
+        raise ReplayError("Replay does not exist.")
+    return FileResponse(
+        path=f"./replays/{replay_id}.replay",
+        media_type="application/octet-stream",
+        filename=f"Replay_gameid_{replay_id}.replay"
+    )
 
 
-@app.exception_handler(replays.ReplayError)
-async def replay_error_handler(request: Request, exception: replays.ReplayError):
+@app.exception_handler(ReplayError)
+async def replay_error_handler(request: Request, exception: ReplayError):
     return JSONResponse(
         status_code=400,
         content={"reason": exception.reason},
     )
 
-if __name__ == "__main__":
-    LOGGING_CONFIG["formatters"]["default"]["fmt"] = "%(asctime)s [%(name)s] %(levelprefix)s %(message)s"
-    config = uvicorn.Config("main:app", host="0.0.0.0", port=7823, log_level="warning")
-    server = uvicorn.Server(config)
-    server.run()
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exception: Exception):
+    print(f"Unexpected error: {str(exception)}")
+
+    return JSONResponse(
+        status_code=500,
+        content={"reason": "An internal server error occurred."},
+    )

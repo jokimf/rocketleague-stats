@@ -15,6 +15,21 @@ td>img {
     vertical-align: top;
 }
 
+.basicstats {
+}
+
+.basicstats td,
+.basicstats th {
+    padding: 2px;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.basicstats th {
+    background-color: rgb(10, 10, 10);
+    border-color: #21252bb3;
+}
+
 a:active {
     color: white !important;
 }

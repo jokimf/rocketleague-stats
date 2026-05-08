@@ -1,6 +1,5 @@
-from connect import Database
 from queries import GeneralQueries, RLQueries
-
+import db
 
 class ProfileQueries:
     @staticmethod
@@ -22,7 +21,7 @@ class ProfileQueries:
     @staticmethod
     def profile_averages(player_id: str):
         def _profile_average_stats(past_games_amount: int) -> list:
-            with Database.get_connection() as conn:
+            with db.get_db_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute("""
                         SELECT AVG(h.score), AVG(h.goals), AVG(h.assists), AVG(h.saves), AVG(h.shots)
@@ -43,7 +42,7 @@ class ProfileQueries:
     @staticmethod
     def performance_profile_view(player_id: str):
         def _performance_rank(stat: str, player_id: str) -> int:
-            with Database.get_connection() as conn:
+            with db.get_db_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute(f"""
                             SELECT n FROM 
@@ -67,7 +66,7 @@ class ProfileQueries:
             else:
                 return "IndianRed"
 
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT * FROM performance WHERE playerID = %s AND gameID = %s",
                                (player_id, GeneralQueries.total_games()))
@@ -86,7 +85,7 @@ class ProfileQueries:
 
     @staticmethod
     def player_average_deviation(player_id: str) -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"""WITH av AS (SELECT AVG(p2.score) a FROM (SELECT * FROM performance p ORDER BY p.gameID DESC LIMIT 3) p2)
                                 SELECT p.score - av.a FROM performance p, av WHERE p.playerID = %s ORDER BY p.gameID DESC LIMIT 1""", (player_id,))
@@ -98,7 +97,7 @@ class ProfileQueries:
         max_id = GeneralQueries.total_games()
         if max_id < 21:
             return (0, 0)
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT scores.score 
@@ -113,7 +112,7 @@ class ProfileQueries:
 
     @staticmethod
     def to_beat_next(player_id: str) -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""WITH maxId AS (SELECT MAX(gameID) AS mId FROM scores)
                                 SELECT scores.score FROM scores, maxId WHERE gameID = maxId.mId - 19 AND playerID = %s""", (player_id,))

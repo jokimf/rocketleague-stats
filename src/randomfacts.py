@@ -1,19 +1,13 @@
 import math
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
 
 from dateutil.relativedelta import relativedelta
 
-from connect import Database
+import db
 from queries import GeneralQueries, RLQueries
 from records import RecordQueries
-
-
-@dataclass
-class RandomFact:
-    fact: str
-    rarity: int
+from structs import RandomFact
 
 
 class RandomFactQueries:
@@ -291,7 +285,7 @@ class RandomFactQueries:
 
     @staticmethod
     def game_amount_this_month() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT COUNT(*) FROM games WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE())")
@@ -299,28 +293,28 @@ class RandomFactQueries:
 
     @staticmethod
     def last_two_sessions_dates() -> tuple[str]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT date FROM sessions ORDER BY SessionID DESC LIMIT 2")
                 return cursor.fetchall()
 
     @staticmethod
     def game_amount_this_year() -> int:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT COUNT(*) FROM games WHERE YEAR(date) = YEAR(CURDATE())")
                 return cursor.fetchone()[0]
 
     @staticmethod
     def unique_months_game_count() -> tuple[str, int]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT DATE_FORMAT(date, '%m-%Y') as d, COUNT(*) c FROM games GROUP BY d ORDER BY c DESC")
                 return cursor.fetchall()
 
     @staticmethod
     def results_table() -> tuple[int, int, int]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT goals, against, COUNT(g.gameID) AS c FROM games g GROUP BY goals, against ORDER BY 1, 2")
@@ -328,7 +322,7 @@ class RandomFactQueries:
 
     @staticmethod
     def last_result() -> tuple[int, int]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT goals, against FROM games ORDER BY gameID DESC LIMIT 1")
                 return cursor.fetchone()
@@ -337,7 +331,7 @@ class RandomFactQueries:
     def player_total_of_stat(player_id: str, stat: str) -> int:
         if stat not in RandomFactQueries.POSSIBLE_STATS:
             raise ValueError(f"{stat} is not in possible stats.")
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(f"SELECT SUM({stat}) FROM scores WHERE playerID = %s", (player_id,))
                 data = cursor.fetchone()[0]  # (None,) if no scores in db
@@ -347,7 +341,7 @@ class RandomFactQueries:
     def player_stat_of_last_game(player_id: str, stat: str) -> int:
         if stat not in RandomFactQueries.POSSIBLE_STATS:
             raise ValueError(f"{stat} is not in possible stats.")
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     f"SELECT {stat} FROM scores WHERE playerID = %s ORDER BY gameID DESC LIMIT 1", (player_id,))
@@ -359,14 +353,14 @@ class RandomFactQueries:
 
     @staticmethod
     def record_games_per_session(limit: int = 1) -> list[tuple[int, int]]:
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT sessionID, wins+losses FROM sessions ORDER BY wins+losses DESC LIMIT %s", (limit,))
                 return cursor.fetchall()
 
     @staticmethod
     def session_data_by_date(date: str):
-        with Database.get_connection() as conn:
+        with db.get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT * FROM sessions WHERE date=%s", (date,))
                 return cursor.fetchone()
