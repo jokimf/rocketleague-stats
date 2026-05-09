@@ -15,16 +15,6 @@ class Dashboard:
         self.RANK_HIGHLIGHTING = ["rgb(201, 176, 55, 0.3)", "rgb(215, 215, 215, 0.3)",
                                   "rgb(173, 138, 86, 0.3)"]  # gold silver bronze
         self.LAST_GAMES_HIGHLIGHTING =  self.generate_last_games_highlighting(self.player_profiles)
-        # [
-        #     None, None, None,  # gameID, G, GA
-        #     None, [self.player_profiles[0]["color"], 100, 700],
-        #     *[[self.player_profiles[0]["color"], 0, 5]]*3, (self.player_profiles[0]["color"], 0, 10),
-        #     None, [self.player_profiles[1]["color"], 100, 700],
-        #     *[[self.player_profiles[1]["color"], 0, 5]]*3, (self.player_profiles[1]["color"], 0, 10),
-        #     None, [self.player_profiles[2]["color"], 100, 700],
-        #     *[[self.player_profiles[2]["color"], 0, 5]]*3, (self.player_profiles[2]["color"], 0, 10),
-        #     None
-        # ]
 
     def reload(self):
         # Reload cache:
