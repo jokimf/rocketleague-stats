@@ -80,6 +80,6 @@ def enforce_max_size(content_length: int = Header(None)):
 def get_rrrocket_analyzer():
     match os.name:
         case "posix":
-            return "./rrrocket/rrrocket-0.11.1"
+            return "rrrocket/rrrocket-0.11.1"
         case _:
-            return "./rrrocket/rrrocket-0.11.1.exe"
+            return "rrrocket/rrrocket-0.11.1.exe"
