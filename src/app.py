@@ -21,6 +21,7 @@ logging.basicConfig(
 )
 # init.init()
 d = dashboard.Dashboard()
+print(os.getcwd())
 
 
 @app.get("/")

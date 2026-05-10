@@ -15,6 +15,7 @@ def handle_upload(replay_file) -> int:
     if not replay_file.filename.endswith(".replay"):
         raise ReplayError("Invalid file type.")
     # Save file to temp folder
+    print(os.getcwd())
     temp_file_path = f"./replays/temp/{datetime.datetime.now().timestamp()}_{replay_file.filename}"
 
     try:
