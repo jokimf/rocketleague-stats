@@ -66,18 +66,6 @@ article>footer {
     font-size: larger;
 }
 
-.knus {
-    background-color: #263326;
-}
-
-.puad {
-    background-color: #332626;
-}
-
-.sticker {
-    background-color: #262633;
-}
-
 .cols>* {
     flex-basis: 100%;
 }

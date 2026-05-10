@@ -100,13 +100,10 @@ class GeneralQueries:
                                    (player.online_id, player.name))
                     cursor.execute("INSERT IGNORE INTO scores VALUES (%s,%s,NULL,%s,%s,%s,%s,%s)",
                                    (game_id, player.online_id, player.score, player.goals, player.assists, player.saves, player.shots))
-
-                print(analysis.goals)
-                print(analysis.players)
                 for goal in analysis.goals:
                     scorer = [p for p in analysis.players if p.name == goal.player_name]
                     if scorer := scorer[0] if scorer else None:  # Sometimes, players are not part of players but scored...?
-                        cursor.execute("INSERT INTO goals VALUES (NULL,%s,%s,%s)",
+                        cursor.execute("INSERT IGNORE INTO goals VALUES (NULL,%s,%s,%s)",
                                        (game_id, scorer.online_id, goal.frame))
                     else:
                         raise ReplayError("A Player not in players scored.")

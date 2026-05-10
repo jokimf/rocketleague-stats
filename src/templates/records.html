@@ -120,7 +120,7 @@
                         endif %}>
                         {{ loop.index }}</td>
                     {% for data in entry %}
-                    <td {% if data=='Knus' %} style="background-color: {{ k }}" {% elif data=='Puad' %}
+                    <td {% if data=='Knus' %} style="background-color: {{ k }}" {% elif data=='PFD' %}
                         style="background-color: {{ p }}" {% elif data=='Sticker' %} style="background-color: {{ s }}"
                         {% elif data=='CG' %} style="background-color: {{ cg }}" {% elif loop.index==3 and latest - 100
                         < data %} style="background-color: rgb(28, 156, 230)" {% endif %}>
@@ -152,7 +152,7 @@
                         endif %}>
                         {{ loop.index }}</td>
                     {% for data in entry %}
-                    <td {% if data=='Knus' %} style="background-color: {{ k }}" {% elif data=='Puad' %}
+                    <td {% if data=='Knus' %} style="background-color: {{ k }}" {% elif data=='PFD' %}
                         style="background-color: {{ p }}" {% elif data=='Sticker' %} style="background-color: {{ s }}"
                         {% elif data=='CG' %} style="background-color: {{ cg }}" {% endif %}>{{ data }}</td>
                     {% endfor %}

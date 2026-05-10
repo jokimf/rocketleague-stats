@@ -43,10 +43,10 @@ with open(f'./{name}') as stats:
         games_data = [data[0], data.pop(1), data.pop(1), data.pop(1)]
         c.execute("INSERT INTO games VALUES(%s,%s,%s,%s)", games_data)
         knus = [data[0], data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1)]
-        puad = [data[0], data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1)]
+        pfd = [data[0], data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1)]
         sticker = [data[0], data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1), data.pop(1)]
         c.execute("INSERT INTO scores VALUES(%s,0,%s,%s,%s,%s,%s,%s)", knus)
-        c.execute("INSERT INTO scores VALUES(%s,1,%s,%s,%s,%s,%s,%s)", puad)
+        c.execute("INSERT INTO scores VALUES(%s,1,%s,%s,%s,%s,%s,%s)", pfd)
         c.execute("INSERT INTO scores VALUES(%s,2,%s,%s,%s,%s,%s,%s)", sticker)
 c.close()
 conn.commit()
