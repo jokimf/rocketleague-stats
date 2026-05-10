@@ -21,8 +21,6 @@ logging.basicConfig(
 )
 # init.init()
 d = dashboard.Dashboard()
-logging.info(os.getcwd())
-
 
 @app.get("/")
 @app.get("/rl")

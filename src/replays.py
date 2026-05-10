@@ -1,15 +1,15 @@
 import datetime
-import logging
 import json
 import os
 import shutil
 import subprocess
+import utility
 from typing import Optional
 
 from queries import GeneralQueries, RLQueries
 from structs import ReplayAnalysis, ReplayError, ReplayGoal, ReplayPlayer
 
-logger = logging.getLogger(__name__)
+RRROCKET_EXECUTABLE = utility.get_rrrocket_analyzer()
 
 def handle_upload(replay_file) -> int:
 
@@ -17,7 +17,6 @@ def handle_upload(replay_file) -> int:
     if not replay_file.filename.endswith(".replay"):
         raise ReplayError("Invalid file type.")
     # Save file to temp folder
-    logger.info(os.getcwd())
     temp_file_path = f"./replays/temp/{datetime.datetime.now().timestamp()}_{replay_file.filename}"
 
     try:
@@ -68,12 +67,12 @@ def amount_of_matching_stats(player_stats_db, player_stats_replay) -> float:
 
 def extract_replay_data(temp_file_path: str) -> ReplayAnalysis:
     try:
-        rpy = json.loads(subprocess.check_output([".\\rrrocket-0.11.1.exe", f"{temp_file_path}"]))
+        rpy = json.loads(subprocess.check_output([f"./{RRROCKET_EXECUTABLE}", f"{temp_file_path}"]))
     except subprocess.CalledProcessError:
         os.remove(temp_file_path)
-        raise ReplayError("Encountered error while parsing.")
+        raise ReplayError(f"Encountered error while parsing file: {temp_file_path}")
     except FileNotFoundError:
-        raise ReplayError(f"Replay file {temp_file_path} not found.")
+        raise ReplayError(f"{RRROCKET_EXECUTABLE} not found.")
 
     cg_players_ids = GeneralQueries.get_team_player_ids()
     try:

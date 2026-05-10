@@ -1,5 +1,6 @@
 FROM python:alpine
 ADD src /src
+ADD rrrocket /rrrocket
 COPY requirements.txt /
 RUN pip install -r requirements.txt
 EXPOSE 7823

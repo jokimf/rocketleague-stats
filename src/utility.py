@@ -7,6 +7,8 @@ from fastapi.requests import Request
 import db
 from queries import GeneralQueries
 
+import os
+
 
 def conditional_formatting(color: str, value: float, minimum: int, maximum: int) -> str:
     minimum = int(minimum)
@@ -74,3 +76,10 @@ def enforce_max_size(content_length: int = Header(None)):
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail="File too large"
         )
+
+def get_rrrocket_analyzer():
+    match os.name:
+        case "posix":
+            return "./rrrocket/rrrocket-0.11.1"
+        case _:
+            return "./rrrocket/rrrocket-0.11.1.exe"
