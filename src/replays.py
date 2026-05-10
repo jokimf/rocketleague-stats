@@ -1,4 +1,5 @@
 import datetime
+import logging
 import json
 import os
 import shutil
@@ -8,6 +9,7 @@ from typing import Optional
 from queries import GeneralQueries, RLQueries
 from structs import ReplayAnalysis, ReplayError, ReplayGoal, ReplayPlayer
 
+logger = logging.getLogger(__name__)
 
 def handle_upload(replay_file) -> int:
 
@@ -15,7 +17,7 @@ def handle_upload(replay_file) -> int:
     if not replay_file.filename.endswith(".replay"):
         raise ReplayError("Invalid file type.")
     # Save file to temp folder
-    print(os.getcwd())
+    logger.info(os.getcwd())
     temp_file_path = f"./replays/temp/{datetime.datetime.now().timestamp()}_{replay_file.filename}"
 
     try:
@@ -42,28 +44,6 @@ def handle_upload(replay_file) -> int:
     # Save statistics to db
     GeneralQueries.save_replay_stats(game_id, analysis)
     return game_id
-
-
-def determine_game_id_old(analysis: ReplayAnalysis) -> Optional[int]:
-    potential_games = RLQueries.games_by_date(analysis.date[:10])
-    all_players = GeneralQueries.get_player_ids()
-    print(f"Matching for {analysis}")
-    for potential_game in potential_games:
-        print(f"Checking {potential_game}")
-        # Check each players stats
-        matches = int(analysis.cg_score == potential_game["goals"]) + \
-            int(analysis.enemy_score == potential_game["against"])
-        for player_id in all_players:
-            player_stats_db = RLQueries.player_stats_by_gameid(potential_game["gameID"], player_id)
-            if not player_stats_db:
-                continue
-            player_stats_replay = [p for p in analysis.players if p.online_id == player_id]
-            if not player_stats_replay:
-                continue
-            matches += amount_of_matching_stats(player_stats_db[0], player_stats_replay[0])
-        if matches >= 15:  # 15 out of 17
-            return potential_game["gameID"]
-
 
 def determine_game_id(analysis: ReplayAnalysis) -> Optional[int]:
     potential_games = RLQueries.games_by_date(analysis.date[:10])

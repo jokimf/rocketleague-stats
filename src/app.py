@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 # init.init()
 d = dashboard.Dashboard()
-print(os.getcwd())
+logging.info(os.getcwd())
 
 
 @app.get("/")
@@ -94,7 +94,7 @@ async def replay_error_handler(request: Request, exception: ReplayError):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exception: Exception):
-    print(f"Unexpected error: {str(exception)}")
+    logging.error(f"Unexpected error: {str(exception)}")
 
     return JSONResponse(
         status_code=500,

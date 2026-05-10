@@ -1,4 +1,5 @@
 import os
+import logging
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -6,7 +7,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 from queries import GeneralQueries, RLQueries
-
+logger = logging.getLogger(__name__)
 
 def fetch_credits():
     creds = None
@@ -35,7 +36,7 @@ try:
     creds = fetch_credits()
     service = build("sheets", "v4", credentials=creds)
 except Exception:
-    print("Offline Mode")
+    logger.info("Offline Mode")
 
 def is_new_data_available(latest_game_id_excel: int) -> bool:
     result = service.spreadsheets().values().get(
