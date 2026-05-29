@@ -45,3 +45,9 @@ class ReplayAnalysis:
 class RandomFact:
     fact: str
     rarity: int
+
+@dataclass
+class LatestSession:
+    info_panels: dict
+    table_data: list
+    player_colors: list[str]

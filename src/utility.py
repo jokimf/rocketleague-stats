@@ -36,29 +36,27 @@ class User:
     def has_valid_values(self) -> bool:
         return bool(self.username and self.identifier and self.userid)
 
-    def is_premium(self) -> bool:
-        with db.get_db_connection("jok.im") as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT premium FROM users WHERE username=%s AND identifier=%s AND userID=%s",
-                               (self.username, self.identifier, self.userid))
-                premium = cursor.fetchone()[0]
-                return bool(premium)
+    def is_premium(self, conn) -> bool:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT premium FROM users WHERE username=%s AND identifier=%s AND userID=%s",
+                            (self.username, self.identifier, self.userid))
+            premium = cursor.fetchone()[0]
+            return bool(premium)
 
-    def check_credentials(self) -> bool:
-        with db.get_db_connection("jok.im") as conn:
-            with conn.cursor() as cursor:
-                if not self.has_valid_values():
-                    return False
-                cursor.execute("SELECT 1 FROM users WHERE username=%s AND identifier=%s AND userid=%s",
-                               (self.username, self.identifier, self.userid))
-                user_found = cursor.fetchone()
+    def check_credentials(self, conn) -> bool:
+        with conn.cursor() as cursor:
+            if not self.has_valid_values():
+                return False
+            cursor.execute("SELECT 1 FROM users WHERE username=%s AND identifier=%s AND userid=%s",
+                            (self.username, self.identifier, self.userid))
+            user_found = cursor.fetchone()
         return user_found and bool(user_found[0])
 
 
 def extract_user_info(request: Request) -> Optional[User]:
     username = request.cookies.get('username')
     identifier = request.cookies.get('identifier')
-    userid = request.cookies.get('userid')
+    userid = int(request.cookies.get('userid')) if request.cookies.get('userid') else 0
     user = User(username, identifier, int(userid))
     return user
 

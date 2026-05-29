@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 # import init
 import dashboard
+import db
 import utility
 from replays import handle_upload
 from structs import ReplayError
@@ -42,20 +43,23 @@ async def games(request: Request):
 async def upload(request: Request):
     user: utility.User | None = utility.extract_user_info(request)
 
-    if not (user and user.check_credentials() and user.is_premium()):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    with db.get_db_connection("jok.im") as conn:
+        if not (user and user.check_credentials(conn) and user.is_premium(conn)):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     return templates.TemplateResponse(request, "upload.html")
 
 
 @app.post("/rl/uploadreplay", dependencies=[Depends(utility.enforce_max_size)])
-async def upload_replay(request: Request, file: UploadFile):
+async def upload_replay(request: Request, replay_file: UploadFile):
     user: utility.User | None = utility.extract_user_info(request)
 
-    if not (user and user.check_credentials() and user.is_premium()):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    with db.get_db_connection("jok.im") as conn:
+        if not (user and user.check_credentials(conn) and user.is_premium(conn)):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     # Exceptions are handled by exception endpoint
-    replay: int = handle_upload(file)
+    with db.get_db_connection() as conn:
+        replay: int = handle_upload(conn, replay_file)
 
     return {"replay_id": replay}
 
@@ -85,7 +89,7 @@ async def replay_download(request: Request, replay_id: int):
 @app.exception_handler(ReplayError)
 async def replay_error_handler(request: Request, exception: ReplayError):
     return JSONResponse(
-        status_code=400,
+        status_code=200,
         content={"reason": exception.reason},
     )
 

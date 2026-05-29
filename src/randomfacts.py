@@ -359,8 +359,7 @@ class RandomFactQueries:
                 return cursor.fetchall()
 
     @staticmethod
-    def session_data_by_date(date: str):
-        with db.get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT * FROM sessions WHERE date=%s", (date,))
-                return cursor.fetchone()
+    def session_data_by_date(conn, date: str):
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM sessions WHERE date=%s", (date,))
+            return cursor.fetchone()

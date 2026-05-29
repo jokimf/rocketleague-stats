@@ -3,15 +3,15 @@ import json
 import os
 import shutil
 import subprocess
-import utility
 from typing import Optional
 
+import utility
 from queries import GeneralQueries, RLQueries
 from structs import ReplayAnalysis, ReplayError, ReplayGoal, ReplayPlayer
 
 RRROCKET_EXECUTABLE = utility.get_rrrocket_analyzer()
 
-def handle_upload(replay_file) -> int:
+def handle_upload(conn, replay_file) -> int:
 
     # Validate file
     if not replay_file.filename.endswith(".replay"):
@@ -25,13 +25,13 @@ def handle_upload(replay_file) -> int:
     except Exception:
         raise ReplayError("Error writing file to server.")
     # Analyze replay
-    analysis: ReplayAnalysis = extract_replay_data(temp_file_path)
+    analysis: ReplayAnalysis = extract_replay_data(conn, temp_file_path)
     # Determine game_id
-    game_id: Optional[int] = determine_game_id(analysis)
+    game_id: Optional[int] = determine_game_id(conn, analysis)
     if not game_id:
         os.remove(temp_file_path)
         raise ReplayError("No database match found.")
-    if GeneralQueries.game_id_has_replay(game_id):
+    if GeneralQueries.game_id_has_replay(conn, game_id):
         os.remove(temp_file_path)
         raise ReplayError(f"Replay {game_id} has already been uploaded.")
     # Persist file in replays folder
@@ -41,16 +41,16 @@ def handle_upload(replay_file) -> int:
         os.remove(temp_file_path)
         raise ReplayError(f"Error moving replay to persistent storage.")
     # Save statistics to db
-    GeneralQueries.save_replay_stats(game_id, analysis)
+    GeneralQueries.save_replay_stats(conn, game_id, analysis)
     return game_id
 
-def determine_game_id(analysis: ReplayAnalysis) -> Optional[int]:
-    potential_games = RLQueries.games_by_date(analysis.date[:10])
+def determine_game_id(conn, analysis: ReplayAnalysis) -> Optional[int]:
+    potential_games = RLQueries.games_by_date(conn, analysis.date[:10])
     for potential_game in potential_games:
         # Check each players stats
         matches = int(analysis.cg_score == potential_game["goals"]) + \
             int(analysis.enemy_score == potential_game["against"])
-        for player_db in RLQueries.get_player_scores_by_gameid(potential_game["gameID"]):
+        for player_db in RLQueries.get_player_scores_by_gameid(conn, potential_game["gameID"]):
             matching_players = [p for p in analysis.players if p.online_id == player_db["playerID"]]
             if player_analysis := matching_players[0] if matching_players else None:
                 matches += amount_of_matching_stats(player_db, player_analysis)
@@ -65,7 +65,7 @@ def amount_of_matching_stats(player_stats_db, player_stats_replay) -> float:
     )
 
 
-def extract_replay_data(temp_file_path: str) -> ReplayAnalysis:
+def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
     try:
         rpy = json.loads(subprocess.check_output([f"./{RRROCKET_EXECUTABLE}", f"{temp_file_path}"]))
     except subprocess.CalledProcessError:
@@ -74,7 +74,7 @@ def extract_replay_data(temp_file_path: str) -> ReplayAnalysis:
     except FileNotFoundError:
         raise ReplayError(f"{RRROCKET_EXECUTABLE} not found.")
 
-    cg_players_ids = GeneralQueries.get_team_player_ids()
+    cg_players_ids = GeneralQueries.get_team_player_ids(conn)
     try:
         players = [
             ReplayPlayer(

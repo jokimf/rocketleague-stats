@@ -45,11 +45,11 @@ def is_new_data_available(latest_game_id_excel: int) -> bool:
     return game_data and int(game_data[0][0]) > latest_game_id_excel and all(game_data[0]) and len(game_data[0]) == 23
 
 
-def insert_new_data() -> None:
+def insert_new_data(conn) -> None:
     result = service.spreadsheets().values().get(
-        spreadsheetId=RL_DOC, range=f"Games!A{GeneralQueries.total_games() + 1}:W").execute()
+        spreadsheetId=RL_DOC, range=f"Games!A{GeneralQueries.total_games(conn) + 1}:W").execute()
     game_data = result.get("values", [])
 
     # Insert if data does not match, assert that not data point is missing
     for game in game_data:
-        RLQueries.insert_game_data(game)
+        RLQueries.insert_game_data(conn, game)
