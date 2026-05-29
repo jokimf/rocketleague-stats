@@ -433,7 +433,7 @@ class RLQueries:
                         LEFT JOIN scores p1 ON g.gameID = p1.gameID AND p1.playerID = %s
                         LEFT JOIN scores p2 ON g.gameID = p2.gameID AND p2.playerID = %s
                         LEFT JOIN scores p3 ON g.gameID = p3.gameID AND p3.playerID = %s
-                        ORDER BY ID DESC LIMIT %s  
+                        ORDER BY ID DESC LIMIT %s   
                             """, ())
 
         # Output: One row per player per game
