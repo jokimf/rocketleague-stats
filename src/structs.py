@@ -51,3 +51,14 @@ class LatestSession:
     info_panels: dict
     table_data: list
     player_colors: list[str]
+
+
+@dataclass(frozen=True)
+class Visualizations:
+    days: str
+    months: str
+    years: str
+    weekdays: str
+    seasons: str
+    performance: str
+    score_distribution: str
