@@ -52,7 +52,6 @@ async def upload(request: Request):
 @app.post("/rl/uploadreplay", dependencies=[Depends(utility.enforce_max_size)])
 async def upload_replay(request: Request, replay_file: UploadFile):
     user: utility.User | None = utility.extract_user_info(request)
-
     with db.get_db_connection("jok.im") as conn:
         if not (user and user.check_credentials(conn) and user.is_premium(conn)):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
