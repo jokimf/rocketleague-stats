@@ -11,12 +11,10 @@ from structs import ReplayAnalysis, ReplayError, ReplayGoal, ReplayPlayer
 
 RRROCKET_EXECUTABLE = utility.get_rrrocket_analyzer()
 
-def handle_upload(conn, replay_file) -> int:
 
-    # Validate file
+def handle_upload(conn, replay_file) -> int:
     if not replay_file.filename.endswith(".replay"):
         raise ReplayError("Invalid file type.")
-    # Save file to temp folder
     temp_file_path = f"./replays/temp/{datetime.datetime.now().timestamp()}_{replay_file.filename}"
 
     try:
@@ -24,32 +22,34 @@ def handle_upload(conn, replay_file) -> int:
             file_object.write(replay_file.file.read())
     except Exception:
         raise ReplayError("Error writing file to server.")
-    # Analyze replay
+    
     analysis: ReplayAnalysis = extract_replay_data(conn, temp_file_path)
-    # Determine game_id
     game_id: Optional[int] = determine_game_id(conn, analysis)
+    
     if not game_id:
         os.remove(temp_file_path)
         raise ReplayError("No database match found.")
     if GeneralQueries.game_id_has_replay(conn, game_id):
         os.remove(temp_file_path)
         raise ReplayError(f"Replay {game_id} has already been uploaded.")
+    
     # Persist file in replays folder
     try:
         shutil.move(temp_file_path, f"./replays/{game_id}.replay")
-    except Exception as e:
+    except Exception:
         os.remove(temp_file_path)
-        raise ReplayError(f"Error moving replay to persistent storage.")
+        raise ReplayError("Error moving replay to persistent storage.")
+    
     # Save statistics to db
     GeneralQueries.save_replay_stats(conn, game_id, analysis)
     return game_id
+
 
 def determine_game_id(conn, analysis: ReplayAnalysis) -> Optional[int]:
     potential_games = RLQueries.games_by_date(conn, analysis.date[:10])
     for potential_game in potential_games:
         # Check each players stats
-        matches = int(analysis.cg_score == potential_game["goals"]) + \
-            int(analysis.enemy_score == potential_game["against"])
+        matches = int(analysis.cg_score == potential_game["goals"]) + int(analysis.enemy_score == potential_game["against"])
         for player_db in RLQueries.get_player_scores_by_gameid(conn, potential_game["gameID"]):
             matching_players = [p for p in analysis.players if p.online_id == player_db["playerID"]]
             if player_analysis := matching_players[0] if matching_players else None:
@@ -59,10 +59,7 @@ def determine_game_id(conn, analysis: ReplayAnalysis) -> Optional[int]:
 
 
 def amount_of_matching_stats(player_stats_db, player_stats_replay) -> float:
-    return sum(
-        1 for attr in ("score", "goals", "assists", "saves", "shots")
-        if player_stats_db.get(attr) == getattr(player_stats_replay, attr)
-    )
+    return sum(1 for attr in ("score", "goals", "assists", "saves", "shots") if player_stats_db.get(attr) == getattr(player_stats_replay, attr))
 
 
 def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
@@ -78,40 +75,31 @@ def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
     try:
         players = [
             ReplayPlayer(
-                online_id=player.get("PlayerID").get("fields").get("EpicAccountId") if
-                player.get("Platform").get("value") == "OnlinePlatform_Epic" else
-                player.get("OnlineID"),
+                online_id=player.get("PlayerID").get("fields").get("EpicAccountId")
+                if player.get("Platform").get("value") == "OnlinePlatform_Epic"
+                else player.get("OnlineID"),
                 name=player.get("Name"),
                 team=player.get("Team"),
                 score=player.get("Score"),
                 goals=player.get("Goals"),
                 assists=player.get("Assists"),
                 saves=player.get("Saves"),
-                shots=player.get("Shots")
+                shots=player.get("Shots"),
             )
             for player in rpy.get("properties").get("PlayerStats")
         ]
         cg_id = 0 if any(p.online_id in cg_players_ids for p in players if p.team == 0) else 1
         analysis = ReplayAnalysis(
             match_id=rpy.get("properties").get("Id"),
-            cg_score=rpy.get("properties").get("Team0Score", 0) if cg_id == 0 else rpy.get(
-                "properties").get("Team1Score", 0),
-            enemy_score=rpy.get("properties").get(
-                "Team1Score", 0) if cg_id == 0 else rpy.get("properties").get("Team0Score", 0),
+            cg_score=rpy.get("properties").get("Team0Score", 0) if cg_id == 0 else rpy.get("properties").get("Team1Score", 0),
+            enemy_score=rpy.get("properties").get("Team1Score", 0) if cg_id == 0 else rpy.get("properties").get("Team0Score", 0),
             total_seconds_played=rpy.get("properties").get("TotalSecondsPlayed"),
             num_frames=rpy.get("properties").get("NumFrames"),
-            goals=[
-                ReplayGoal(
-                    goal.get("frame"),
-                    goal.get("PlayerName"),
-                    goal.get("PlayerTeam")
-                )
-                for goal in rpy.get("properties").get("Goals")
-            ],
+            goals=[ReplayGoal(goal.get("frame"), goal.get("PlayerName"), goal.get("PlayerTeam")) for goal in rpy.get("properties").get("Goals")],
             players=players,
             map_name=rpy.get("properties").get("MapName"),
             date=rpy.get("properties").get("Date"),
-            cg_id=cg_id
+            cg_id=cg_id,
         )
     except Exception:
         os.remove(temp_file_path)

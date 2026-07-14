@@ -361,5 +361,5 @@ class RandomFactQueries:
     @staticmethod
     def session_data_by_date(conn, date: str):
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM sessions WHERE date=%s", (date,))
+            cursor.execute("SELECT * FROM sessions WHERE date=%s LIMIT 1", (date,))
             return cursor.fetchone()

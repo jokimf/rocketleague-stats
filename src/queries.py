@@ -26,14 +26,11 @@ class GeneralQueries:
             return cursor.fetchone()[0]
 
     @staticmethod
-    def player_color(conn, player_id: str, transparency: float = 1) -> str:
-        if transparency < 0 or transparency > 1:
-            raise ValueError(f"Transparency must be between 0 and 1, not {transparency}.")
-
+    def player_color(conn, player_id: str) -> str:
         with conn.cursor() as cursor:
             cursor.execute("SELECT color FROM players WHERE playerID = %s", (player_id,))
             color: str = cursor.fetchone()[0]
-        return color  # [:-1] + "," + str(transparency) + rgba_color[-1]
+        return color
 
     @staticmethod
     def player_rank(conn, player_id: str) -> str:
@@ -51,16 +48,16 @@ class GeneralQueries:
             cursor.execute("SELECT playerID FROM players WHERE active = 1 ORDER BY `order` ASC")
             player_ids = cursor.fetchall()
             if not player_ids:
-                return None
+                return []
             return [player_id[0] for player_id in player_ids]
 
     @staticmethod
-    def get_team_player_ids(conn):
+    def get_team_player_ids(conn) -> list[str]:
         with conn.cursor() as cursor:
             cursor.execute("SELECT playerID FROM players WHERE team = 1 ORDER BY `order` ASC")
             player_ids = cursor.fetchall()
             if not player_ids:
-                return None
+                return []
             return [player_id[0] for player_id in player_ids]
 
     @staticmethod
