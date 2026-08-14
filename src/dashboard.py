@@ -1,5 +1,6 @@
 import db
 import google_import as data
+import replays
 import utility
 import visualizations
 from profiles import ProfileQueries
@@ -62,12 +63,12 @@ class Dashboard:
         self.session_game_details = RLQueries.last_x_games_stats(conn, active_player_ids, self.session_game_amount, False)
         self.fun_facts = []  # RLQueries.generate_fun_facts(active_player_ids)
 
-        print("Session information")
-        print(self.session_information)
-        print("Latest session")
-        print(self.latest_session)
-        print("Session game details")
-        print(self.session_game_details)
+        # print("Session information")
+        # print(self.session_information)
+        # print("Latest session")
+        # print(self.latest_session)
+        # print("Session game details")
+        # print(self.session_game_details)
 
     def reload_all_stats(self):
         if data.is_new_data_available(self.total_games):
@@ -118,12 +119,18 @@ class Dashboard:
                 "rank_highlighting": self.RANK_HIGHLIGHTING,
             }
 
-    def build_games_context(self):
+    def build_games_context(self, minID: int | None, maxID: int | None):
+        with db.get_db_connection() as conn:
+            active_players = GeneralQueries.get_active_player_ids(conn)
+            games = self.last_100_games_stats if minID is None and maxID is None else RLQueries.get_game_stats(conn, active_players, minID, maxID)
         return {
-            "games": self.last_100_games_stats,
-            "last_games_highlighting": self.LAST_GAMES_HIGHLIGHTING,
+            "games": games,
+            "last_games_highlighting": [None] + self.LAST_GAMES_HIGHLIGHTING, # [None], because we have an additional column date in comparison to main page table
             "cf": utility.conditional_formatting,
         }
+
+    def build_replay_context(self):
+        return {"game_ids_with_missing_replay": replays.get_missing_recent_game_ids()}
 
     def _generate_last_games_highlighting(self, active_players):
         highlighting = [None, None, None]

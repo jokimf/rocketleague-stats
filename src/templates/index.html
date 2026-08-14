@@ -155,14 +155,15 @@
                             {% elif row[2] > row[1] and loop.index == 3 %}
                                 loss 
                             {% endif %}
-                        {% endif %}{% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10]>
+                        {% endif %}
+                        {% if row[4] > row[10] and row[4] > row[16] and loop.index == 5 or row[4] < row[10] and row[10]>
                             row[16] and loop.index == 11 or row[16] > row[10] and row[4] < row[16] and loop.index==17 %}
                                 mvp_highlighting_table_cell{% endif %}">
                         {% if loop.index not in [4,10,16,22] %}
                         {{ data }}
                         {% elif loop.index == 22 %}
                         {% if data %}
-                        <a href="/rl/replay/{{row[0]}}">▶️</a>
+                        <a href="/rl/replay/{{row[0]}}"><p style="text-align: center;">⏯️</p></a>
                         {% else %}
                         <p style="text-align: center;">❌</p>
                         {% endif %}

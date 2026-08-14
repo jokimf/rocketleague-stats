@@ -33,7 +33,11 @@
         <h3>Upload replay files</h3>
         <input id="fileInput" type="file" multiple style="width: auto;" accept=".replay">
         <button id="uploadBtn">Upload</button>
-        <table id="result"></table>
+        <div style="display:flex; flex-direction: row;">
+            <div style="width: 150px;">
+                <h4>Recent missing gameIDs:</h4>{{ game_ids_with_missing_replay | join(', ') }}</div>
+            <table id="result"></table>
+        </div>
     </main>
 </body>
 <script src="/rl/static/upload.js"></script>

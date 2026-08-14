@@ -1,8 +1,8 @@
 import json
-import sys
 import logging
-import mysql.connector as mysql
+import sys
 
+import mysql.connector as mysql
 
 logger = logging.getLogger(__name__)
 

@@ -16,12 +16,10 @@ from structs import ReplayError
 app = FastAPI()  # Startup: uvicorn app:app --reload --app-dir src
 app.mount("/rl/static", StaticFiles(directory="./src/static"), name="static")
 templates = Jinja2Templates(directory="./src/templates")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 # init.init()
 d = dashboard.Dashboard()
+
 
 @app.get("/")
 @app.get("/rl")
@@ -35,8 +33,8 @@ async def records(request: Request):
 
 
 @app.get("/rl/games")
-async def games(request: Request):
-    return templates.TemplateResponse(request, "games.html", d.build_games_context())
+async def games(request: Request, minID: int | None = None, maxID: int | None = None):
+    return templates.TemplateResponse(request, "games.html", d.build_games_context(minID, maxID))
 
 
 @app.get("/rl/upload")
@@ -46,7 +44,7 @@ async def upload(request: Request):
     with db.get_db_connection("jok.im") as conn:
         if not (user and user.check_credentials(conn) and user.is_premium(conn)):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    return templates.TemplateResponse(request, "upload.html")
+    return templates.TemplateResponse(request, "upload.html", d.build_replay_context())
 
 
 @app.post("/rl/uploadreplay", dependencies=[Depends(utility.enforce_max_size)])
@@ -78,11 +76,7 @@ async def reload_stats(request: Request):
 async def replay_download(request: Request, replay_id: int):
     if not os.path.exists(f"./replays/{replay_id}.replay"):
         raise ReplayError("Replay does not exist.")
-    return FileResponse(
-        path=f"./replays/{replay_id}.replay",
-        media_type="application/octet-stream",
-        filename=f"Replay_gameid_{replay_id}.replay"
-    )
+    return FileResponse(path=f"./replays/{replay_id}.replay", media_type="application/octet-stream", filename=f"Replay_gameid_{replay_id}.replay")
 
 
 @app.exception_handler(ReplayError)

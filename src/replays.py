@@ -5,6 +5,7 @@ import shutil
 import subprocess
 from typing import Optional
 
+import db
 import utility
 from queries import GeneralQueries, RLQueries
 from structs import ReplayAnalysis, ReplayError, ReplayGoal, ReplayPlayer
@@ -22,24 +23,24 @@ def handle_upload(conn, replay_file) -> int:
             file_object.write(replay_file.file.read())
     except Exception:
         raise ReplayError("Error writing file to server.")
-    
+
     analysis: ReplayAnalysis = extract_replay_data(conn, temp_file_path)
     game_id: Optional[int] = determine_game_id(conn, analysis)
-    
+
     if not game_id:
         os.remove(temp_file_path)
         raise ReplayError("No database match found.")
     if GeneralQueries.game_id_has_replay(conn, game_id):
         os.remove(temp_file_path)
         raise ReplayError(f"Replay {game_id} has already been uploaded.")
-    
+
     # Persist file in replays folder
     try:
         shutil.move(temp_file_path, f"./replays/{game_id}.replay")
     except Exception:
         os.remove(temp_file_path)
         raise ReplayError("Error moving replay to persistent storage.")
-    
+
     # Save statistics to db
     GeneralQueries.save_replay_stats(conn, game_id, analysis)
     return game_id
@@ -71,6 +72,11 @@ def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
     except FileNotFoundError:
         raise ReplayError(f"{RRROCKET_EXECUTABLE} not found.")
 
+    # Check if replay is parse-worthy
+    team_size = rpy.get("properties").get("TeamSize")
+    if team_size != 3:
+        raise ReplayError("Team size did not equal 3.")
+
     cg_players_ids = GeneralQueries.get_team_player_ids(conn)
     try:
         players = [
@@ -101,7 +107,13 @@ def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
             date=rpy.get("properties").get("Date"),
             cg_id=cg_id,
         )
-    except Exception:
+    except Exception as e:
         os.remove(temp_file_path)
-        raise ReplayError("Replay file too old to be supported.")
+        raise ReplayError(f"Parser error: {e}")
     return analysis
+
+
+def get_missing_recent_game_ids() -> list[int]:
+    with db.get_db_connection() as conn, conn.cursor() as c:
+        c.execute("SELECT gameID FROM games WHERE replayAvailable = 0 order by gameID desc LIMIT 50;")
+        return (x[0] for x in c.fetchall())

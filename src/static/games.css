@@ -22,3 +22,11 @@ td>img {
 a:active {
     color: white !important;
 }
+
+.win {
+    background-color: rgba(30, 133, 30, 0.4);
+}
+
+.loss {
+    background-color: rgba(133, 30, 30, 0.4)
+}

@@ -15,9 +15,6 @@ td>img {
     vertical-align: top;
 }
 
-.basicstats {
-}
-
 .basicstats td,
 .basicstats th {
     padding: 2px;
@@ -72,4 +69,8 @@ article>footer {
 
 .no-decoration {
     text-decoration: none;
+}
+
+.highlight_td {
+    text-align: center;
 }

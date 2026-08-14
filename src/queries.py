@@ -379,25 +379,26 @@ class RLQueries:
         return games
 
     @staticmethod
-    def latest_session_games(conn):
+    def get_game_stats(conn, active_players, fromID: int, toID: int):
         with conn.cursor() as cursor:
             cursor.execute(
                 """
-                        SELECT g.gameID, g.goals, against,
-                        p1.rank, p1.score, p1.goals, p1.assists, p1.saves, p1.shots,
-                        p2.rank, p2.score, p2.goals, p2.assists, p2.saves, p2.shots,
-                        p3.rank, p3.score, p3.goals, p3.assists, p3.saves, p3.shots,
-                        g.replayAvailable
-                        FROM games g
-                        LEFT JOIN scores p1 ON g.gameID = p1.gameID AND p1.playerID = %s
-                        LEFT JOIN scores p2 ON g.gameID = p2.gameID AND p2.playerID = %s
-                        LEFT JOIN scores p3 ON g.gameID = p3.gameID AND p3.playerID = %s
-                        ORDER BY ID DESC LIMIT %s   
-                            """,
-                (),
+                SELECT 
+                    g.gameID AS ID, g.date, g.goals As CG, against AS Enemy,
+                    p1.rank, p1.score, p1.goals, p1.assists, p1.saves, p1.shots,
+                    p2.rank, p2.score, p2.goals, p2.assists, p2.saves, p2.shots,
+                    p3.rank, p3.score, p3.goals, p3.assists, p3.saves, p3.shots,
+                    replayAvailable
+                FROM games g
+                LEFT JOIN scores p1 ON g.gameID = p1.gameID AND p1.playerID = %s
+                LEFT JOIN scores p2 ON g.gameID = p2.gameID AND p2.playerID = %s
+                LEFT JOIN scores p3 ON g.gameID = p3.gameID AND p3.playerID = %s
+                WHERE g.gameID BETWEEN %s AND %s
+                ORDER BY ID DESC
+            """,
+                (*active_players, fromID, toID),
             )
-
-        # Output: One row per player per game
+            return cursor.fetchall()
 
 
 # TODO: Use unused queries
