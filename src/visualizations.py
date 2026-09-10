@@ -1,10 +1,9 @@
-import random
-from enum import Enum  # for class type hints
+from typing import Self
 
 import simplejson as json  # To be able to serialize object of type Decimal
-from typing import Self
-from queries import GeneralQueries
-from structs import Visualizations
+
+import queries
+from structs import DatasetColor, Player, Visualizations
 
 
 def get_all_visualizations(conn, total_games_count, active_players) -> Visualizations:
@@ -17,24 +16,6 @@ def get_all_visualizations(conn, total_games_count, active_players) -> Visualiza
         performance=_performance(conn, total_games_count, active_players),
         score_distribution=_score_distribution(conn, active_players),
     )
-
-
-class DatasetColor(Enum):
-    @staticmethod
-    def random_color() -> str:
-        r, g, b = (
-            random.randrange(0, 256),
-            random.randrange(0, 256),
-            random.randrange(0, 256),
-        )
-        return f"rgba({r},{g},{b},0.6)"
-
-    TEAM = ("rgba(40, 40, 40, 0.8)",)
-    WIN = ("rgba(13, 70, 13, 0.8)",)
-    LOSS = ("rgba(135, 4, 4, 0.8)",)
-    GAME = ("rgba(17, 3, 58, 0.8)",)
-    NEUTRAL_GREY = ("rgba(128,128,128,0.6)",)
-    WHITE = "rgba(255,255,255,0.6)"
 
 
 class VisualizationBuilder:
@@ -65,9 +46,7 @@ class VisualizationBuilder:
         self._vis["type"] = vis_type
         return self
 
-    def with_title(
-        self, text: str, align: str = "center", position: str = "top"
-    ) -> Self:
+    def with_title(self, text: str, align: str = "center", position: str = "top") -> Self:
         title_attributes = {
             "text": text,
             "align": align,
@@ -127,9 +106,7 @@ class VisualizationBuilder:
             scales["y"]["max"] = y_max
         return self
 
-    def with_grid(
-        self, x_color: DatasetColor | str = None, y_color: DatasetColor | str = None
-    ) -> Self:
+    def with_grid(self, x_color: DatasetColor | str = None, y_color: DatasetColor | str = None) -> Self:
         def get_val(c):
             return c.value if isinstance(c, DatasetColor) else c
 
@@ -258,31 +235,33 @@ def _performance(conn, total_games_count: int, active_players: list[str]) -> str
     data_list = []
     with conn.cursor() as cursor:
         for player_id in active_players:
-            cursor.execute(
-                f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20"
-            )
+            cursor.execute(f"SELECT s.score FROM performance s WHERE s.playerID = {player_id} ORDER BY gameID DESC LIMIT 20")
             data_list.append(list(reversed([x[0] for x in cursor.fetchall()])))
         average = [sum(group) / len(group) for group in zip(*data_list)]
 
     graph = (
         VisualizationBuilder()
         .with_type("line")
-        .with_dataset(
-            average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL_GREY, 3
-        )
+        .with_dataset(average, "Average", DatasetColor.WHITE, DatasetColor.NEUTRAL_GREY, 3)
         .with_labels(list(range(total_games_count - 19, total_games_count + 1)))
         .with_grid(y_color="rgba(209, 209, 209, 0.1)")
     )
 
     for i, player_id in enumerate(active_players):
-        player_info = GeneralQueries.get_player_info(conn, player_id)
+        player_info = get_player_info(conn, player_id)
         graph = graph.with_dataset(
             data_list[i],
-            player_info.get("name"),
-            player_info.get("color"),
+            player_info.name,
+            player_info.color,
             DatasetColor.NEUTRAL_GREY,
         )
     return graph.to_str()
+
+
+def get_player_info(conn, player_id: str) -> Player:
+    with conn.cursor(dictionary=True) as cursor:
+        cursor.execute("SELECT * FROM players WHERE playerID = %s", (player_id,))
+        return Player(**cursor.fetchone())
 
 
 def _score_distribution(conn, active_players: list[str]) -> str:
@@ -306,19 +285,14 @@ def _score_distribution(conn, active_players: list[str]) -> str:
             datasets.append([x[2] for x in raw])
             labels = [x[1] for x in raw]
 
-    graph = (
-        VisualizationBuilder()
-        .with_type("line")
-        .with_labels(labels)
-        .with_grid(y_color="rgba(209, 209, 209, 0.1)")
-    )
+    graph = VisualizationBuilder().with_type("line").with_labels(labels).with_grid(y_color="rgba(209, 209, 209, 0.1)")
 
     for i, player_id in enumerate(active_players):
-        player_info = GeneralQueries.get_player_info(conn, player_id)
+        player_info = get_player_info(conn, player_id)
         graph = graph.with_dataset(
             datasets[i],
-            player_info.get("name"),
-            player_info.get("color"),
+            player_info.name,
+            player_info.color,
             DatasetColor.NEUTRAL_GREY,
         )
     return graph.to_str()

@@ -1,13 +1,13 @@
 import db
 import google_import as data
+import profiles
+import queries
+import randomfacts
+import records
 import replays
+import streaks
 import utility
 import visualizations
-from profiles import ProfileQueries
-from queries import GeneralQueries, RLQueries
-from randomfacts import RandomFactQueries
-from records import RecordQueries
-from streaks import StreakQueries
 from structs import LatestSession
 
 
@@ -35,33 +35,32 @@ class Dashboard:
 
     def reload(self, conn):
         # Reload cache:
+        active_player_ids = get_active_player_ids(conn)
 
-        active_player_ids = GeneralQueries.get_active_player_ids(conn)
-
-        self.total_games = GeneralQueries.total_games(conn)
-        self.player_profiles = ProfileQueries.build_player_profiles(conn, active_player_ids)
-        self.session_information = RandomFactQueries.session_data_by_date(conn, RLQueries.session_details(conn)["latest_session_date"])
-        self.session_rank = RLQueries.session_rank(conn)
-        self.random_facts = []  # RandomFactQueries.generate_random_facts()
-        self.winrates = RLQueries.winrates(conn)
-        self.days_since_first = GeneralQueries.days_since_first_game(conn)
-        self.tilt = RLQueries.tilt(conn)
-        self.average_session_length = RLQueries.average_session_length(conn)
-        self.last_games = RLQueries.last_x_games_stats(conn, active_player_ids, len(RLQueries.games_from_session_date(conn)), False)
+        self.total_games = queries.total_games(conn)
+        self.player_profiles = profiles.build_player_profiles(conn, active_player_ids)
+        self.session_information = randomfacts.session_data_by_date(conn, queries.session_details(conn)["latest_session_date"])
+        self.session_rank = queries.session_rank(conn)
+        self.random_facts = []  # randomfacts.generate_random_facts(conn, active_player_ids)
+        self.winrates = queries.winrates(conn)
+        self.days_since_first = queries.days_since_first_game(conn)
+        self.tilt = queries.calculate_tilt(conn)
+        self.average_session_length = queries.average_session_length(conn)
+        self.last_games = queries.last_x_games_stats(conn, active_player_ids, len(queries.games_from_session_date(conn)), False)
         self.visualizations = visualizations.get_all_visualizations(conn, self.total_games, active_player_ids)
 
         # Records
-        self.record_games = RecordQueries.generate_record_games(conn)
-        self.streaks_record = StreakQueries.generate_streaks_record_page(conn)
+        self.record_games = records.generate_record_games(conn)
+        self.streaks_record = streaks.generate_streaks_record_page(conn)
 
         # Games
-        self.last_100_games_stats = RLQueries.last_x_games_stats(conn, active_player_ids, 100, True)
+        self.last_100_games_stats = queries.last_x_games_stats(conn, active_player_ids, 100, True)
 
         # unused
         self.latest_session = latest_session(conn, active_player_ids)
-        self.session_game_amount = len(RLQueries.games_from_session_date(conn))
-        self.session_game_details = RLQueries.last_x_games_stats(conn, active_player_ids, self.session_game_amount, False)
-        self.fun_facts = []  # RLQueries.generate_fun_facts(active_player_ids)
+        self.session_game_amount = len(queries.games_from_session_date(conn))
+        self.session_game_details = queries.last_x_games_stats(conn, active_player_ids, self.session_game_amount, False)
+        self.fun_facts = []  # queries.generate_fun_facts(active_player_ids)
 
         # print("Session information")
         # print(self.session_information)
@@ -114,18 +113,19 @@ class Dashboard:
     def build_profile_context(self, player_id: str):
         with db.get_db_connection() as conn:
             return {
-                "name": GeneralQueries.player_name(conn, player_id),
-                "streaks": StreakQueries.generate_profile_streaks(conn, player_id),
+                "name": queries.player_name(conn, player_id),
+                "streaks": streaks.generate_profile_streaks(conn, player_id),
                 "rank_highlighting": self.RANK_HIGHLIGHTING,
             }
 
     def build_games_context(self, minID: int | None, maxID: int | None):
         with db.get_db_connection() as conn:
-            active_players = GeneralQueries.get_active_player_ids(conn)
-            games = self.last_100_games_stats if minID is None and maxID is None else RLQueries.get_game_stats(conn, active_players, minID, maxID)
+            active_players = get_active_player_ids(conn)
+            games = self.last_100_games_stats if minID is None and maxID is None else queries.get_game_stats(conn, active_players, minID, maxID)
         return {
             "games": games,
-            "last_games_highlighting": [None] + self.LAST_GAMES_HIGHLIGHTING, # [None], because we have an additional column date in comparison to main page table
+            "last_games_highlighting": [None]
+            + self.LAST_GAMES_HIGHLIGHTING,  # [None], because we have an additional column date in comparison to main page table
             "cf": utility.conditional_formatting,
         }
 
@@ -150,10 +150,19 @@ class Dashboard:
 
 def latest_session(conn, active_player_ids) -> LatestSession:
     info_panels = {"date": 0, "win_loss": (0, 0)}
-    table_data = RLQueries.last_x_games_stats(conn, active_player_ids, 5, False)
+    table_data = queries.last_x_games_stats(conn, active_player_ids, 5, False)
 
     return LatestSession(
         info_panels=info_panels,
         table_data=table_data,
-        player_colors=[GeneralQueries.player_color(conn, player_id) for player_id in active_player_ids],
+        player_colors=[queries.player_color(conn, player_id) for player_id in active_player_ids],
     )
+
+
+def get_active_player_ids(conn) -> list[str]:
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT playerID FROM players WHERE active = 1 ORDER BY `order` ASC")
+        player_ids = cursor.fetchall()
+        if not player_ids:
+            return []
+        return [player_id[0] for player_id in player_ids]

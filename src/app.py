@@ -17,6 +17,7 @@ app = FastAPI()  # Startup: uvicorn app:app --reload --app-dir src
 app.mount("/rl/static", StaticFiles(directory="./src/static"), name="static")
 templates = Jinja2Templates(directory="./src/templates")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 # init.init()
 d = dashboard.Dashboard()
 
@@ -89,7 +90,7 @@ async def replay_error_handler(request: Request, exception: ReplayError):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exception: Exception):
-    logging.error(f"Unexpected error: {str(exception)}")
+    logger.error(f"Unexpected error: {exception!s}")
 
     return JSONResponse(
         status_code=500,

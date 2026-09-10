@@ -85,7 +85,11 @@
                         <p style="text-align: center;">❌</p>
                         {% endif %}
                         {% else %}
+                        {% if data != "" %}
                         <img src="https://jok.im/static/rl/ranks/{{ data.lower() }}.png" alt="{{ data }}">
+                        {% else %}
+                        <p>PL</p>
+                        {% endif %}
                         {% endif %}
                     </td>
                 {% endfor %}

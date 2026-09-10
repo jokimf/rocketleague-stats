@@ -1,5 +1,6 @@
-import mysql.connector as mysql
 import json
+
+import mysql.connector as mysql
 
 
 def init():

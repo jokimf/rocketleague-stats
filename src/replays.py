@@ -7,7 +7,6 @@ from typing import Optional
 
 import db
 import utility
-from queries import GeneralQueries, RLQueries
 from structs import ReplayAnalysis, ReplayError, ReplayGoal, ReplayPlayer
 
 RRROCKET_EXECUTABLE = utility.get_rrrocket_analyzer()
@@ -30,7 +29,7 @@ def handle_upload(conn, replay_file) -> int:
     if not game_id:
         os.remove(temp_file_path)
         raise ReplayError("No database match found.")
-    if GeneralQueries.game_id_has_replay(conn, game_id):
+    if game_id_has_replay(conn, game_id):
         os.remove(temp_file_path)
         raise ReplayError(f"Replay {game_id} has already been uploaded.")
 
@@ -42,16 +41,16 @@ def handle_upload(conn, replay_file) -> int:
         raise ReplayError("Error moving replay to persistent storage.")
 
     # Save statistics to db
-    GeneralQueries.save_replay_stats(conn, game_id, analysis)
+    write_replay_stats(conn, game_id, analysis)
     return game_id
 
 
 def determine_game_id(conn, analysis: ReplayAnalysis) -> Optional[int]:
-    potential_games = RLQueries.games_by_date(conn, analysis.date[:10])
+    potential_games = games_by_date(conn, analysis.date[:10])
     for potential_game in potential_games:
         # Check each players stats
         matches = int(analysis.cg_score == potential_game["goals"]) + int(analysis.enemy_score == potential_game["against"])
-        for player_db in RLQueries.get_player_scores_by_gameid(conn, potential_game["gameID"]):
+        for player_db in get_player_scores_by_gameid(conn, potential_game["gameID"]):
             matching_players = [p for p in analysis.players if p.online_id == player_db["playerID"]]
             if player_analysis := matching_players[0] if matching_players else None:
                 matches += amount_of_matching_stats(player_db, player_analysis)
@@ -77,7 +76,7 @@ def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
     if team_size != 3:
         raise ReplayError("Team size did not equal 3.")
 
-    cg_players_ids = GeneralQueries.get_team_player_ids(conn)
+    own_team_ids = get_team_player_ids(conn)
     try:
         players = [
             ReplayPlayer(
@@ -94,7 +93,7 @@ def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
             )
             for player in rpy.get("properties").get("PlayerStats")
         ]
-        cg_id = 0 if any(p.online_id in cg_players_ids for p in players if p.team == 0) else 1
+        cg_id = 0 if any(p.online_id in own_team_ids for p in players if p.team == 0) else 1
         analysis = ReplayAnalysis(
             match_id=rpy.get("properties").get("Id"),
             cg_score=rpy.get("properties").get("Team0Score", 0) if cg_id == 0 else rpy.get("properties").get("Team1Score", 0),
@@ -113,7 +112,83 @@ def extract_replay_data(conn, temp_file_path: str) -> ReplayAnalysis:
     return analysis
 
 
-def get_missing_recent_game_ids() -> list[int]:
+def get_missing_recent_game_ids():
     with db.get_db_connection() as conn, conn.cursor() as c:
         c.execute("SELECT gameID FROM games WHERE replayAvailable = 0 order by gameID desc LIMIT 50;")
         return (x[0] for x in c.fetchall())
+
+
+def get_team_player_ids(conn) -> list[str]:
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT playerID FROM players WHERE team = 1 ORDER BY `order` ASC")
+        player_ids = cursor.fetchall()
+        if not player_ids:
+            return []
+        return [player_id[0] for player_id in player_ids]
+
+
+def game_id_has_replay(conn, game_id: int) -> bool:
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT replayAvailable FROM games WHERE gameID = %s", (game_id,))
+        return bool(cursor.fetchone()[0])
+
+
+def write_replay_stats(conn, game_id: int, analysis: ReplayAnalysis) -> None:
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "UPDATE games SET secondsPlayed = %s, mapName = %s, replayAvailable = TRUE WHERE gameID = %s",
+            (analysis.total_seconds_played, analysis.map_name, game_id),
+        )
+        for player in analysis.players:
+            cursor.execute(
+                "INSERT IGNORE INTO players (playerID, name) VALUES (%s,%s)",
+                (player.online_id, player.name),
+            )
+            cursor.execute(
+                "INSERT IGNORE INTO scores VALUES (%s,%s,NULL,%s,%s,%s,%s,%s)",
+                (
+                    game_id,
+                    player.online_id,
+                    player.score,
+                    player.goals,
+                    player.assists,
+                    player.saves,
+                    player.shots,
+                ),
+            )
+        for goal in analysis.goals:
+            scorer = [p for p in analysis.players if p.name == goal.player_name]
+            if scorer := scorer[0] if scorer else None:  # TODO: Sometimes, players are not part of players but scored...?
+                cursor.execute(
+                    "INSERT IGNORE INTO goals VALUES (NULL,%s,%s,%s)",
+                    (game_id, scorer.online_id, goal.frame),
+                )
+            else:
+                raise ReplayError("A Player not in players scored.")
+
+    conn.commit()
+
+
+def get_player_scores_by_gameid(conn, game_id: int):
+    with conn.cursor(dictionary=True) as cursor:
+        cursor.execute(
+            """
+            SELECT p.playerID, s.score, s.goals, s.assists, s.saves, s.shots
+            FROM games g JOIN scores s ON g.gameID = s.gameID JOIN players p on s.playerID = p.playerID 
+            WHERE g.gameID = %s AND p.team = TRUE;
+        """,
+            (game_id,),
+        )
+        return cursor.fetchall()
+
+
+def games_by_date(conn, date: str, adjancent_days: int = 1) -> list:
+    yesterday = (datetime.date.fromisoformat(date) - datetime.timedelta(days=adjancent_days)).strftime("%Y-%m-%d")
+    tomorrow = (datetime.date.fromisoformat(date) + datetime.timedelta(days=adjancent_days)).strftime("%Y-%m-%d")
+    with conn.cursor(dictionary=True) as cursor:
+        cursor.execute(
+            "SELECT * FROM games WHERE date >= %s AND date <= %s;",
+            (yesterday, tomorrow),
+        )
+        games = cursor.fetchall()
+    return games

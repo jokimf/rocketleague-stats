@@ -6,7 +6,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from queries import GeneralQueries, RLQueries
+import queries
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +48,9 @@ def is_new_data_available(latest_game_id_excel: int) -> bool:
 
 def insert_new_data(conn) -> None:
     result = service.spreadsheets().values().get(
-        spreadsheetId=RL_DOC, range=f"Games!A{GeneralQueries.total_games(conn) + 1}:W").execute()
+        spreadsheetId=RL_DOC, range=f"Games!A{queries.total_games(conn) + 1}:W").execute()
     game_data = result.get("values", [])
 
     # Insert if data does not match, assert that not data point is missing
     for game in game_data:
-        RLQueries.insert_game_data(conn, game)
+        queries.write_game_data_from_excel_rows(conn, game)
