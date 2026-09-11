@@ -77,8 +77,8 @@
             {% for player in players %}
             <article>
                 <header>
-                    <h1>
-                        <img alt={{ player.rank }} class="mr-.125 border-box"
+                    <h1 style="text-align: center;">
+                        <img class="profile_rank_icon" alt={{ player.rank }}
                             src="https://jok.im/static/rl/ranks/{{ player.rank }}.png">
                         <a href="/rl/profile/{{ player.player_id }}" style="color:{{ player.color }};">{{ player.name
                             }}</a>
@@ -101,7 +101,7 @@
                     {% set rounding = 2 %}
                     {% endif %}
                     <tr>
-                        <td>{{ profile_stat_names[loop.index0] }}</td>
+                        <td>{{ ["Score", "Goals", "Assists", "Saves", "Shots"][loop.index0] }}</td>
                         {% for value in stats %}
                         <td top="{{player.top[loop.index0]}}">{{ value | round(rounding) }}</td>
                         {% endfor %}
@@ -130,25 +130,29 @@
             <h1 id="session">LATEST SESSION</h1>
             <h3 id="sessionoverview">Overview</h3>
             <p>
-                <output class="bg-variant"><span class="bold">Session ID:</span> {{ session_information[0] }}</output>
-                <output class="bg-active"><span class="bold">Date:</span> {{ session_information[2] }}</output>
-                <output class="bg-muted"><span class="bold">W/L:</span> {{ session_information[3] }} - {{
-                    session_information[4] }}</output>
+                <output class="bg-variant"><span class="bold">Session ID:</span> {{ latest_session.session.session_id
+                    }}</output>
+                <output class="bg-active"><span class="bold">Date:</span> {{ latest_session.session.date }}</output>
+                <output class="bg-muted"><span class="bold">W/L:</span> {{ latest_session.session.wins }} - {{
+                    latest_session.session.losses }}</output>
+                <output class="bg-success"><span class="bold">G/A:</span> {{ latest_session.session.goals }} - {{
+                    latest_session.session.against }}</output>
             </p>
             <table>
                 <tr>
                     <th colspan="3" class="table-general">General</th>
                     {% for player in players %}
-                    <th colspan="6" style="background-color: {{ player.color }};opacity:0.5;">{{ player.name }}</th>
+                    <th colspan="6" style="background-color: {{ player.color }};">{{ player.name }}</th>
                     {% endfor %}
                     <th colspan="3" class="table-general">Replay</th>
                 </tr>
-                {% for row in last_games %}
+                {% for row in latest_session.table_data %}
                 <tr>
                     {% for data in row %}
-                    <td value="{{ data }}" col="{{ loop.index }}" min="{{ last_games_highlighting[loop.index0][1] }}"
-                        color="{{ last_games_highlighting[loop.index0][0] }}"
-                        max="{{ last_games_highlighting[loop.index0][2] }}" class="highlight_td 
+                    <td value="{{ data }}" col="{{ loop.index }}"
+                        min="{{ latest_session.highlighting[loop.index0][1] }}"
+                        color="{{ latest_session.highlighting[loop.index0][0] }}"
+                        max="{{ latest_session.highlighting[loop.index0][2] }}" class="highlight_td 
                         {% if loop.index==2 or loop.index==3 %} 
                             {% if row[1] > row[2] and loop.index == 2 %}
                                 win 
@@ -163,7 +167,9 @@
                         {{ data }}
                         {% elif loop.index == 22 %}
                         {% if data %}
-                        <a href="/rl/replay/{{row[0]}}"><p style="text-align: center;">⏯️</p></a>
+                        <a href="/rl/replay/{{row[0]}}">
+                            <p style="text-align: center;">⏯️</p>
+                        </a>
                         {% else %}
                         <p style="text-align: center;">❌</p>
                         {% endif %}
@@ -209,69 +215,166 @@
             </ul>
         </section>
         {% endif %}
-        <section>
-            <h1 id="winrates">WINRATES</h1>
-            <output class="bg-active m-.25">
-                <span class="bold">TOTAL:</span>
-                {{ winrates[0]|round(1) }}%
-            </output>
-            <output class="bg-variant m-.25">
-                <span class="bold">SEASON:</span>
-                {{ winrates[1]|round(1) }}%
-            </output>
-            <output class="bg-accent m-.25">
-                <span class="bold">L100:</span>
-                {{ winrates[2]|round(1) }}%
-            </output>
-            <output class="bg-severe m-.25">
-                <span class="bold">L20:</span>
-                {{ winrates[3]|round(1) }}%
-            </output>
+        <section class="team-overview">
+            <h2>Team Overview</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Last 5</th>
+                            <th>Last 20</th>
+                            <th>Last 100</th>
+                            <th>Last 500</th>
+                            <th>Last 1000</th>
+                            <th>Lifetime</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Wins</th>
+                            <td>{{ team_overview.last_5.wins }}</td>
+                            <td>{{ team_overview.last_20.wins }}</td>
+                            <td>{{ team_overview.last_100.wins }}</td>
+                            <td>{{ team_overview.last_500.wins }}</td>
+                            <td>{{ team_overview.last_1000.wins }}</td>
+                            <td>{{ team_overview.lifetime.wins }}</td>
+                        </tr>
+                        <tr>
+                            <th>Losses</th>
+                            <td>{{ team_overview.last_5.losses }}</td>
+                            <td>{{ team_overview.last_20.losses }}</td>
+                            <td>{{ team_overview.last_100.losses }}</td>
+                            <td>{{ team_overview.last_500.losses }}</td>
+                            <td>{{ team_overview.last_1000.losses }}</td>
+                            <td>{{ team_overview.lifetime.losses }}</td>
+                        </tr>
+                        <tr>
+                            <th>Win Rate</th>
+                            <td>{{ "%.1f"|format(team_overview.last_5.win_rate * 100) }}%</td>
+                            <td>{{ "%.1f"|format(team_overview.last_20.win_rate * 100) }}%</td>
+                            <td>{{ "%.1f"|format(team_overview.last_100.win_rate * 100) }}%</td>
+                            <td>{{ "%.1f"|format(team_overview.last_500.win_rate * 100) }}%</td>
+                            <td>{{ "%.1f"|format(team_overview.last_1000.win_rate * 100) }}%</td>
+                            <td>{{ "%.1f"|format(team_overview.lifetime.win_rate * 100) }}%</td>
+                        </tr>
+                        <tr>
+                            <th>Avg. Goals / Game</th>
+                            <td>{{ "%.2f"|format(team_overview.last_5.avg_goals_per_game) }}</td>
+                            <td>{{ "%.2f"|format(team_overview.last_20.avg_goals_per_game) }}</td>
+                            <td>{{ "%.2f"|format(team_overview.last_100.avg_goals_per_game) }}</td>
+                            <td>{{ "%.2f"|format(team_overview.last_500.avg_goals_per_game) }}</td>
+                            <td>{{ "%.2f"|format(team_overview.last_1000.avg_goals_per_game) }}</td>
+                            <td>{{ "%.2f"|format(team_overview.lifetime.avg_goals_per_game) }}</td>
         </section>
         <section>
-            <h1 id="seasons">SEASONS</h1>
-            <h3 id="g6">Seasons Graph</h3>
-            <canvas id="seasonsGraph"></canvas>
-        </section>
-        <section>
-            <table>
-                <tr>
-                    <td>Days since first game</td>
-                    <td>{{ days_since_first | int }}</td>
-                </tr>
-                <tr>
-                    <td>Games</td>
-                    <td>{{ total_games }}</td>
-                </tr>
-                <tr>
-                    <td>Tilt</td>
-                    <td>{{ tilt }}%</td>
-                </tr>
-                <tr>
-                    <td>Average Session Length</td>
-                    <td>{{ average_session_length | round(2) }}</td>
-                </tr>
+            <h1>GOAL HEATMAP</h1>
+            <table border="1" cellpadding="5" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Goals \ Against</th>
+                        <th>0</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th>6+</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in goal_heatmap %}
+                    <tr>
+                        <td><strong>{{ row.goals }}</strong></td>
+                        <td>{{ row.against_0 }}</td>
+                        <td>{{ row.against_1 }}</td>
+                        <td>{{ row.against_2 }}</td>
+                        <td>{{ row.against_3 }}</td>
+                        <td>{{ row.against_4 }}</td>
+                        <td>{{ row.against_5 }}</td>
+                        <td>{{ row.against_6_plus|default(row['against_6+']) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </section>
         <section>
-            <h1 id="funfacts">"FUN" FACTS</h1>
-            <output class="bg-attention">
-                <span class="bold">No funny stats available at the moment.</span>
-            </output>
-        </section>
-        <section>
-            <h1 id="datefacts">DATE FACTS</h1>
-            <h3 id="g1">Wins & Losses by day of the month</h3>
-            <canvas id="daysGraph"></canvas>
-            <h3 id="g2">Wins & Losses by weekday</h3>
-            <canvas id="weekdaysGraph"></canvas>
-            <h3 id="g3">Wins & Losses by month</h3>
-            <canvas id="monthGraph"></canvas>
-            <h3 id="g4">Wins & Losses by year</h3>
-            <canvas id="yearGraph"></canvas>
-            <h3 id="g5">Points per game distribution</h3>
-            <canvas id="scoreDistribution"></canvas>
-        </section>
+            <section>
+                <h1 id="winrates">WINRATES</h1>
+                <output class="bg-active m-.25">
+                    <span class="bold">TOTAL:</span>
+                    {{ winrates[0]|round(1) }}%
+                </output>
+                <output class="bg-variant m-.25">
+                    <span class="bold">SEASON:</span>
+                    {{ winrates[1]|round(1) }}%
+                </output>
+                <output class="bg-accent m-.25">
+                    <span class="bold">L100:</span>
+                    {{ winrates[2]|round(1) }}%
+                </output>
+                <output class="bg-severe m-.25">
+                    <span class="bold">L20:</span>
+                    {{ winrates[3]|round(1) }}%
+                </output>
+            </section>
+            <section>
+                <table>
+                    <tr>
+                        <td>Days since first game</td>
+                        <td>{{ random_values.days_since_first | int }}</td>
+                    </tr>
+                    <tr>
+                        <td>Games</td>
+                        <td>{{ random_values.total_games }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tilt</td>
+                        <td>{{ random_values.tilt }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Average Session Length</td>
+                        <td>{{ random_values.average_session_length | round(2) }}</td>
+                    </tr>
+                </table>
+            </section>
+            <section>
+                <h1 id="funfacts">"FUN" FACTS</h1>
+                <output class="bg-attention">
+                    <span class="bold">No funny stats available at the moment.</span>
+                </output>
+            </section>
+            <section class="date-facts-section">
+                <h3 id="g5">Points per game distribution</h3>
+                <canvas id="scoreDistribution"></canvas>
+                <div id="charts-grid">
+                    <div>
+                        <h3 id="g6">Wins & Losses by season</h3>
+                        <canvas id="seasonsGraph"></canvas>
+                    </div>
+
+                    <div>
+                        <h3 id="g1">Wins & Losses by day of the month</h3>
+                        <canvas id="daysGraph"></canvas>
+                    </div>
+
+                    <div>
+                        <h3 id="g2">Wins & Losses by weekday</h3>
+                        <canvas id="weekdaysGraph"></canvas>
+                    </div>
+
+                    <div>
+                        <h3 id="g3">Wins & Losses by month</h3>
+                        <canvas id="monthGraph"></canvas>
+                    </div>
+
+                    <div>
+                        <h3 id="g4">Wins & Losses by year</h3>
+                        <canvas id="yearGraph"></canvas>
+                    </div>
+
+                </div>
+            </section>
     </main>
     {% endif %}
 </body>

@@ -52,11 +52,21 @@ class RandomFact:
     rarity: int
 
 
+@dataclass(frozen=True)
+class Session:
+    session_id: str
+    date: str
+    wins: int
+    losses: int
+    goals: int
+    against: int
+
+
 @dataclass
-class LatestSession:
-    info_panels: dict
+class LatestSessionPanel:
+    session: Session
     table_data: list
-    player_colors: list[str]
+    highlighting: list
 
 
 @dataclass(frozen=True)
@@ -118,3 +128,53 @@ class DatasetColor(Enum):
     GAME = ("rgba(17, 3, 58, 0.8)",)
     NEUTRAL_GREY = ("rgba(128,128,128,0.6)",)
     WHITE = "rgba(255,255,255,0.6)"
+
+
+@dataclass(frozen=True)
+class RandomValues:
+    days_since_first: int
+    total_games: int
+    tilt: float
+    average_session_length: float
+
+
+## Starting 3.0 ##
+
+
+@dataclass(frozen=True)
+class TeamOverviewRow:
+    games: int
+    wins: int
+    losses: int
+    win_rate: float
+    avg_goals_per_game: float
+    avg_against_per_game: float
+    avg_differential_per_game: float
+    avg_score_per_game: float
+    avg_assists_per_game: float
+    avg_saves_per_game: float
+    avg_shots_per_game: float
+    avg_game_duration_s: float
+    longest_game_duration_s: float
+
+
+@dataclass(frozen=True)
+class TeamOverview:
+    last_5: TeamOverviewRow
+    last_20: TeamOverviewRow
+    last_100: TeamOverviewRow
+    last_500: TeamOverviewRow
+    last_1000: TeamOverviewRow
+    lifetime: TeamOverviewRow
+
+
+@dataclass(frozen=True)
+class TeamStreaks:
+    current_win: int
+    current_loss: int
+    score: int
+    not_score: int
+
+
+# @dataclass(frozen=True)
+# class GoalMargins:

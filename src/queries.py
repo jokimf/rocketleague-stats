@@ -1,6 +1,8 @@
 import datetime
 from typing import Any
 
+from structs import RandomValues, Session, TeamOverview, TeamOverviewRow
+
 
 def total_games(conn) -> int:
     with conn.cursor() as cursor:
@@ -177,17 +179,17 @@ def average_session_length(conn) -> int:
         return cursor.fetchone()[0]
 
 
-def latest_session_main_data(conn) -> list[Any]:
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT sessionID, date, wins, losses, Goals, Against FROM sessions ORDER BY SessionID desc LIMIT 1")
-        return cursor.fetchone()
+def latest_session_main_data(conn) -> Session:
+    with conn.cursor(dictionary=True) as cursor:
+        cursor.execute("SELECT sessionID as session_id, date, wins, losses, goals, against FROM sessions ORDER BY sessionID desc LIMIT 1")
+        return Session(**cursor.fetchone())
 
 
-def games_from_session_date(conn, session_date: str = None) -> list[Any]:  # TODO: rewrite
+def games_from_session_date(conn, session_date: str | None = None) -> list[Any]:
     if session_date is None:
-        session_date = latest_session_main_data(conn)[1]
+        session_date = latest_session_main_data(conn).date
     with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM games WHERE date >= %s", (session_date,))
+        cursor.execute("SELECT * FROM games WHERE date = %s", (session_date,))
         return cursor.fetchall()
 
 
@@ -204,14 +206,14 @@ def winrates(conn) -> list:
     latest_game_id = total_games(conn)
     season_start = current_season_start_id(conn)
     last_session = latest_session_main_data(conn)
-    games_last_session = last_session[2] + last_session[3]
+    games_last_session = last_session.wins + last_session.losses
 
     winrates_list = [
         total_wins(conn) / latest_game_id * 100,
         wins_in_range(conn, season_start, latest_game_id) / (latest_game_id - season_start + 1) * 100,
         float(wins_in_range(conn, latest_game_id - 99, latest_game_id)),
         wins_in_range(conn, latest_game_id - 19, latest_game_id) / 20 * 100,
-        last_session[2] / games_last_session * 100,
+        last_session.wins / games_last_session * 100,
     ]
     return winrates_list
 
@@ -223,25 +225,18 @@ def total_wins(conn) -> int:
 
 
 # Session Details W/L
-def session_details(conn):  # TODO rewrite this
-    details = dict()
-    latest_session_details = latest_session_main_data(conn)
-    _, s_date, s_wins, s_losses, _, _ = latest_session_details  # TODO: rewrite
-    details["session_game_count"] = s_wins + s_losses
-    details["latest_session_date"] = s_date
-    details["w_and_l"] = ["W" if game[2] > game[3] else "L" for game in games_from_session_date(conn, s_date)]
-    return details
-
-    # Session rank is determined by the delta of wins and losses, goals and against, and finally sum of player scores.
+def session_details(conn):
+    session = latest_session_main_data(conn)
+    games = games_from_session_date(conn, session.date)
+    return {
+        "session_game_count": session.wins + session.losses,
+        "latest_session_date": session.date,
+        "w_and_l": ["W" if game[2] > game[3] else "L" for game in games],
+    }
 
 
-def session_rank(conn, session_id: int | None = None) -> dict:
-    latest_session_details = latest_session_main_data(conn)
-    if session_id is None:
-        if not latest_session_details:
-            return 0
-        session_id = latest_session_details[0]  # TODO: rewrite
-
+# Session rank is determined by the delta of wins and losses, goals and against, and finally sum of player scores.
+def latest_session_rank(conn) -> dict:
     with conn.cursor() as cursor:
         cursor.execute(
             """
@@ -253,7 +248,7 @@ def session_rank(conn, session_id: int | None = None) -> dict:
             ) t1
             WHERE t1.sessionId = %s
         """,
-            (session_id,),
+            (latest_session_main_data(conn).session_id,),
         )
         session_ranking = cursor.fetchone()[0]
         cursor.execute(
@@ -291,6 +286,93 @@ def get_game_stats(conn, active_players, fromID: int, toID: int):
         """,
             (*active_players, fromID, toID),
         )
+        return cursor.fetchall()
+
+
+def build_random_values(conn) -> RandomValues:
+    return RandomValues(
+        days_since_first=days_since_first_game(conn),
+        total_games=total_games(conn),
+        tilt=calculate_tilt(conn),
+        average_session_length=average_session_length(conn),
+    )
+
+
+def build_team_overview(conn) -> TeamOverview:
+    with conn.cursor(dictionary=True) as cursor:
+        cursor.execute("""
+            WITH game_stats AS (
+                SELECT g.gameID, g.date, g.goals, g.against, g.secondsPlayed,
+                    COALESCE(SUM(s.score), 0) AS score,
+                    COALESCE(SUM(s.assists), 0) AS assists,
+                    COALESCE(SUM(s.saves), 0) AS saves,
+                    COALESCE(SUM(s.shots), 0) AS shots
+                FROM games g LEFT JOIN scores s  ON s.gameID = g.gameID
+                GROUP BY g.gameID, g.date, g.goals, g.against, g.secondsPlayed
+            ),
+            ranked AS (
+                SELECT *, ROW_NUMBER() OVER (
+                        ORDER BY date DESC, gameID DESC
+                    ) AS game_number
+                FROM game_stats
+            ),
+            periods AS (
+                SELECT 5 AS period, 'last_5' AS name
+                UNION ALL SELECT 20, 'last_20'
+                UNION ALL SELECT 100, 'last_100'
+                UNION ALL SELECT 500, 'last_500'
+                UNION ALL SELECT 1000, 'last_1000'
+                UNION ALL SELECT 2147483647, 'lifetime'
+            )
+            SELECT COUNT(r.gameID) AS games,
+                COALESCE(SUM(r.goals > r.against), 0) AS wins,
+                COALESCE(SUM(r.goals < r.against), 0) AS losses,
+                COALESCE(AVG(r.goals > r.against), 0) AS win_rate,
+                COALESCE(AVG(r.goals), 0) AS avg_goals_per_game,
+                COALESCE(AVG(r.against), 0) AS avg_against_per_game,
+                COALESCE(AVG(r.goals - r.against), 0) AS avg_differential_per_game,
+                COALESCE(AVG(r.score), 0) AS avg_score_per_game,
+                COALESCE(AVG(r.assists), 0) AS avg_assists_per_game,
+                COALESCE(AVG(r.saves), 0) AS avg_saves_per_game,
+                COALESCE(AVG(r.shots), 0) AS avg_shots_per_game,
+                COALESCE(AVG(r.secondsPlayed), 0) AS avg_game_duration_s,
+                COALESCE(MAX(r.secondsPlayed), 0) AS longest_game_duration_s
+            FROM periods p LEFT JOIN ranked r ON r.game_number <= p.period
+            GROUP BY p.period, p.name ORDER BY p.period
+        """)
+        rows = (TeamOverviewRow(**row) for row in cursor.fetchall())
+    return TeamOverview(*rows)
+
+
+def goal_heatmap(conn):
+    with conn.cursor(dictionary=True) as cursor:
+        cursor.execute(""" 
+            SELECT CASE
+                WHEN g.goals = 0 THEN '0'
+                WHEN g.goals = 1 THEN '1'
+                WHEN g.goals = 2 THEN '2'
+                WHEN g.goals = 3 THEN '3'
+                WHEN g.goals = 4 THEN '4'
+                when g.goals = 5 then '5'
+                ELSE '6+'
+            END AS goals,
+
+            SUM(CASE WHEN g.against = 0 THEN 1 ELSE 0 END) AS "against_0",
+            SUM(CASE WHEN g.against = 1 THEN 1 ELSE 0 END) AS "against_1",
+            SUM(CASE WHEN g.against = 2 THEN 1 ELSE 0 END) AS "against_2",
+            SUM(CASE WHEN g.against = 3 THEN 1 ELSE 0 END) AS "against_3",
+            SUM(CASE WHEN g.against = 4 THEN 1 ELSE 0 END) AS "against_4",
+            sum(case when g.against = 5 then 1 else 0 end) as "against_5",
+            SUM(CASE WHEN g.against >= 6 THEN 1 ELSE 0 END) AS "against_6+"
+            FROM games g GROUP BY CASE
+                WHEN g.goals = 0 THEN '0'
+                WHEN g.goals = 1 THEN '1'
+                WHEN g.goals = 2 THEN '2'
+                WHEN g.goals = 3 THEN '3'
+                WHEN g.goals = 4 THEN '4'
+                when g.goals = 5 then '5'
+                ELSE '6+' END,
+            LEAST(g.goals, 6) ORDER BY LEAST(g.goals, 6)""")
         return cursor.fetchall()
 
 

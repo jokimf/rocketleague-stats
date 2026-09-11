@@ -3,7 +3,11 @@ h3 {
     scroll-margin-top: 3.5rem;
 }
 
-h1>img {
+h3 {
+    text-align: center;
+}
+
+.profile_rank_icon {
     width: 40px;
     height: 40px;
     vertical-align: top;
@@ -27,8 +31,11 @@ td>img {
     border-color: #21252bb3;
 }
 
-a:active {
-    color: white !important;
+a:active,
+a:hover {
+    cursor: pointer;
+    text-decoration: none !important;
+    opacity: 50%;
 }
 
 .win {
@@ -54,7 +61,10 @@ article>footer {
 }
 
 .mvp_highlighting_table_cell {
-    border: 2px double darkgoldenrod !important;
+    /* border: 2px solid darkgoldenrod !important; */
+    /* border-radius: 8px; */
+    font-weight: bolder;
+    color: rgb(212, 179, 94)
 }
 
 .here {
@@ -71,6 +81,22 @@ article>footer {
     text-decoration: none;
 }
 
-.highlight_td {
+td,
+th,
+table {
     text-align: center;
+    border: 2px solid var(--bg-default) !important;
+    margin: 1px;
+    border-radius: 8px;
+}
+
+td:hover {
+    opacity: 80%;
+}
+
+
+#charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
 }

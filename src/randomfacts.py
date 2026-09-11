@@ -27,11 +27,8 @@ def generate_random_facts(conn, active_player_ids: list[str]) -> list:
 # Last session was xy
 def last_session_facts(conn) -> list[RandomFact]:
     facts = []
-    latest_session_data = queries.latest_session_main_data(conn)  # TODO: fix overhead
-    if not latest_session_data:
-        return []
+    session_id = queries.latest_session_main_data(conn).session_id
 
-    session_id = latest_session_data[0]
     # Session ID milestone
     if session_id % 50 == 0:
         facts.append((f"This session is the {session_id}th session!", 4))
